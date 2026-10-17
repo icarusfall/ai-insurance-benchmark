@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Results — Act of God &amp; Co.</title>
+<meta name="description" content="How language models fared running an AI-liability insurer for ten simulated years, against a scripted reference on the same worlds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='4' y='25' font-size='24' font-family='Georgia'%3E%C2%A7%3C/text%3E%3C/svg%3E">
+<script src="data.js"></script>
+<script src="charts.js"></script>
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="brand" href="index.html">Act of God <span>&amp;</span> Co.</a>
+  <nav>
+    <a href="index.html">How it works</a>
+    <a href="failures.html">How insurers die</a>
+    <a href="results.html" aria-current="page">Results</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <p class="kicker">Results · <span id="batch"></span> · environment <span data-p="ENV_VERSION"></span></p>
+  <h1>Who kept the shareholders happy</h1>
+  <p class="dek">Each model ran the same insurer, against the same four scripted rivals, on the same <span id="n-seeds"></span> simulated decades. Below is how its shareholders' wealth evolved, quarter by quarter, measured against what they required: 2% a quarter.</p>
+</div>
+
+<div class="layout" style="grid-template-columns: minmax(0, 1fr)">
+<main>
+
+<section class="chapter" id="chart">
+  <figure class="chart">
+    <figcaption>
+      <div class="title">Shareholder wealth against the hurdle, median across seeds</div>
+      <div class="sub">1.0 means shareholders earned exactly their required return so far. Wealth is true equity plus dividends, less the cost of capital raised, all grown at the hurdle rate. At quarter 40 each line is the model's median final score, R.</div>
+    </figcaption>
+    <div id="chart-median"></div>
+  </figure>
+  <div class="aside"><p><b>How to read it.</b> Lines start at 1.0. A line that drifts down slowly is holding capital that earns less than shareholders want. A line that drops sharply is an insolvency in at least half the seeds: equity goes to zero and recent dividends are clawed back. The reference actuary was built with a near-correct model of the hidden world; the language models start with none.</p></div>
+</section>
+
+<section class="chapter" id="games">
+  <p class="kicker">Each game</p>
+  <h2>One model, every seed</h2>
+  <p>Medians hide a lot. Pick a model to see each of its games beside the reference actuary's median.</p>
+  <div class="tabs" role="tablist" id="model-tabs"></div>
+  <figure class="chart">
+    <figcaption><div class="title" id="games-title"></div><div class="sub">Thin lines are individual seeds; an insolvency drops a line to its kept dividends.</div></figcaption>
+    <div id="chart-games"></div>
+  </figure>
+</section>
+
+<section class="chapter" id="table">
+  <p class="kicker">Summary</p>
+  <h2>The numbers</h2>
+  <div class="table-wrap"><table id="summary"></table></div>
+  <p style="font-size:15px;color:var(--ink-2)">"Beat the reference" counts seeds where the model's final R exceeded the reference actuary's on the same world. Cost is the API bill per game; minutes are wall-clock time per 40-quarter game.</p>
+</section>
+
+<section class="chapter" id="caveats">
+  <p class="kicker">Caveats</p>
+  <h2>Read this before quoting anything</h2>
+  <ul>
+    <li><b>Small samples.</b> A handful of seeds per model. Outcomes vary a great deal between seeds and between runs of the same model on the same seed. Treat this as a first look, not a ranking.</li>
+    <li><b>Cheap models only.</b> This wave tested inexpensive models on purpose. Larger models have not been run yet.</li>
+    <li><b>Unequal information.</b> The reference and rivals have a near-correct risk model; the language models do not. Beating the reference is hard by design.</li>
+    <li><b>One environment version.</b> Results are only comparable within <span data-p="ENV_VERSION"></span>.</li>
+  </ul>
+</section>
+
+</main>
+</div>
+<footer class="site"><div class="inner">Act of God &amp; Co. is a hobby benchmark. All companies, vendors and events are fictional. Figures on this page are generated from the run logs by <code>python -m website.build</code>.</div></footer>
+<script src="results.js"></script>
+</body>
+</html>

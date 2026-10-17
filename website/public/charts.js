@@ -78,8 +78,14 @@
       t.textContent = (opts.yFormat || fmt)(v);
     });
     if (y0 < 0) el("line", { x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), class: "baseline" }, svg);
+    (opts.refLines || []).forEach(r => {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(r.y), y2: Y(r.y), stroke: "var(--ink-2)", "stroke-width": 1, "stroke-dasharray": "4 4" }, svg);
+      const t = el("text", { x: m.l + 6, y: Y(r.y) - 6, class: "label" }, svg);
+      t.textContent = r.label;
+    });
     const step = opts.xTick || Math.max(1, Math.round((x1 - x0) / 8));
-    for (let v = x0; v <= x1; v += step) {
+    const xticks = opts.xTicks || Array.from({ length: Math.floor((x1 - x0) / step) + 1 }, (_, i) => x0 + i * step);
+    for (const v of xticks) {
       const t = el("text", { x: X(v), y: H - m.b + 18, "text-anchor": "middle" }, svg);
       t.textContent = opts.xFormat ? opts.xFormat(v) : v;
     }
