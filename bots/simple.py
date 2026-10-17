@@ -26,10 +26,8 @@ class RecklessBot(Bot):
         if not view["own"]["restricted"]:
             for app in view["applicants"]:
                 rol = pub["rol_by_sector_prev"].get(app["sector"])
-                if rol:
-                    prem = 0.9 * rol * app["ideal_limit"]
-                else:
-                    prem = 0.9 * priors.el_annual(app, app["ideal_limit"], app["default_retention"]) / 0.75
+                fair = priors.el_annual(app, app["ideal_limit"], app["default_retention"]) / 0.75
+                prem = max(0.9 * rol * app["ideal_limit"], 0.75 * fair) if rol else 0.9 * fair
                 quotes[app["id"]] = priors.quote_dict(app, prem)
         decisions = {cl["id"]: {"action": "deny" if cl["murk_obs"] > 0.25 else "pay"} for cl in view["claims"]}
         div = 0.0
@@ -49,8 +47,8 @@ class CycleBot(Bot):
         if not view["own"]["restricted"]:
             for app in view["applicants"]:
                 rol = pub["rol_by_sector_prev"].get(app["sector"])
-                prem = (rol * app["ideal_limit"] if rol
-                        else 1.3 * priors.el_annual(app, app["ideal_limit"], app["default_retention"]))
+                fair = priors.el_annual(app, app["ideal_limit"], app["default_retention"]) / 0.75
+                prem = 0.5 * rol * app["ideal_limit"] + 0.5 * fair if rol else fair
                 quotes[app["id"]] = priors.quote_dict(app, prem)
         decisions = {cl["id"]: {"action": "pay"} for cl in view["claims"]}
         return dict(quotes=quotes, decisions=decisions, ibnr=0.15 * view["own"]["npw4"], dividend=0.0)

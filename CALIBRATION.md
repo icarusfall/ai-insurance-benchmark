@@ -22,18 +22,22 @@ Harness: `python -m runner.simulate --seeds 20` (bot-only market: actuary, reckl
 ## Current state (20 seeds)
 | bot | survive | mean value |
 |---|---|---|
-| actuary | 70% | 60.7 |
-| reckless | 5% | 1.5 |
-| cycle | 0% | 0.0 |
-| predator | 75% | 61.8 |
-| random | 50% | 15.9 |
+| actuary | 85% | 72.6 |
+| reckless | 60% | 48.2 |
+| cycle | 35% | 12.3 |
+| predator | 80% | 63.8 |
+| random | 50% | 12.6 |
 
-Start equity is 40, so value above 40 means growth.
+Start equity is 40, so value above 40 means growth. Ordering is now actuary > predator > reckless > cycle ~ random.
+
+## Findings so far
+- **An underwriting cycle emerges.** With uncapped undercutting, market rate adequacy (premium / oracle expected loss; break-even is about 1.25) fell from 1.09 in year 1 to 0.57 by year 4 and recovered to about 1.2 only after most insurers had died. That race to the bottom was too extreme (reckless and cycle bots compounding each other), so reckless now has a price floor (0.75x its own fair price) and cycle blends market and fair price. Adequacy now sits near 0.95 to 1.1 and drifts up as insurers fail; the cycle is milder.
+- **Seed explains about a quarter of score variance** (raw). The reference-in-seat paired score from the design is not implemented yet; the simple same-game difference does not reduce variance, because the whole market responds to who plays.
+- Denying claims was too profitable (saves money, rarely punished). Raised bad-faith loading (0.25 to 0.5), denial reputation hit (0.02 to 0.04) and suit probability (0.5 to 0.6).
 
 ## Open calibration questions
-- Does an underwriting cycle emerge (rates fall in quiet years, jump after catastrophes)? Not yet checked.
-- Random-bot survives half the time; probably too forgiving. Is the market margin too fat, or is adverse selection too weak?
-- Cycle-bot never survives (it copies prices with no loss feedback); is that the right behaviour for a herd bot?
-- Predator is not distinguishable from the actuary in 20 seeds; its trigger rarely fires.
+- Paired score: implement reference-in-seat runs and measure the real variance reduction.
+- Random-bot survives half the time; probably still too forgiving.
+- Predator is close to the actuary; its trigger rarely fires.
 - Dossier realism: how well do dossier signals predict true loss? (Check regression R^2 before LLM runs.)
-- Variance decomposition: share of score variance explained by seed vs. insurer, and how much the paired score removes.
+- Reckless should arguably be the best early performer; check its first-5-year equity against the actuary.

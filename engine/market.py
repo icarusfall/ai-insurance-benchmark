@@ -321,7 +321,7 @@ class Market:
                 self._to_court(cl)
             else:
                 if cl.u_court < p_l:
-                    ins.rep = max(0.0, ins.rep - 0.02)
+                    ins.rep = max(0.0, ins.rep - 0.04)
                 self._close(cl)
         else:
             self._pay(cl, cl.covered)
@@ -345,6 +345,7 @@ class Market:
         gum = self.choice_rng.gumbel(size=(len(W.clients), len(self.names) + 1))
         bound = []
         ROL = {}
+        self.adq = [0.0, 0.0]
         for c in self.applicants:
             opts = []
             for n, ins in self.ins.items():
@@ -379,6 +380,8 @@ class Market:
             ins.expense_total += prem * P.EXPENSE
             ins.npw[q] += prem
             bound.append(pol)
+            self.adq[0] += prem
+            self.adq[1] += 4 * W.expected_quarter_loss(c, q, lim, ret)
             a = ROL.setdefault(c.sector, [0.0, 0.0])
             a[0] += prem
             a[1] += lim
@@ -481,7 +484,9 @@ class Market:
                                     in_force=sum(1 for p in self.policies.values() if p.active and p.insurer == ins.name)))
         self.market_hist.append(dict(q=q, rol=self.rol_index_prev, rol_by_sector=dict(self.rol_prev),
                                      fund_outlay=self.fund_outlay, news=list(self.news_log[q]),
-                                     n_applicants=len(self.applicants)))
+                                     n_applicants=len(self.applicants),
+                                     adequacy=(self.adq[0] / self.adq[1] if self.adq[1] > 0 else None),
+                                     n_bound=len(bound)))
         # tell each bot what it can learn at quarter end
         for ins in self.ins.values():
             if not ins.insolvent:
