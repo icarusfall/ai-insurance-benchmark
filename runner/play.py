@@ -24,6 +24,10 @@ def main():
     ap.add_argument("--max-cost", type=float, default=5.0, help="hard USD cap for this run")
     ap.add_argument("--runs-dir", default="runs")
     a = ap.parse_args()
+    import os
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+        raise SystemExit("No Anthropic credentials found. Set ANTHROPIC_API_KEY in the environment "
+                         "(never in the repo) and run again.")
     models = load_models()
     if a.model not in models:
         raise SystemExit(f"{a.model} not in models.yaml")
