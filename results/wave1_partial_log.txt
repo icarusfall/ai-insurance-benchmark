@@ -1,0 +1,22 @@
+  preflight claude-haiku-5-5                 ok  ($0.0013)
+  preflight gpt-5.6-luna                     ok  ($0.0027)
+  preflight gpt-5.4-nano                     ok  ($0.0041)
+  preflight gpt-5-nano                       ok  ($0.0040)
+  preflight gemini-3.1-flash-lite            ok  ($0.0053)
+  preflight gemini-3.5-flash-lite            ok  ($0.0065)
+  preflight deepseek/deepseek-v4-flash       ok  ($0.0009)
+  preflight qwen/qwen3.5-35b-a3b             ok  ($0.0114)
+40 games, 8 workers, per-game cap $1.5, total cap $15.0
+[1/40] gpt-5.4-nano seed 0: score -3.69 value 0.0 RUIN cost $0.126 6.9min  | total $0.00
+[2/40] gpt-5.6-luna seed 0: score +0.44 value 62.0 cost $0.243 12.9min  | total $0.00
+[3/40] gpt-5.6-luna seed 1: score +0.51 value 66.4 cost $0.260 13.3min  | total $1.36
+[4/40] gemini-3.1-flash-lite seed 0: score +0.83 value 91.8 cost $0.273 19.5min  | total $2.02
+[5/40] gpt-5.4-nano seed 1: score -3.69 value 0.0 RUIN cost $0.138 7.0min  | total $2.10
+[6/40] claude-haiku-5-5 seed 0: score +0.30 value 54.0 cost $0.381 20.5min  | total $2.12
+[7/40] claude-haiku-5-5 seed 1: score -3.69 value 0.0 RUIN cost $0.295 21.0min  | total $2.15
+[8/40] gpt-5-nano seed 0: score +0.59 value 72.4 cost $0.192 40.6min  | total $2.60
+[9/40] qwen/qwen3.5-35b-a3b seed 0: score -3.69 value 0.0 RUIN cost $0.689 45.7min  | total $2.98
+[10/40] qwen/qwen3.5-35b-a3b seed 1: score -3.69 value 0.0 RUIN cost $0.207 10.4min  | total $3.21
+[11/40] claude-haiku-5-5 seed 2: score -3.69 value 0.0 RUIN cost $0.204 14.5min  | total $3.61
+[12/40] gpt-5-nano seed 1: score -1.85 value 6.3 cost $0.204 41.3min  | total $3.64
+[13/40] gpt-5.6-luna seed 2: score +0.46 value 63.6 cost $0.248 14.1min  | total $3.91

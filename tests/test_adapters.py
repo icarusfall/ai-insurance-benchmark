@@ -80,3 +80,40 @@ def test_blocked_gemini_is_refusal(monkeypatch):
     monkeypatch.setattr(G, "post_json", lambda *a, **k: {"promptFeedback": {"blockReason": "SAFETY"}, "usageMetadata": {}})
     t = G.GeminiAdapter("g", {}, "AIzaFAKEKEYFORTESTS").complete("s", [{"role": "user", "content": "x"}], TOOLS)
     assert t.stop_reason == "refusal"
+
+
+def test_openai_responses_roundtrip(monkeypatch):
+    import agents.adapters_oai_responses as R
+
+    def fake_post(url, headers, body, **kw):
+        assert body["store"] is False and "reasoning.encrypted_content" in body["include"]
+        assert body["tools"][0]["type"] == "function" and "function" not in body["tools"][0]
+        return {"id": "resp_1", "status": "completed", "output": [
+            {"type": "reasoning", "id": "rs_1", "summary": [], "encrypted_content": "ENC"},
+            {"type": "function_call", "call_id": "call_9", "name": "get_applicants", "arguments": '{"limit": 3}'}],
+            "usage": {"input_tokens": 1000, "output_tokens": 500, "input_tokens_details": {"cached_tokens": 200},
+                      "output_tokens_details": {"reasoning_tokens": 420}}}
+    monkeypatch.setattr(R, "post_json", fake_post)
+    ad = R.OpenAIResponsesAdapter("m", {}, "sk-test-not-real")
+    t = ad.complete("SYS", [{"role": "user", "content": "hi"}], TOOLS, 500)
+    assert t.tool_calls == [("call_9", "get_applicants", {"limit": 3})] and t.stop_reason == "tool_use"
+    assert t.usage == dict(input=800, output=500, cache_read=200, cache_write=0, reasoning=420)
+    inp = R.to_input([{"role": "user", "content": "hi"}, {"role": "assistant", "content": t.raw},
+                      {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "call_9", "content": "{}"}]}])
+    assert [i.get("type", i.get("role")) for i in inp] == ["user", "reasoning", "function_call", "function_call_output"]
+    assert inp[1]["encrypted_content"] == "ENC"
+
+
+def test_nonretryable_errors_are_not_swallowed(monkeypatch):
+    import requests
+
+    import agents.http as H
+
+    class Resp:
+        status_code, text, headers = 400, "bad request", {}
+    monkeypatch.setattr(H.requests, "post", lambda *a, **k: Resp())
+    try:
+        H.post_json("https://example.invalid", {}, {})
+        assert False
+    except H.AdapterError as e:
+        assert e.retryable is False

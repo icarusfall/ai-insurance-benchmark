@@ -31,13 +31,20 @@ class BudgetExceeded(RuntimeError):
 
 
 class Budget:
-    """Shared across calls in a run; raises once the cap is crossed."""
+    """Spend cap shared across calls (thread-safe). A child budget also charges its parent."""
 
-    def __init__(self, max_usd: float):
+    def __init__(self, max_usd: float, parent: "Budget" = None):
+        import threading
         self.max_usd = max_usd
         self.spent = 0.0
+        self.parent = parent
+        self._lock = threading.Lock()
 
     def add(self, usd: float):
-        self.spent += usd
-        if self.spent > self.max_usd:
+        with self._lock:
+            self.spent += usd
+            over = self.spent > self.max_usd
+        if self.parent:
+            self.parent.add(usd)
+        if over:
             raise BudgetExceeded(f"budget ${self.max_usd:.2f} exceeded (spent ${self.spent:.2f})")

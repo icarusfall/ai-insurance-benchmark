@@ -3,6 +3,7 @@ import time
 
 from bots.base import Bot
 
+from .http import AdapterError
 from . import prompt as pr
 from .pricing import Budget, call_cost, prices_for
 from .tools import TOOLS, ToolBox
@@ -22,6 +23,10 @@ class LLMBot(Bot):
         self.max_tokens = max_tokens
         self.state = {"notes": "", "manual": None}
         self.totals = dict(input=0, output=0, cache_read=0, cache_write=0, calls=0, usd=0.0)
+        self.errors = 0
+        self.refusals = 0
+        self.unended = 0
+        self.bad_streak = 0
 
     def reset(self, seed, seat):
         super().reset(seed, seat)
@@ -35,11 +40,19 @@ class LLMBot(Bot):
         nudged = False
         tool_log, refusal = [], False
         for rnd in range(MAX_ROUNDS):
-            turn = self.adapter.complete(pr.SYSTEM, messages, TOOLS, self.max_tokens)
+            try:
+                turn = self.adapter.complete(pr.SYSTEM, messages, TOOLS, self.max_tokens)
+            except AdapterError as e:            # transient provider failure after retries: play on with what we have
+                if not e.retryable:
+                    raise
+                self.errors += 1
+                tool_log.append(dict(tool="_adapter_error", input={}, output=str(e)[:300]))
+                break
             self._account(q, rnd, turn, len(turn.tool_calls))
             messages.append({"role": "assistant", "content": turn.raw})
             if turn.stop_reason == "refusal":
                 refusal = True
+                self.refusals += 1
                 break
             if not turn.tool_calls:
                 if box.done or nudged:
@@ -56,6 +69,11 @@ class LLMBot(Bot):
             messages.append({"role": "user", "content": results})
             if box.done:
                 break
+        if not box.done:
+            self.unended += 1
+        self.bad_streak = self.bad_streak + 1 if (not box.done and not box.quotes) else 0
+        if self.bad_streak >= 3:
+            raise AdapterError("three consecutive quarters without a completed turn; aborting", retryable=False)
         actions = box.actions()
         if self.runlog:
             self.runlog.game(q=q, bot=self.name, refusal=refusal, ended=box.done, rounds=len(tool_log),

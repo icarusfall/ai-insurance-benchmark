@@ -7,7 +7,7 @@ Language models run an insurance company for ten years (40 quarters). The produc
 
 It is a benchmark in the spirit of Vending-Bench: no trick questions, just a long, boring-looking job where small judgement errors compound for years before they show up.
 
-**Status:** the simulation engine and the scripted rival insurers work and are being calibrated. The LLM agent layer, the web control room and the public site are not built yet. See the [roadmap](#roadmap).
+**Status:** the simulation engine, the scripted rivals and the LLM agent layer (Anthropic, OpenAI, Gemini, OpenRouter) all work. A first wave of cheap models has partly run (13 games; see [`results/wave1_partial.md`](results/wave1_partial.md)). The project is paused for a design review: see [`HANDOVER.md`](HANDOVER.md). The web control room and public site are not built yet.
 
 ---
 
@@ -134,10 +134,12 @@ Direct adapters for **Anthropic**, **OpenAI** and **Google Gemini**, plus **Open
 |---|---|
 | [`DESIGN.md`](DESIGN.md) | The full specification: mechanics, scoring, architecture, website plan |
 | [`CALIBRATION.md`](CALIBRATION.md) | Log of tuning decisions and open questions |
+| [`HANDOVER.md`](HANDOVER.md) | Current state, what's missing, and open questions for review |
+| [`results/`](results/) | Committed summaries of runs (raw logs stay local in `runs/`) |
 | `engine/` | The simulation: world generation, market, claims, regulator. No network access, fully deterministic |
 | `bots/` | The scripted insurers |
 | `runner/` | Command-line runners and diagnostics |
-| `tests/` | Determinism and fairness tests |
+| `tests/` | Determinism, fairness, agent-loop and adapter tests |
 | `agents/` | LLM layer: system prompt and briefing, tool schemas, model adapters, cost and call logging |
 | `analysis/`, `web/`, `site/` | Planned: scoring and charts, control room, public site |
 
@@ -147,7 +149,7 @@ Direct adapters for **Anthropic**, **OpenAI** and **Google Gemini**, plus **Open
 - [x] Bot-only market engine
 - [ ] Calibration: make the economy hard in the right ways (in progress)
 - [x] LLM agent layer: tools, context policy, token and cost logging (built and tested with a scripted fake model; not yet run live)
-- [ ] First benchmark runs across a model roster
+- [~] First benchmark runs across a model roster (wave 1 partial, paused for review)
 - [ ] Competitive mode and the conference experiments
 - [ ] Control room on Railway
 - [ ] Public site: how it works, narrated stories from real runs, full results

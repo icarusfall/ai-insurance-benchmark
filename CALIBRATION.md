@@ -44,3 +44,10 @@ Start equity is 40, so value above 40 means growth. Ordering is now actuary > pr
 - Predator is close to the actuary; its trigger rarely fires.
 - Dossier realism: how well do dossier signals predict true loss? (Check regression R^2 before LLM runs.)
 - Reckless should arguably be the best early performer; check its first-5-year equity against the actuary.
+
+## First LLM results (wave 1, partial: 13 of 40 games; see results/wave1_partial.md)
+- 7 of 13 games ended in ruin where the scripted actuary survived every one of the same seeds. Per-game cost $0.13 to $0.69; 7 to 46 minutes.
+- Failure modes seen in the logs: **dividend-then-collapse** (Haiku 5.5 paid 15, 3 and 17 in dividends and failed in two of three games), **slow bleed without raising capital** (gpt-5.4-nano, never called `raise_capital`, insolvent at Q22-23 on both seeds), absurd first-quarter prices (gpt-5-nano), and Qwen3.5-35B ruined at Q10 and Q24.
+- Steady survivors: gpt-5.6-luna (value 62-66, paid out most equity as dividends); best single game gemini-3.1-flash-lite (91.8).
+- Open: whether this much ruin is the intended difficulty or a mis-tuned environment/score; see HANDOVER.md questions 1-3.
+- Operational lessons: OpenAI's newer models need the Responses API for tools with reasoning; Gemini quota 429s under concurrency; the first attempt silently produced 40 empty quarters because adapter errors were swallowed (now fail-fast plus a preflight).
