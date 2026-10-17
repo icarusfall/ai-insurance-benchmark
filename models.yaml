@@ -29,3 +29,69 @@ models:
     cache_read: 0.25
     thinking: adaptive
     effort: null
+
+  # ---- OpenAI (direct). Prices: reference figures from OpenRouter's listing on 2026-10-17; verify against
+  # OpenAI's pricing page before quoting cost numbers. Reasoning tokens are billed as output.
+  gpt-5-nano:
+    provider: openai
+    input: 0.05
+    output: 0.40
+    cache_read: 0.005
+    effort: null
+  gpt-5.4-nano:
+    provider: openai
+    input: 0.20
+    output: 1.25
+    cache_read: 0.02
+  gpt-5.6-luna:
+    provider: openai
+    input: 0.20
+    output: 1.20
+    cache_read: 0.02
+  gpt-5.6-terra:
+    provider: openai
+    input: 2.00
+    output: 12.00
+    cache_read: 0.20
+  gpt-5.6-sol:
+    provider: openai
+    input: 4.00
+    output: 20.00
+    cache_read: 0.40
+  gpt-5.5:
+    provider: openai
+    input: 5.00
+    output: 30.00
+    cache_read: 0.50
+
+  # ---- Gemini (direct). Same caveat on prices.
+  gemini-2.5-flash-lite:
+    provider: gemini
+    input: 0.10
+    output: 0.40
+    cache_read: 0.01
+  gemini-3.1-flash-lite:
+    provider: gemini
+    input: 0.25
+    output: 1.50
+    cache_read: 0.025
+  gemini-3.5-flash:
+    provider: gemini
+    input: 1.50
+    output: 9.00
+    cache_read: 0.15
+
+  # ---- Via OpenRouter (key = OpenRouter model id). Cost per call comes from OpenRouter's response,
+  # so the prices here are only used for estimates.
+  deepseek/deepseek-v4-flash:
+    provider: openrouter
+    input: 0.091
+    output: 0.182
+  qwen/qwen3.5-35b-a3b:
+    provider: openrouter
+    input: 0.15
+    output: 1.00
+  moonshotai/kimi-k2.6:
+    provider: openrouter
+    input: 0.65
+    output: 3.41

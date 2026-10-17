@@ -124,6 +124,10 @@ random       -2.64   1.65     50     12.6   1.08    205.8    27.3
 
 Starting equity is 40, so a value above 40 means the insurer grew. CR is the combined ratio (claims plus expenses over premium; below 1 is profitable).
 
+## Models
+
+Direct adapters for **Anthropic**, **OpenAI** and **Google Gemini**, plus **OpenRouter** for everything else (DeepSeek, Qwen, Kimi and so on). Each model is one entry in [`models.yaml`](models.yaml); keys go in a git-ignored `.env` (see `.env.example`). Every call logs tokens (including hidden reasoning tokens) and cost, so score-per-dollar comes for free. Prices in `models.yaml` for OpenAI and Gemini are reference figures; OpenRouter reports its own exact cost per call.
+
 ## Repo map
 
 | Path | What's there |

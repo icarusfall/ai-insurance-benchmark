@@ -31,7 +31,7 @@ TOOLS = [
                     "base rate is not auto-quoted. Persists across quarters until replaced or cleared.",
      "input_schema": {"type": "object", "properties": {
          "base_rate_on_limit": {"type": "object", "description": "sector -> annual premium as a fraction of limit",
-                                "additionalProperties": {"type": "number"}},
+                                "properties": {s: {"type": "number"} for s in SECTORS}},
          "autonomy_slope": {"type": "number"}, "safety_slope": {"type": "number"},
          "red_flag_multiplier": {"type": "number"}, "clear": {"type": "boolean"}}}},
     {"name": "decline",

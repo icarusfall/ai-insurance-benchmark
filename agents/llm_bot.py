@@ -69,7 +69,7 @@ class LLMBot(Bot):
 
     # ------------------------------------------------------------------- accounting
     def _account(self, q, rnd, turn, ntools):
-        usd = call_cost(self.prices, turn.usage) if self.prices else 0.0
+        usd = turn.cost if turn.cost is not None else (call_cost(self.prices, turn.usage) if self.prices else 0.0)
         for k in ("input", "output", "cache_read", "cache_write"):
             self.totals[k] += turn.usage.get(k, 0)
         self.totals["calls"] += 1

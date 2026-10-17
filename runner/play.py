@@ -7,7 +7,7 @@ import json
 import time
 
 import bots
-from agents.adapters import AnthropicAdapter
+from agents.factory import make_adapter
 from agents.env import load_env
 from agents.llm_bot import LLMBot
 from agents.pricing import Budget, BudgetExceeded, load_models
@@ -27,17 +27,16 @@ def main():
     a = ap.parse_args()
     import os
     load_env()
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
-        raise SystemExit("No Anthropic credentials found. Set ANTHROPIC_API_KEY in the environment "
-                         "(never in the repo) and run again.")
     models = load_models()
     if a.model not in models:
         raise SystemExit(f"{a.model} not in models.yaml")
-    run_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{a.model}-s{a.seed}"
+    run_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{a.model.replace('/', '_')}-s{a.seed}"
     log = RunLog(a.runs_dir, run_id, dict(model=a.model, seed=a.seed, quarters=a.quarters, mode="benchmark",
                                           env_version=P.ENV_VERSION, npcs=NPCS, prices=models[a.model]))
     budget = Budget(a.max_cost)
-    bot = LLMBot(SUBJECT, AnthropicAdapter(a.model, models[a.model]), a.model, models, budget, log)
+    if models[a.model]["provider"] == "anthropic" and not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+        raise SystemExit("No Anthropic credentials found. Set ANTHROPIC_API_KEY in .env or the environment.")
+    bot = LLMBot(SUBJECT, make_adapter(a.model, models[a.model]), a.model, models, budget, log)
     lineup = {SUBJECT: bot}
     lineup.update(bots.make(NPCS))
     m = Market(a.seed, lineup)

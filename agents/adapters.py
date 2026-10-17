@@ -19,6 +19,7 @@ class Turn:
     usage: dict                    # input (uncached), output, cache_read, cache_write
     latency: float = 0.0
     request_id: str = ""
+    cost: float = None             # provider-reported USD, if any (OpenRouter)
 
 
 class AnthropicAdapter:
