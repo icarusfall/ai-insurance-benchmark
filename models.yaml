@@ -1,0 +1,3 @@
+# Model roster. IDs and prices are pinned per run; fill in before running LLMs.
+# Prices are USD per million tokens.
+models: []

@@ -1,0 +1,12 @@
+[project]
+name = "ai-insurance-benchmark"
+version = "0.0.1"
+description = "A deadpan benchmark: LLMs run AI-liability insurers through ten years of questionable events."
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26", "pyyaml>=6"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
