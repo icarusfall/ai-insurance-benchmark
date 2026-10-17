@@ -8,6 +8,7 @@ import time
 
 import bots
 from agents.adapters import AnthropicAdapter
+from agents.env import load_env
 from agents.llm_bot import LLMBot
 from agents.pricing import Budget, BudgetExceeded, load_models
 from agents.runlog import RunLog
@@ -25,6 +26,7 @@ def main():
     ap.add_argument("--runs-dir", default="runs")
     a = ap.parse_args()
     import os
+    load_env()
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
         raise SystemExit("No Anthropic credentials found. Set ANTHROPIC_API_KEY in the environment "
                          "(never in the repo) and run again.")
