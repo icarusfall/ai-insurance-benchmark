@@ -10,11 +10,17 @@ from . import priors
 from .base import Bot
 
 
+MARGIN = 0.35   # the reference's profit margin; set by the calibration sweep (see CALIBRATION.md; v0.1: 0.10)
+
+
 class ActuaryBot(Bot):
     name = "actuary"
 
-    def __init__(self, margin: float = 0.10, cat_load: float = 0.25, cred_k: float = 6.0, maturity: int = 8):
-        self.margin, self.cat_load, self.cred_k, self.maturity = margin, cat_load, cred_k, maturity
+    def __init__(self, margin: float = None, cat_load: float = 0.25, cred_k: float = 6.0, maturity: int = 8,
+                 div_buffer: float = 10.0):
+        self.margin = MARGIN if margin is None else margin
+        self.cat_load, self.cred_k, self.maturity = cat_load, cred_k, maturity
+        self.div_buffer = div_buffer
 
     def reset(self, seed, seat):
         super().reset(seed, seat)
@@ -43,8 +49,8 @@ class ActuaryBot(Bot):
                 self.expo[t][sector] += raw / P.POLICY_TERM
 
     # ---- pricing
-    def price(self, app, q, retreat=1.0):
-        raw = priors.el_annual(app, app["ideal_limit"], app["default_retention"])
+    def price(self, app, q, retreat=1.0, limit=None):
+        raw = priors.el_annual(app, app["ideal_limit"] if limit is None else limit, app["default_retention"])
         self.quoted[app["id"]] = (app["sector"], raw)
         gross = raw * self.mult(app["sector"], q) * (1 + self.cat_load)
         return gross / (1 - P.EXPENSE - self.margin) * retreat
@@ -53,6 +59,7 @@ class ActuaryBot(Bot):
         q = view["q"]
         own = view["own"]
         quotes = {}
+        treaty = self.treaty(own)
         if not own["restricted"]:
             retreat = 1.3 if own["rating_score"] < 0.35 else 1.0
             # capacity discipline: don't write more premium than capital supports
@@ -61,12 +68,15 @@ class ActuaryBot(Bot):
             live = sum(1 for v in view["public"]["insurers"].values() if not v["insolvent"])
             win_guess = 1.0 / max(1, live)
             for app in sorted(view["applicants"], key=lambda a: not a["renewal"]):
-                prem = self.price(app, q, retreat)
+                lim = priors.quote_limit(app, own, treaty)
+                if lim <= 0:
+                    continue
+                prem = self.price(app, q, retreat, lim)
                 if running > cap:
                     prem *= 1.6
                 else:
                     running += prem * win_guess
-                quotes[app["id"]] = priors.quote_dict(app, prem)
+                quotes[app["id"]] = priors.quote_dict(app, prem, lim)
         decisions = {}
         for cl in view["claims"]:
             self.inc[cl["occ_q"]][cl["sector"]] += cl["covered"]
@@ -78,9 +88,17 @@ class ActuaryBot(Bot):
         if own["restricted"] or own["rating_score"] < 0.3:
             target = 1.5 * P.K_REG * own["npw4"] + 5.0
             raise_amt = float(np.clip(target - own["reported_equity"], 0.0, 0.5 * P.START_EQUITY))
-        att = round(max(0.5, 0.12 * max(own["reported_equity"], 3.0)) * 2) / 2
-        return dict(quotes=quotes, decisions=decisions, ibnr=self.ibnr(q), dividend=0.0,
-                    reinsurance={"attachment": att, "limit": 10 * att}, raise_capital=raise_amt)
+        dividend = 0.0
+        if q % 4 == 3 and not own["restricted"]:
+            dividend = max(0.0, own["reported_equity"] - (2 * P.K_REG * own["npw4"] + self.div_buffer))
+        return dict(quotes=quotes, decisions=decisions, ibnr=self.ibnr(q), dividend=dividend,
+                    reinsurance=treaty, raise_capital=raise_amt)
+
+    def treaty(self, own):
+        """Buy exactly what the single-risk rule needs: attach at the net line cap, cover up to the largest limit."""
+        att = max(0.5, math.floor(own["max_net_line"] * 2) / 2)
+        top = P.IDEAL_LIMIT_PER_SIZE * P.SIZE_MULT[-1]
+        return {"attachment": att, "limit": max(1.0, top - att)} if att < top else None
 
     def ibnr(self, q):
         m = self.overall_mult(q)

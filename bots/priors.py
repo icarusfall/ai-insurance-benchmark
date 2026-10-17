@@ -31,6 +31,11 @@ def el_annual(app: dict, limit: float, retention: float, upstream_excl: bool = F
     return el
 
 
-def quote_dict(app: dict, premium: float) -> dict:
-    return dict(premium=premium, limit=app["ideal_limit"], retention=app["default_retention"],
+def quote_limit(app: dict, own: dict, treaty) -> float:
+    """The client's ideal limit, cut down to what the single-risk rule allows under the given treaty."""
+    return min(app["ideal_limit"], loss.max_gross_limit(own["max_net_line"], treaty))
+
+
+def quote_dict(app: dict, premium: float, limit: float = None) -> dict:
+    return dict(premium=premium, limit=app["ideal_limit"] if limit is None else limit, retention=app["default_retention"],
                 cat_carveout=False, upstream_excl=False, misuse_excl=False)

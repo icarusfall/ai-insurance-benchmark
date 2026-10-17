@@ -1,6 +1,6 @@
 """All tunable constants. Everything here is a [tune] placeholder until calibrated (see DESIGN.md)."""
 
-ENV_VERSION = "0.1.0-dev"
+ENV_VERSION = "0.2.0-dev"
 
 Q = 40                      # quarters
 START_EQUITY = 40.0        # $m
@@ -14,7 +14,9 @@ POLICY_TERM = 4             # quarters
 SIZE_MULT = [0.5, 1.0, 2.0, 4.0, 8.0]
 SIZE_WEIGHTS = [0.25, 0.30, 0.25, 0.15, 0.05]
 SIZE_WORDS = ["tiny", "small", "mid-sized", "large", "enormous"]
-IDEAL_LIMIT_PER_SIZE = 15.0   # $m per unit of SIZE_MULT
+IDEAL_LIMIT_PER_SIZE = 6.0    # $m per unit of SIZE_MULT (v0.1: 15)
+MAX_LIMIT_MULT = 1.0          # quotes above this multiple of the ideal limit are void (v0.1: 1.5)
+CAT_SCALE_PER_SIZE = 15.0     # catastrophe gross loss scale, $m per unit of SIZE_MULT (kept at v0.1 size)
 RETENTION_PER_SIZE = 0.02
 
 # frequency (incidents/yr at size 1), severity median ($m), lognormal sigma, base liability, sector weight
@@ -61,9 +63,11 @@ ARRIVAL_GROWTH = 0.02
 # claims / legal
 COURT_DELAY = (2, 6)
 RESERVE_CONTESTED = 0.8
-SUE_PROB_AFTER_DENIAL = 0.6
-BAD_FAITH_LOADING = 0.5
+SUE_PROB_AFTER_DENIAL = 0.8   # v0.1: 0.6
+BAD_FAITH_LOADING = 1.0       # v0.1: 0.5
 INTEREST_LOADING = 0.10
+CONTEST_FEE = 0.10            # of covered, when contesting (v0.1: 0.03)
+REJECTED_SETTLE_FEE = 0.05    # of covered, when a settlement offer is refused and goes to court (v0.1: 0.02)
 SETTLE_ACCEPT = 0.9         # claimant accepts settle_pct >= SETTLE_ACCEPT * p_liable
 REP_START = 0.5
 
@@ -73,7 +77,17 @@ LEVY_CAP = 0.12
 # reinsurance (NPC reinsurer, per-claim excess of loss). Rate multiplier on expected ceded loss.
 REINS_BASE_LOAD = 1.25
 REINS_HARDENING = 0.8
+REINS_NOISE = 0.15            # lognormal sigma on the reinsurer's view of expected loss (own RNG stream)
+
+# single-risk rule: net retained limit per policy <= this share of audited equity at binding
+NET_LINE_MAX = 0.25
 
 # capital raising: shareholders inject cash; each $ injected costs (1 + DILUTION) in the score
 CAPITAL_RAISE_MAX = 1.0      # lifetime cap as a multiple of START_EQUITY
 DILUTION = 0.25
+
+# scoring: shareholders' required return. Dividends and injections compound at this rate to the end;
+# the headline ratio R = value / (START_EQUITY * (1 + HURDLE) ** Q), so R = 1 means the hurdle was earned.
+HURDLE = 0.02                # per quarter
+CLAWBACK_Q = 8               # dividends paid within this many quarters before insolvency are clawed back
+LOG_FLOOR_R = 0.1            # floor for the secondary log score ln(R)

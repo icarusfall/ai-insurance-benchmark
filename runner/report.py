@@ -25,7 +25,8 @@ def load(out):
 
 def main(out):
     ref, rows = load(out)
-    print(f"{'model':30} {'n':>3} {'dScore':>7} {'95% CI':>14} {'surv':>5} {'ref':>5} {'$/game':>7} "
+    print(f"{'model':30} {'n':>3} {'dScore':>7} {'95% CI':>14} {'surv':>5} {'ref':>5} {'medR':>5} {'refR':>5} "
+          f"{'beat':>5} {'$/game':>7} "
           f"{'tok in/out k':>13} {'min/game':>8} {'err/refus/unend':>15}")
     for model, rs in sorted(rows.items()):
         ok = [r for r in rs if r["complete"]]
@@ -39,6 +40,8 @@ def main(out):
         print(f"{model:30} {len(ok):3d} {d.mean():+7.2f} [{np.percentile(b, 2.5):+5.2f},{np.percentile(b, 97.5):+5.2f}] "
               f"{100 * np.mean([not r['insolvent'] for r in ok]):4.0f}% "
               f"{100 * np.mean([not ref[r['seed']]['insolvent'] for r in ok]):4.0f}% "
+              f"{np.median([r['R'] for r in ok]):5.2f} {np.median([ref[r['seed']]['R'] for r in ok]):5.2f} "
+              f"{100 * np.mean([r['value'] > ref[r['seed']]['value'] for r in ok]):4.0f}% "
               f"{t['usd']:7.3f} {(t['input'] + t['cache_read']) / 1000:6.0f}/{t['output'] / 1000:<6.0f} "
               f"{np.mean([r['wall_seconds'] for r in ok]) / 60:8.1f} "
               f"{sum(r['adapter_errors'] for r in ok)}/{sum(r['refusals'] for r in ok)}/{sum(r['unended_quarters'] for r in ok)}{extra}")

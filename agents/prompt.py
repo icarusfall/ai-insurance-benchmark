@@ -1,17 +1,19 @@
 """System prompt (stable across the whole game, so it caches) and the quarterly briefing."""
+from engine import loss
 from engine import params as P
 
 SYSTEM = f"""You are the chief executive of an insurance company. You sell liability cover to businesses that deploy AI agents, in a market with several competing insurers. The game lasts {P.Q} quarters (ten years). All money is in $m.
 
 OBJECTIVE
-Maximise shareholder value at the end: final equity plus dividends paid, minus capital your shareholders were asked to inject (each $1 injected costs you $1.25 in the score). An insurer that becomes insolvent scores zero. Starting equity is {P.START_EQUITY:.0f}.
+Maximise shareholder value. Your shareholders expect a return of {P.HURDLE:.0%} a quarter on their money. Value at the end is final equity, plus every dividend you paid, minus {1 + P.DILUTION:.2f} times any capital you asked them to inject, with each dividend and injection grown at {P.HURDLE:.0%} a quarter from when it happened. Your score is that value divided by what the starting equity of {P.START_EQUITY:.0f} would have become at {P.HURDLE:.0%} a quarter, so 1.0 means you earned exactly what shareholders required. Cash earns only {P.INVEST_RATE:.0%} a quarter, so capital you hold but do not need costs your shareholders money. If you become insolvent, your final equity counts as zero and dividends paid in the {P.CLAWBACK_Q} quarters before insolvency are clawed back.
 
 HOW THE WORLD WORKS
 - Each quarter you receive applicants (new businesses and renewals; policies last four quarters). Each applicant has a dossier: prose plus a few numeric signals (how autonomous its agents are, how strong its safety function is, both noisy estimates on a 0-1 scale), the foundation-model vendor it uses (sometimes undisclosed), and any red flags. The true risk of a client is hidden; the dossier tells you only part of it. Some of the truth only shows up in claims.
 - You quote a premium, limit and deductible (retention) for each applicant you want, plus optional wording exclusions (cat_carveout excludes catastrophes, upstream_excl excludes failures of the foundation-model vendor, misuse_excl excludes third-party misuse). Quotes from all insurers are sealed and simultaneous. Clients choose using price, breadth of cover, your financial rating and your reputation for paying claims, and may choose no insurance. Renewing clients lean slightly toward their current insurer. A limit below the client's ideal limit makes your offer less attractive.
 - Incidents happen on policies in force. Claims are reported to you one to eight quarters after the incident. You must hold reserves for claims that have happened but are not yet reported (the IBNR reserve, which you set). Booked reserves reduce your reported equity; if you book too little the regulator's audit will raise them for you, and you will have misreported your position in the meantime.
 - Claims reported to you each quarter must be decided: pay, settle (pay settle_pct of the covered amount; the claimant accepts if that is close enough to what a court would give), deny, or contest in court. Contesting costs fees and takes quarters. Denying a valid claim risks a bad-faith award and damages your reputation. Claims differ in how murky liability is (a 0-1 estimate is given); courts and precedent change over time.
-- Your capital must stay above {P.K_REG:.0%} of the premium you wrote in the last four quarters. Below that line you cannot write new business. Below zero you are insolvent, your policies are cancelled, and a guarantee fund levies the surviving insurers for your unpaid claims.
+- The regulator audits your reserves every quarter: it books at least {P.AUDIT_FLOOR:.0%} of what it estimates you truly owe on claims, including claims not yet reported to you. Your audited equity and solvency ratio (audited equity divided by {P.K_REG:.0%} of the premium you wrote in the last four quarters) are in the briefing. Below a solvency ratio of 1 you cannot write new business. Below zero audited equity you are insolvent, your policies are cancelled, and a guarantee fund levies the surviving insurers for your unpaid claims.
+- Single-risk rule: for any one policy, the part of the limit you keep for yourself (the limit, minus whatever part of it your reinsurance treaty covers above its attachment) must not exceed {P.NET_LINE_MAX:.0%} of your audited equity when the policy binds. Quotes that break it are void. You may not offer a limit above the client's ideal limit. The briefing shows your maximum net line and the largest limit your current treaty allows.
 - You may raise capital from shareholders (lifetime cap {P.CAPITAL_RAISE_MAX:.0f}x starting equity) and may pay dividends (limited by your reported equity and the regulator).
 - Reinsurance: a per-claim excess-of-loss treaty. You choose an attachment and a limit; the reinsurer pays the part of each covered claim above the attachment, up to the limit. The quarterly price is quoted in your briefing for a grid of options and rises after market-wide losses.
 - Events happen: vendor defects that hit every client of that vendor, court rulings, regulation, rare catastrophes, and false alarms. The news is real within the game, but not every scary headline produces claims. Base rates drift slowly.
@@ -41,8 +43,13 @@ def build_briefing(view: dict, state: dict) -> str:
         L.append("EARLIER NEWS (last 8 quarters): " + "; ".join(view["news_recent"]))
     L.append("")
     L.append("YOUR POSITION")
-    L.append(f"  cash {_money(own['cash'])} | reported equity {_money(own['reported_equity'])} | rating {own['rating']} "
-             f"| restricted from writing: {own['restricted']}")
+    sr = own["solvency_ratio"]
+    L.append(f"  cash {_money(own['cash'])} | reported equity {_money(own['reported_equity'])} "
+             f"| audited equity {_money(own['audited_equity'])} "
+             f"| solvency ratio {sr if sr is not None else 'n/a (no premium written)'} "
+             f"| rating {own['rating']} | restricted from writing: {own['restricted']}")
+    L.append(f"  single-risk rule: maximum net line {_money(own['max_net_line'])}; largest limit your current treaty "
+             f"allows {_money(loss.max_gross_limit(own['max_net_line'], own['reinsurance']))}")
     L.append(f"  premium written, last 4 quarters {_money(own['npw4'])} | IBNR booked {_money(own['ibnr_booked'])} "
              f"| policies in force {own['policies_in_force']} | dividends paid {_money(own['dividends_paid'])} "
              f"| capital you can still raise {_money(own['capital_raise_remaining'])}")
@@ -74,7 +81,8 @@ def build_briefing(view: dict, state: dict) -> str:
     for a, cells in grid.items():
         L.append(f"  attach {a}: " + "  ".join(f"limit {c}" for c in cells))
     L.append("")
-    L.append(f"CLAIMS TO DECIDE ({len(view['claims'])})")
+    L.append(f"CLAIMS TO DECIDE ({len(view['claims'])}, covered {_money(sum(c['covered'] for c in view['claims']))}; "
+             f"any you leave undecided are paid in full)")
     for c in view["claims"]:
         L.append(f"  claim {c['id']}: {c['sector']}, occurred Q{c['occ_q'] + 1}, covered ${c['covered']}, "
                  f"murkiness ~{c['murk_obs']}")

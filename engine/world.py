@@ -146,6 +146,7 @@ class World:
         self.cat_sev = np.ones(P.Q)
         self.arrival_mult = np.ones(P.Q)
         self.outside_pen = np.zeros(P.Q)
+        self.reins_noise = np.exp(stream(self.seed, "reins").normal(0, P.REINS_NOISE, size=P.Q))
         for e in self.events:
             if e.kind == "cat":
                 self.cat_hit[e.q] = e.data["hit_prob"]
@@ -256,12 +257,16 @@ class World:
 
     def expected_quarter_ceded(self, c: Client, q: int, limit: float, retention: float,
                                attach: float, rlimit: float) -> float:
-        """Oracle expected quarterly loss to a per-claim XoL layer [attach, attach+rlimit] over the policy."""
+        """The reinsurer's view of expected quarterly loss to a per-claim XoL layer [attach, attach+rlimit] over the
+        policy: true base rates, vendor-flaw multipliers lagged one quarter, plus catastrophes at the long-run rate.
+        (Noise is applied by the market, per quarter.)"""
         if limit <= attach:
             return 0.0
-        lam = self.lam_base(c, q) + self.lam_flaw(c, q)
-        return lam * loss.layer_expectation(c.sector, c.size, round(min(rlimit, limit - attach), 0),
-                                            round(retention + attach, 2))
+        width = round(min(rlimit, limit - attach), 0)
+        lam = self.lam_base(c, q) * self.flawmult[max(q - 1, 0), c.provider]
+        ordinary = lam * loss.layer_expectation(c.sector, c.size, width, round(retention + attach, 2))
+        cat = P.CAT_RATE * loss.CAT_HIT_MEAN * loss.cat_layer_expectation(c.size, width, round(retention + attach, 2))
+        return ordinary + cat
 
     # ----------------------------------------------------------------- incidents
     def incidents(self, c: Client, q: int):
@@ -278,7 +283,8 @@ class World:
                 out.append(self._inc(c, q, slot, comp, gross))
                 slot += 1
         if c.u_cat[q] < self.cat_prob(c, q):
-            gross = c.ideal_limit * math.exp(-2.65 + 0.8 * float(c.z_cat[q])) * float(self.cat_sev[q])
+            gross = (P.CAT_SCALE_PER_SIZE * P.SIZE_MULT[c.size] * math.exp(loss.CAT_MU + 0.8 * float(c.z_cat[q]))
+                     * float(self.cat_sev[q]))
             out.append(self._inc(c, q, 3, "cat", gross))
         return out
 

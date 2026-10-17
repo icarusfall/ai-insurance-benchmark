@@ -2,6 +2,7 @@
 import json
 import math
 
+from engine import loss
 from engine import params as P
 
 SECTORS = P.SECTOR_NAMES
@@ -17,7 +18,9 @@ TOOLS = [
          "offset": {"type": "integer", "minimum": 0}, "limit": {"type": "integer", "minimum": 1, "maximum": 40}}}},
     {"name": "submit_quotes",
      "description": "Quote applicants by id. Premium is the annual premium in $m. Omit limit/retention to use the client's "
-                    "ideal limit and default retention. Calling again for the same id replaces the earlier quote.",
+                    "ideal limit and default retention (the ideal limit is also the most you may offer). The single-risk "
+                    "rule applies: the net part of the limit after your reinsurance treaty must not exceed your maximum "
+                    "net line, or the quote is void. Calling again for the same id replaces the earlier quote.",
      "input_schema": {"type": "object", "required": ["quotes"], "properties": {"quotes": {
          "type": "array", "items": {"type": "object", "required": ["id", "premium"], "properties": {
              "id": {"type": "integer"}, "premium": {"type": "number", "exclusiveMinimum": 0},
@@ -28,7 +31,9 @@ TOOLS = [
      "description": "Set a standing rating table that prices every applicant you have not quoted explicitly or declined. "
                     "premium = base_rate_on_limit[sector] * limit * exp(autonomy_slope*(autonomy_signal-0.5) + "
                     "safety_slope*(safety_signal-0.5)) * red_flag_multiplier ** (number of red flags). A sector with no "
-                    "base rate is not auto-quoted. Persists across quarters until replaced or cleared.",
+                    "base rate is not auto-quoted. The limit is the client's ideal limit, cut down where needed to the "
+                    "largest limit the single-risk rule allows under your treaty. Persists across quarters until replaced "
+                    "or cleared.",
      "input_schema": {"type": "object", "properties": {
          "base_rate_on_limit": {"type": "object", "description": "sector -> annual premium as a fraction of limit",
                                 "properties": {s: {"type": "number"} for s in SECTORS}},
@@ -51,7 +56,7 @@ TOOLS = [
     {"name": "pay_dividend", "description": "Pay a dividend this quarter ($m). Capped by reported equity and regulation.",
      "input_schema": {"type": "object", "required": ["amount"], "properties": {"amount": {"type": "number", "minimum": 0}}}},
     {"name": "raise_capital",
-     "description": "Ask shareholders for fresh capital ($m). Each $1 costs $1.25 in the final score. Lifetime cap applies.",
+     "description": "Ask shareholders for fresh capital ($m). Each $1 costs $1.25, grown at the hurdle rate to the end, in the final score. Lifetime cap applies.",
      "input_schema": {"type": "object", "required": ["amount"], "properties": {"amount": {"type": "number", "minimum": 0}}}},
     {"name": "set_reinsurance",
      "description": "Choose your per-claim excess-of-loss treaty (standing until changed). Set cancel=true for none. "
@@ -97,6 +102,22 @@ class ToolBox:
         except Exception as e:                   # tool errors go back to the model, not up the stack
             return json.dumps({"error": f"{type(e).__name__}: {e}"})
 
+    # ---- the single-risk rule, under the treaty that will apply at binding
+    def treaty(self):
+        return loss.treaty_terms(self.reins) if self.reins_set else self.view["own"]["reinsurance"]
+
+    def max_limit(self, a: dict) -> float:
+        return min(a["ideal_limit"], loss.max_gross_limit(self.view["own"]["max_net_line"], self.treaty()))
+
+    def breaches(self, qt: dict, a: dict) -> str:
+        if qt["limit"] > a["ideal_limit"] * P.MAX_LIMIT_MULT + 1e-9:
+            return f"limit {qt['limit']} is above the client's ideal limit {a['ideal_limit']}"
+        net = loss.layer_split(qt["limit"], self.treaty())[0]
+        if net > self.view["own"]["max_net_line"] + 1e-9:
+            return (f"net line {net:.2f} exceeds your maximum net line {self.view['own']['max_net_line']:.2f} "
+                    f"under your treaty (largest allowed limit {self.max_limit(a):.2f})")
+        return ""
+
     # ---- tools
     def t_get_applicants(self, offset: int = 0, limit: int = 25):
         items = list(self.apps.values())[offset: offset + limit]
@@ -117,11 +138,16 @@ class ToolBox:
             if not isinstance(prem, (int, float)) or not prem > 0 or not math.isfinite(prem):
                 errs.append(f"id {qt['id']}: premium must be positive")
                 continue
-            self.quotes[a["id"]] = dict(
+            new = dict(
                 premium=float(prem), limit=float(qt.get("limit", a["ideal_limit"])),
                 retention=float(qt.get("retention", a["default_retention"])),
                 cat_carveout=bool(qt.get("cat_carveout")), upstream_excl=bool(qt.get("upstream_excl")),
                 misuse_excl=bool(qt.get("misuse_excl")))
+            why = self.breaches(new, a)
+            if why:
+                errs.append(f"id {qt['id']}: {why}; not recorded")
+                continue
+            self.quotes[a["id"]] = new
             self.declined.discard(a["id"])
             ok += 1
         return {"accepted": ok, "errors": errs}
@@ -190,7 +216,9 @@ class ToolBox:
 
     def t_end_turn(self):
         self.done = True
-        return {"ended": True, "quotes_submitted": len(self.quotes), "manual_set": bool(self.state.get("manual")),
+        void = [i for i, qt in self.quotes.items() if self.breaches(qt, self.apps[i])]
+        return {"ended": True, "quotes_submitted": len(self.quotes), "quotes_void_under_single_risk_rule": void,
+                "manual_set": bool(self.state.get("manual")),
                 "claims_decided": len(self.decisions), "claims_undecided_will_be_paid": len(self.claim_ids - set(self.decisions)),
                 "note": "if some warnings above look wrong it is too late to change them"}
 
@@ -199,7 +227,9 @@ class ToolBox:
         base = m["base_rate_on_limit"].get(a["sector"])
         if not base:
             return None
-        limit = a["ideal_limit"]
+        limit = self.max_limit(a)
+        if limit <= 0:
+            return None
         mod = math.exp(m["autonomy_slope"] * (a["autonomy_signal"] - 0.5) + m["safety_slope"] * (a["safety_signal"] - 0.5))
         mod *= m["red_flag_multiplier"] ** len(a["red_flags"])
         return dict(premium=base * limit * mod, limit=limit, retention=a["default_retention"],

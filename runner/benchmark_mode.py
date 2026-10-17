@@ -1,6 +1,8 @@
 """Benchmark mode: one subject against frozen NPCs, scored against a reference bot in the same seat.
 
     python -m runner.benchmark_mode --subject random --seeds 20
+
+Calibration probes (null, claims shortcuts, actuary variants): python -m runner.probe
 """
 import argparse
 import math

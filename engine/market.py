@@ -78,6 +78,8 @@ class Ins:
     reins: dict = None
     reins_cost_total: float = 0.0
     injected: float = 0.0
+    div_q: list = field(default_factory=lambda: [0.0] * P.Q)
+    inj_q: list = field(default_factory=lambda: [0.0] * P.Q)
     rep_n: list = field(default_factory=lambda: [0] * P.Q)
     rep_amt: list = field(default_factory=lambda: [0.0] * P.Q)
     history: list = field(default_factory=list)
@@ -145,7 +147,8 @@ class Market:
         for cid in self.open[name]:
             cl = self.claims[cid]
             if cl.status == "court":
-                t += cl.covered * (1 - cl.cede) * self.world.liability_p(self.q, cl.sector, cl.murk)
+                load = 1 + P.INTEREST_LOADING + (P.BAD_FAITH_LOADING if cl.bad_faith else 0.0)
+                t += cl.covered * (1 - cl.cede) * self.world.liability_p(self.q, cl.sector, cl.murk) * load
             else:
                 t += cl.covered * (1 - cl.cede) * 0.9
         return t
@@ -167,7 +170,10 @@ class Market:
         e = sum(self.exp_hist[-4:])
         a = sum(self.act_hist[-4:])
         h = float(np.clip(a / e - 1.0, 0.0, 3.0)) if e > 0 else 0.0
-        return P.REINS_BASE_LOAD + P.REINS_HARDENING * h
+        return (P.REINS_BASE_LOAD + P.REINS_HARDENING * h) * float(self.world.reins_noise[max(self.q, 0)])
+
+    def net_line_cap(self, ins: Ins) -> float:
+        return P.NET_LINE_MAX * max(ins.audited_eq, 0.0)
 
     def reins_quote(self, name: str, attach: float, limit: float) -> float:
         """Quarterly cost of a per-claim XoL treaty on this insurer's current in-force book."""
@@ -251,6 +257,9 @@ class Market:
             applicants=[self._applicant_view(c, me) for c in self.applicants],
             claims=claims,
             own=dict(cash=round(ins.cash, 3), reported_equity=round(ins.reported_eq, 3),
+                     audited_equity=round(ins.audited_eq, 3),
+                     solvency_ratio=(round(ins.audited_eq / (P.K_REG * npw4), 2) if npw4 > 0 else None),
+                     max_net_line=round(self.net_line_cap(ins), 3),
                      rating=rating_letter(ins.rating), rating_score=round(ins.rating, 3),
                      restricted=ins.restricted, npw4=round(npw4, 3), ibnr_booked=round(ins.ibnr, 3),
                      reinsurance=ins.reins, reins_multiplier=round(self.reins_multiplier(), 2),
@@ -293,15 +302,15 @@ class Market:
         # 2. court resolutions
         for cid in self.court_due.get(q, []):
             self._court(self.claims[cid])
-        # 3. binding
-        bound = self._bind(actions)
-        # 4. reinsurance selection (standing until changed), then incidents on in-force policies
+        # 3. reinsurance selection (standing until changed; it applies to this quarter's binding and line rule)
         for n, ins in self.ins.items():
             a = actions.get(n, {})
             if "reinsurance" in a and not ins.insolvent:
                 r = a["reinsurance"]
-                ins.reins = ({"attachment": max(0.5, round(float(r["attachment"]) * 2) / 2),
-                              "limit": max(1.0, round(float(r["limit"])))} if r else None)
+                ins.reins = loss.treaty_terms(r)
+        # 4. binding
+        bound = self._bind(actions)
+        # 4. reinsurance charge, then incidents on in-force policies
         mult = self.reins_multiplier()
         for ins in self.ins.values():
             if ins.reins and not ins.insolvent:
@@ -352,9 +361,9 @@ class Market:
                 self._pay(cl, s * cl.covered)
                 self._close(cl)
                 return
-            self._to_court(cl, fee=0.02 * cl.covered)
+            self._to_court(cl, fee=P.REJECTED_SETTLE_FEE * cl.covered)
         elif action == "contest":
-            self._to_court(cl, fee=0.03 * cl.covered)
+            self._to_court(cl, fee=P.CONTEST_FEE * cl.covered)
         elif action == "deny":
             if cl.u_sue < P.SUE_PROB_AFTER_DENIAL:
                 cl.bad_faith = True
@@ -395,8 +404,10 @@ class Market:
                 if not qt:
                     continue
                 prem, lim, ret = float(qt.get("premium", 0)), float(qt.get("limit", 0)), float(qt.get("retention", 0))
-                if not (prem > 0 and lim > 0 and ret >= 0) or lim > 1.5 * c.ideal_limit:
+                if not (prem > 0 and lim > 0 and ret >= 0) or lim > P.MAX_LIMIT_MULT * c.ideal_limit + 1e-9:
                     continue
+                if loss.layer_split(lim, ins.reins)[0] > self.net_line_cap(ins) + 1e-9:
+                    continue                     # single-risk rule: net retained line too large for capital
                 cov = (0.8 * min(lim / c.ideal_limit, 1.0) - 0.35 * bool(qt.get("cat_carveout"))
                        - 0.2 * bool(qt.get("upstream_excl")) - 0.15 * bool(qt.get("misuse_excl")))
                 u = (-c.ps * math.log(prem) + c.cov_pref * cov + c.rating_w * ins.rating + c.rep_w * ins.rep
@@ -496,6 +507,7 @@ class Market:
                 if raise_amt > 0:
                     ins.cash += raise_amt
                     ins.injected += raise_amt
+                    ins.inj_q[q] += raise_amt
             upr = self._upr(ins.name) * (1 - P.EXPENSE)   # net of deferred acquisition cost
             booked = self._case_reserve(ins.name) + ins.ibnr
             ins.reported_eq = ins.cash - upr - booked
@@ -505,11 +517,12 @@ class Market:
                 allow = max(0.0, min(div, ins.reported_eq - 2 * P.K_REG * npw4, ins.cash))
                 ins.cash -= allow
                 ins.div_paid += allow
+                ins.div_q[q] += allow
                 ins.reported_eq -= allow
             true_unpaid = self._true_unpaid(ins.name)
             audited_res = max(booked, P.AUDIT_FLOOR * true_unpaid)
             ins.audited_eq = ins.cash - upr - audited_res
-            ins.restricted = ins.audited_eq < P.K_REG * npw4
+            ins.restricted = bool(ins.audited_eq < P.K_REG * npw4)   # plain bool: numpy bools log as "False"
             ins.rating = float(np.clip(ins.audited_eq / max(npw4, 8.0) / P.RATING_FULL, 0.0, 1.0))
             if ins.audited_eq < 0:
                 newly.append(ins)
@@ -546,14 +559,27 @@ class Market:
             self.resolve(actions)
         return self.result()
 
+    def value(self, name: str) -> float:
+        """Shareholder value at the end, with every cash flow to or from shareholders compounded at the hurdle rate.
+        Insolvent: terminal equity is 0 and dividends paid within CLAWBACK_Q quarters of insolvency are clawed back."""
+        ins = self.ins[name]
+        grow = [(1 + P.HURDLE) ** (P.Q - 1 - t) for t in range(P.Q)]
+        if ins.insolvent:
+            kept = sum(ins.div_q[t] * grow[t] for t in range(max(0, ins.insolvent_q - P.CLAWBACK_Q)))
+            return max(kept - sum((1 + P.DILUTION) * ins.inj_q[t] * grow[t] for t in range(P.Q)), 0.0)
+        te = max(self.true_equity(name), 0.0)
+        flows = sum((ins.div_q[t] - (1 + P.DILUTION) * ins.inj_q[t]) * grow[t] for t in range(P.Q))
+        return max(te + flows, 0.0)
+
     def result(self) -> dict:
         out = {}
+        bench = P.START_EQUITY * (1 + P.HURDLE) ** P.Q
         for n, ins in self.ins.items():
             te = 0.0 if ins.insolvent else max(self.true_equity(n), 0.0)
-            v = 0.0 if ins.insolvent else max(te + ins.div_paid - (1 + P.DILUTION) * ins.injected, 0.0)
+            v = self.value(n)
             out[n] = dict(insolvent=ins.insolvent, insolvent_q=ins.insolvent_q, true_equity=te, injected=ins.injected,
-                          dividends=ins.div_paid, value=v,
-                          score=math.log(max(v, 1.0) / P.START_EQUITY),
+                          dividends=ins.div_paid, value=v, R=v / bench,
+                          score=math.log(max(v / bench, P.LOG_FLOOR_R)),
                           combined_ratio=((ins.paid_total + ins.expense_total) / ins.earned_total
                                           if ins.earned_total > 0 else float("nan")),
                           premium_written=sum(ins.npw), reins_cost=ins.reins_cost_total, history=ins.history)

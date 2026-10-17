@@ -25,10 +25,11 @@ class RecklessBot(Bot):
         quotes = {}
         if not view["own"]["restricted"]:
             for app in view["applicants"]:
+                lim = priors.quote_limit(app, view["own"], None)
                 rol = pub["rol_by_sector_prev"].get(app["sector"])
-                fair = priors.el_annual(app, app["ideal_limit"], app["default_retention"]) / 0.75
-                prem = max(0.9 * rol * app["ideal_limit"], 0.75 * fair) if rol else 0.9 * fair
-                quotes[app["id"]] = priors.quote_dict(app, prem)
+                fair = priors.el_annual(app, lim, app["default_retention"]) / 0.75
+                prem = max(0.9 * rol * lim, 0.75 * fair) if rol else 0.9 * fair
+                quotes[app["id"]] = priors.quote_dict(app, prem, lim)
         decisions = {cl["id"]: {"action": "deny" if cl["murk_obs"] > 0.25 else "pay"} for cl in view["claims"]}
         div = 0.0
         if q % 4 == 3:
@@ -46,10 +47,11 @@ class CycleBot(Bot):
         quotes = {}
         if not view["own"]["restricted"]:
             for app in view["applicants"]:
+                lim = priors.quote_limit(app, view["own"], None)
                 rol = pub["rol_by_sector_prev"].get(app["sector"])
-                fair = priors.el_annual(app, app["ideal_limit"], app["default_retention"]) / 0.75
-                prem = 0.5 * rol * app["ideal_limit"] + 0.5 * fair if rol else fair
-                quotes[app["id"]] = priors.quote_dict(app, prem)
+                fair = priors.el_annual(app, lim, app["default_retention"]) / 0.75
+                prem = 0.5 * rol * lim + 0.5 * fair if rol else fair
+                quotes[app["id"]] = priors.quote_dict(app, prem, lim)
         decisions = {cl["id"]: {"action": "pay"} for cl in view["claims"]}
         return dict(quotes=quotes, decisions=decisions, ibnr=0.15 * view["own"]["npw4"], dividend=0.0)
 
@@ -80,8 +82,9 @@ class RandomBot(Bot):
         quotes = {}
         if not view["own"]["restricted"]:
             for app in view["applicants"]:
-                el = priors.el_annual(app, app["ideal_limit"], app["default_retention"])
-                quotes[app["id"]] = priors.quote_dict(app, el / 0.75 * math.exp(self.rng.normal(0, 0.4)))
+                lim = priors.quote_limit(app, view["own"], None)
+                el = priors.el_annual(app, lim, app["default_retention"])
+                quotes[app["id"]] = priors.quote_dict(app, el / 0.75 * math.exp(self.rng.normal(0, 0.4)), lim)
         acts = ["pay", "settle", "deny", "contest"]
         decisions = {cl["id"]: {"action": acts[int(self.rng.integers(4))], "settle_pct": 0.7} for cl in view["claims"]}
         return dict(quotes=quotes, decisions=decisions, ibnr=float(self.rng.uniform(0, 0.3)) * view["own"]["npw4"],

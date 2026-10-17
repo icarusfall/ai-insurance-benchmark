@@ -51,3 +51,48 @@ Start equity is 40, so value above 40 means growth. Ordering is now actuary > pr
 - Steady survivors: gpt-5.6-luna (value 62-66, paid out most equity as dividends); best single game gemini-3.1-flash-lite (91.8).
 - Open: whether this much ruin is the intended difficulty or a mis-tuned environment/score; see HANDOVER.md questions 1-3.
 - Operational lessons: OpenAI's newer models need the Responses API for tools with reasoning; Gemini quota 429s under concurrency; the first attempt silently produced 40 empty quarters because adapter errors were swallowed (now fail-fast plus a preflight).
+
+## Environment v0.2.0-dev (2026-10-17)
+
+Changes from v0.1 (rationale in `REVIEW.md`, spec in `V0_2_PROPOSAL.md`): value compounds dividends and injections at a 2%/quarter hurdle and the headline ratio is R = value / (40 x 1.02^40); dividends within 8 quarters of insolvency are clawed back; log score floor ln(0.1). Ideal limits 6 per size unit (was 15), no limit above ideal, and a single-risk rule (net retained limit <= 25% of audited equity, else the quote is void). Catastrophe severity kept at its v0.1 absolute size. The reinsurer prices catastrophes, sees vendor flaws a quarter late and carries 15% lognormal noise. Claims: suit after denial 0.8, bad-faith loading 1.0, contest fee 10%, rejected-settlement fee 5%; claims in court valued at end with their loadings. Bots size limits to the line rule; the actuary buys a treaty attaching at its net line cap, pays out reported equity above 2 x K_REG x npw4 + 10 each year-end, and its margin was swept.
+
+Margin sweep (20 seeds; the NPC actuary, the predator and the reference all use margin m; delta of m-0.1 and m+0.1 against m):
+
+| m | reference median R | m-0.1 | m+0.1 |
+|---|---|---|---|
+| 0.20 | 1.55 | -0.34 [-0.61, -0.10] | +0.13 [+0.07, +0.19] |
+| 0.30 | 1.79 | -0.08 [-0.20, +0.05] | +0.02 [-0.09, +0.13] |
+| 0.40 | 1.95 | +0.05 [-0.02, +0.13] | -0.05 [-0.16, +0.07] |
+| 0.50 | 2.47 | +0.07 [-0.02, +0.17] | -0.23 [-0.35, -0.12] |
+
+The best response sits near 0.35 to 0.40, so the reference margin is set to 0.35.
+
+Probes at margin 0.35 (`python -m runner.probe --seeds 20`), paired delta in ln R:
+
+| probe | v0.1 | v0.2 | v0.2 P(beat ref) |
+|---|---|---|---|
+| null | -0.29 [-0.64, +0.26] | **-1.20 [-1.35, -1.04]** | 0% |
+| pay_all | -0.69 [-1.24, -0.28] | -0.00 [-0.12, +0.12] | 50% |
+| deny_all | +0.18 [+0.08, +0.30] | **-0.34 [-0.46, -0.20]** | 10% |
+| contest_all | -0.09 [-0.32, +0.08] | -0.10 [-0.18, -0.02] | 30% |
+| low_settle | +0.06 [-0.02, +0.16] | -0.07 [-0.16, +0.03] | 30% |
+| margin_up (+0.10) | +0.42 (margin30) | +0.01 [-0.12, +0.14] | 40% |
+| margin_down (-0.10) | n/a | -0.11 [-0.31, +0.07] | 40% |
+| no_reins | +0.22 [-0.02, +0.53] | **-0.32 [-0.47, -0.19]** | 10% |
+| timid | -0.41 [-1.03, +0.06] | -0.50 [-0.63, -0.38] | 5% |
+
+Bot-only market (`python -m runner.simulate --seeds 20`):
+
+| bot | survive | mean value | combined ratio |
+|---|---|---|---|
+| actuary | 100% | 215.0 | 0.54 |
+| predator | 95% | 163.5 | 0.58 |
+| reckless | 55% | 29.0 | 1.03 |
+| cycle | 45% | 16.9 | 1.12 |
+| random | 30% | 5.9 | 1.26 |
+
+Against the targets:
+- Met: null bot well below the actuary (R 0.67); actuary survival 100%; no probe beats the reference; paired CIs about ±0.13 at 20 seeds (so 30 seeds resolves roughly 0.1).
+- Missed: **the market is too profitable.** Reference median R is about 1.9 (target 1.2 to 1.6) and the actuary's combined ratio is 0.54. The equilibrium margin is high because clients will pay well above expected loss (the self-insure option compares against perceived cost and price sensitivity is moderate).
+- Missed: **reckless is no longer the early star.** At Q20 its median equity plus dividends is 30 against the actuary's 87. Denying claims is now expensive and, without reinsurance, its limits are capped at its net line.
+- Side effect: **claims skill earns little.** pay_all now ties the reference and low_settle is slightly below it. No shortcut wins, but careful settlement does not win either.
