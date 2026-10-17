@@ -74,9 +74,13 @@ class ActuaryBot(Bot):
                 decisions[cl["id"]] = {"action": "pay"}
             else:
                 decisions[cl["id"]] = {"action": "settle", "settle_pct": float(np.clip(1 - 0.8 * cl["murk_obs"], 0.3, 0.95))}
+        raise_amt = 0.0
+        if own["restricted"] or own["rating_score"] < 0.3:
+            target = 1.5 * P.K_REG * own["npw4"] + 5.0
+            raise_amt = float(np.clip(target - own["reported_equity"], 0.0, 0.5 * P.START_EQUITY))
         att = round(max(0.5, 0.12 * max(own["reported_equity"], 3.0)) * 2) / 2
         return dict(quotes=quotes, decisions=decisions, ibnr=self.ibnr(q), dividend=0.0,
-                    reinsurance={"attachment": att, "limit": 10 * att})
+                    reinsurance={"attachment": att, "limit": 10 * att}, raise_capital=raise_amt)
 
     def ibnr(self, q):
         m = self.overall_mult(q)

@@ -77,6 +77,7 @@ class Ins:
     paid_q: float = 0.0
     reins: dict = None
     reins_cost_total: float = 0.0
+    injected: float = 0.0
     history: list = field(default_factory=list)
 
 
@@ -225,7 +226,8 @@ class Market:
                      restricted=ins.restricted, npw4=round(npw4, 3), ibnr_booked=round(ins.ibnr, 3),
                      reinsurance=ins.reins, reins_multiplier=round(self.reins_multiplier(), 2),
                      policies_in_force=sum(1 for p in self.policies.values() if p.active and p.insurer == me),
-                     dividends_paid=round(ins.div_paid, 3)),
+                     dividends_paid=round(ins.div_paid, 3),
+                     capital_raise_remaining=round(P.CAPITAL_RAISE_MAX * P.START_EQUITY - ins.injected, 3)),
             public=dict(rol_by_sector_prev=dict(self.rol_prev), rol_index_prev=self.rol_index_prev,
                         insurers=shares))
 
@@ -450,6 +452,12 @@ class Market:
             act = actions.get(ins.name, {})
             if act.get("ibnr") is not None:
                 ins.ibnr = max(0.0, float(act["ibnr"]))
+            raise_amt = float(act.get("raise_capital") or 0.0)
+            if raise_amt > 0:
+                raise_amt = min(raise_amt, P.CAPITAL_RAISE_MAX * P.START_EQUITY - ins.injected)
+                if raise_amt > 0:
+                    ins.cash += raise_amt
+                    ins.injected += raise_amt
             upr = self._upr(ins.name) * (1 - P.EXPENSE)   # net of deferred acquisition cost
             booked = self._case_reserve(ins.name) + ins.ibnr
             ins.reported_eq = ins.cash - upr - booked
@@ -504,8 +512,8 @@ class Market:
         out = {}
         for n, ins in self.ins.items():
             te = 0.0 if ins.insolvent else max(self.true_equity(n), 0.0)
-            v = te + (0.0 if ins.insolvent else ins.div_paid)
-            out[n] = dict(insolvent=ins.insolvent, insolvent_q=ins.insolvent_q, true_equity=te,
+            v = 0.0 if ins.insolvent else max(te + ins.div_paid - (1 + P.DILUTION) * ins.injected, 0.0)
+            out[n] = dict(insolvent=ins.insolvent, insolvent_q=ins.insolvent_q, true_equity=te, injected=ins.injected,
                           dividends=ins.div_paid, value=v,
                           score=math.log(max(v, 1.0) / P.START_EQUITY),
                           combined_ratio=((ins.paid_total + ins.expense_total) / ins.earned_total

@@ -43,7 +43,7 @@ flowchart LR
 
 **5. You handle claims.** Pay, settle for less, deny, or fight in court. Claims are more or less murky. Denying a valid claim can lose you a bad-faith case and your reputation. Fighting is slow and costs legal fees.
 
-**6. A regulator watches.** Your capital must cover your premium volume. Fall below the line and you can't write new business; fall below zero and you're insolvent, and a guarantee fund levies your surviving competitors to pay your orphaned claims.
+**6. A regulator watches.** Your capital must cover your premium volume. Fall below the line and you can't write new business. You can call on your shareholders for more capital, but every dollar costs you extra in the final score, so leaving it late is expensive. Fall below zero and you're insolvent, and a guarantee fund levies your surviving competitors to pay your orphaned claims.
 
 **7. Repeat for ten years.**
 
@@ -79,7 +79,7 @@ The same events, clients and incidents happen in every game that shares a seed, 
 
 ## What gets scored
 
-- **Shareholder value**: final equity plus dividends paid. Insolvency is a floor with a penalty.
+- **Shareholder value**: final equity plus dividends paid, less capital shareholders had to inject (with a dilution penalty). Insolvency scores zero.
 - **Survival** and time to ruin.
 - **Calibration**: each quarter the model predicts its own loss ratio; those predictions are scored, so good reasoning is rewarded even when the dice are unkind.
 - **Failure modes**, tagged automatically: price-war victim, reserving failure, concentration blow-up, slow to react to a court ruling.

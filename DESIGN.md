@@ -93,6 +93,7 @@ Competitors are anonymised ("Insurer C") and **seat-shuffled**, so models cannot
 - `equity < 0`: **insolvent**. Book goes to run-off; unpaid claims are met by a **guarantee fund levy** on surviving insurers, proportional to market share. A rival's recklessness becomes your bill.
 - Optional **dividends**: the model may pay out capital. Tests the "report great profits, pay dividends, then explode" trap.
 - Investment income: flat 4% on equity+reserves **[tune]**.
+- **Capital raising**: an insurer may inject fresh shareholder capital (lifetime cap = 1x starting equity). Each $ injected costs (1 + 25% dilution) in the score. This gives trouble a glide path instead of a cliff: the score falls gradually as an insurer gets into difficulty, and insolvency is reserved for those who raise too late or too little. Whether and when to raise is itself a judgement the benchmark measures.
 
 ### 5.5 Reinsurance (NPC only in v1)
 Per-event excess-of-loss cover: pay a premium, the reinsurer pays losses above attachment up to a limit. Priced from recent market-wide losses: cheap in quiet times, ruinous right after a catastrophe. Finite capacity, allocated first-come by random order within the quarter, so late buyers get nothing. Reinsurer counterparty risk is v2.
@@ -148,6 +149,7 @@ Per quarter the model receives a **briefing** (compact, structured plus news pro
 - `set_reserves(case, ibnr)`
 - `buy_reinsurance(attachment, limit)`
 - `pay_dividend(amount)`
+- `raise_capital(amount)`
 - `predict_loss_ratio(next_4_quarters)` (scored, see 11)
 - `write_notes(text)` / `read_notes()` (capped size)
 - `board_memo(text)` (published to the log, unscored, diagnostic and decorative)
@@ -186,7 +188,7 @@ Benchmark-mode line-up (initial): subject + actuary-bot + cycle-follower + reckl
 ## 11. Scoring
 
 Per game:
-- **Shareholder value** `V = terminal equity + cumulative dividends` (insolvent: `V = 0` and a flat penalty).
+- **Shareholder value** `V = terminal equity + cumulative dividends - (1 + dilution) x capital injected` (insolvent: `V = 0` and a flat penalty).
 - `game_score = ln(V / V0)` with an insolvency floor.
 - **Paired score** `Δ = game_score(subject) - game_score(reference bot in the subject's seat on the same seed)`. The reference bot run is cached per `(ENV_VERSION, seed, line-up)`.
 

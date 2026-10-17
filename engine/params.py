@@ -73,3 +73,7 @@ LEVY_CAP = 0.12
 # reinsurance (NPC reinsurer, per-claim excess of loss). Rate multiplier on expected ceded loss.
 REINS_BASE_LOAD = 1.25
 REINS_HARDENING = 0.8
+
+# capital raising: shareholders inject cash; each $ injected costs (1 + DILUTION) in the score
+CAPITAL_RAISE_MAX = 1.0      # lifetime cap as a multiple of START_EQUITY
+DILUTION = 0.25
