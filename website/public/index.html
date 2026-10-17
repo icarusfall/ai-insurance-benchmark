@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Act of God &amp; Co. — how it works</title>
+<meta name="description" content="A benchmark in which language models run an insurer selling cover for AI agents, for ten simulated years. How the simulation works, in full.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='4' y='25' font-size='24' font-family='Georgia'%3E%C2%A7%3C/text%3E%3C/svg%3E">
+<script src="data.js"></script>
+<script src="charts.js"></script>
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="brand" href="index.html">Act of God <span>&amp;</span> Co.</a>
+  <nav>
+    <a href="index.html" aria-current="page">How it works</a>
+    <a href="failures.html">How insurers die</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <img class="hero-art" src="img/office.png" alt="A small pastel insurance office with a storm cloud above it and a lightning bolt striking the roof." width="554" height="677">
+  <p class="kicker">An LLM benchmark · environment <span data-p="ENV_VERSION"></span></p>
+  <h1>A language model runs an insurance company. For ten years. The product is cover for AI agents.</h1>
+  <p class="dek">This page explains the simulation in full: what the model sees, what it decides, what happens in the hidden world while it decides, and how the result is scored. The companion page, <a href="failures.html">How insurers die</a>, shows the ways it goes wrong, using real simulated games.</p>
+  <p class="epigraph">“Your pharmacy-refill agent dispensed 40,000 doses. The vendor says it is working as intended. Please advise on reserves.”</p>
+</div>
+
+<div class="layout">
+<nav class="toc" aria-label="Contents"><ol>
+  <li><a href="#premise">The premise</a></li>
+  <li><a href="#world">The hidden world</a></li>
+  <li><a href="#quarter">One quarter, in order</a></li>
+  <li><a href="#pricing">Pricing and the winner's curse</a></li>
+  <li><a href="#lag">Claims arrive late</a></li>
+  <li><a href="#claims">Pay, settle, deny or fight</a></li>
+  <li><a href="#capital">Capital and the regulator</a></li>
+  <li><a href="#reins">Reinsurance</a></li>
+  <li><a href="#events">Things that happen</a></li>
+  <li><a href="#scoring">Scoring</a></li>
+  <li><a href="#cast">The rivals</a></li>
+  <li><a href="#interface">What the model actually sees</a></li>
+  <li><a href="#caveats">Caveats</a></li>
+  <li><a href="#transcripts">A quarter, as played</a></li>
+</ol></nav>
+
+<main>
+
+<section class="chapter" id="premise">
+  <p class="kicker">01</p>
+  <h2>The premise</h2>
+  <p class="lede">Insurance is a long, quiet test of judgement. You are paid first and you pay later, sometimes years later, and nobody tells you the right price.</p>
+  <p>The model plays the chief executive of an insurer for 40 quarters. It sells <b>liability cover to businesses that deploy AI agents</b>: if a client's agent misbehaves and someone sues, the policy pays. Each quarter it reads a briefing, prices applicants, decides what to do about claims, sets reserves, buys reinsurance, perhaps pays a dividend, writes notes to its future self and a memo to the board, and ends the turn. Then the simulated world moves on.</p>
+  <p>It plays against four scripted rival insurers whose rules never change, so any model can be compared with any other on exactly the same worlds. The benchmark is in the spirit of <i>Vending-Bench</i>: no trick questions, just a long job in which small errors compound for years before they show.</p>
+  <div class="grid">
+    <div class="card"><span class="tag">Why insurance</span><h4>Paid first, pay later</h4><p>Premiums arrive now. The claims they cause arrive up to two years later. An insurer that forgets this looks brilliant, then explodes.</p></div>
+    <div class="card"><span class="tag">Why insurance</span><h4>Cheap wins, then hurts</h4><p>Clients take the cheapest decent quote, so whoever most underestimates a risk wins it. This is the winner's curse.</p></div>
+    <div class="card"><span class="tag">Why insurance</span><h4>No table of right answers</h4><p>There is no actuarial history for "autonomous agent on a flaky foundation model". The model must reason, then learn from claims.</p></div>
+    <div class="card"><span class="tag">Why insurance</span><h4>Disasters are correlated</h4><p>Many clients run on the same few vendors. One bad software update hits a whole slice of the book at once.</p></div>
+  </div>
+</section>
+
+<section class="chapter" id="world">
+  <p class="kicker">02</p>
+  <h2>The hidden world</h2>
+  <p>Each game is generated from a <b>seed</b>. The seed fixes everything outside the insurers' control: which clients exist, how risky they truly are, every incident that will befall them in every quarter, every court ruling and catastrophe. Insurers' actions never change this exogenous world; they only change who is holding the bag when it happens. That is what makes two runs on the same seed comparable.</p>
+
+  <h3>Six vendors, eight sectors</h3>
+  <p>Clients build their agents on one of six fictional foundation-model vendors, each with a hidden defect rate and quality: <span id="vendor-list"></span>. They work in eight sectors with very different risk shapes: customer service has frequent small incidents; infrastructure and defence have rare, large ones.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Expected annual incidents and typical claim size, by sector</div><div class="sub">For a small client with average safety. Frequency per year (bars); median severity in $m in the data table. Severity is heavy-tailed: 3% of incidents are drawn from a Pareto tail.</div></figcaption>
+    <div id="chart-sectors"></div>
+  </figure>
+
+  <h3>Clients, and what you can and cannot see</h3>
+  <p>A client's true risk depends on its sector and size, how autonomous its agents are, how strong its safety function really is, whether it secretly cuts corners, its vendor's quality, and an "unknown unknown" multiplier that nothing in the paperwork reveals. The model sees a dossier: a few sentences, two noisy numeric signals (autonomy and safety, each about ±0.2 off the truth), the vendor (undisclosed 15% of the time) and the occasional red flag. Some flags mean something. Some do not.</p>
+  <p>Below are four real clients from seed <span data-world="seed"></span>. "Actuary's estimate" is what the scripted reference insurer, which reads the same dossier, believes the client's annual expected loss to be. "Truth" is the simulation's own figure.</p>
+  <div class="grid" id="dossiers"></div>
+  <div class="aside"><p>How much does the dossier reveal? In calibration, sector, size and the stated signals explain about 82% of the variation in true expected loss, mostly via sector and size. Within a sector and size band, the dossier explains only about a quarter of what is left. The rest shows up only in claims, so experience has to be earned.</p></div>
+</section>
+
+<section class="chapter" id="quarter">
+  <p class="kicker">03</p>
+  <h2>One quarter, in order</h2>
+  <p>Every insurer acts on the same information at the same time; then the simulation resolves the quarter in a fixed order. Nothing the model does takes effect until it calls <code>end_turn</code>.</p>
+  <ol class="steps">
+    <li><b>Briefing.</b> News, the insurer's own position (cash, reported and audited equity, solvency ratio, the single-risk limit), its book by sector and vendor, its last eight quarters, market prices from last quarter, reinsurance prices, claims awaiting a decision, and its own notes.</li>
+    <li><b>Decisions.</b> Through tools: fetch applicants, quote or decline, set a standing rate manual, decide claims, set the IBNR reserve, choose reinsurance, pay a dividend or raise capital, forecast its loss ratio, rewrite its notes, write a board memo, end the turn.</li>
+    <li><b>Claims decisions resolve.</b> Paid, settled, denied or sent to court. Cases already in court may conclude.</li>
+    <li><b>Reinsurance takes effect,</b> then <b>clients choose.</b> All quotes are sealed. Each applicant picks the best offer, or none.</li>
+    <li><b>Incidents happen</b> on every policy in force, drawn from the pre-generated world. Each becomes a claim that will be reported between one and eight quarters later.</li>
+    <li><b>The books close.</b> Premiums earned, investment income (1% a quarter on cash), guarantee-fund levies, capital raised, dividends paid. Then the regulator audits reserves, sets the solvency ratio and restrictions, and declares anyone with negative audited equity insolvent.</li>
+  </ol>
+</section>
+
+<section class="chapter" id="pricing">
+  <p class="kicker">04</p>
+  <h2>Pricing and the winner's curse</h2>
+  <p>A quote is a premium, a limit (the most the policy will pay on a claim), a retention (the client's deductible) and optional exclusions: catastrophes, failures of the upstream vendor, misuse by third parties. Exclusions make a policy cheaper to provide and less attractive to buy.</p>
+  <p>Each client scores every quote: price matters most (on a log scale, so 10% cheaper counts the same at any size), then breadth of cover, the insurer's financial rating, and its reputation for paying claims. Renewing clients lean toward their current insurer. There is random taste on top, and the client can always decide insurance is not worth it.</p>
+  <p>The consequence is the winner's curse. Every insurer estimates every client's risk with some error. The client goes to whoever quotes lowest, which is usually whoever made the biggest <i>under</i>estimate. So the business you win is, on average, worse than the business you priced for. The toy below runs four thousand clients through that process.</p>
+
+  <div class="toy" id="toy-curse">
+    <h4>Toy: how much worse is the business you win?</h4>
+    <p class="sub" style="font-size:14px;color:var(--ink-2);margin:0">Three rivals price every client at their own noisy estimate of expected loss times a standard loading. You choose how sharp your estimates are and how hard you price.</p>
+    <div class="controls">
+      <label>Your price, relative to the rivals' loading <output id="curse-k-out"></output><input type="range" id="curse-k" min="0.6" max="1.4" step="0.02" value="1"></label>
+      <label>Your estimation error (lognormal σ) <output id="curse-s-out"></output><input type="range" id="curse-s" min="0" max="0.8" step="0.05" value="0.4"></label>
+      <label>Rivals' estimation error (σ) <output id="curse-r-out"></output><input type="range" id="curse-r" min="0" max="0.8" step="0.05" value="0.4"></label>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="curse-share"></div><div class="k">of clients you win</div></div>
+      <div class="stat"><div class="v" id="curse-plr"></div><div class="k">loss ratio you priced for</div></div>
+      <div class="stat"><div class="v" id="curse-lr"></div><div class="k">loss ratio you actually get</div></div>
+      <div class="stat"><div class="v" id="curse-profit"></div><div class="k">underwriting profit per 100 of premium</div></div>
+    </div>
+    <p class="verdict" id="curse-verdict"></p>
+  </div>
+  <p>The scripted rivals price at their estimate of expected loss, plus a load for catastrophes, divided by what is left after expenses (20% of premium) and a profit margin (<span data-p="ACTUARY_MARGIN" data-fmt="pct"></span>). A model that wants to win business must either be sharper than they are, or accept worse risks.</p>
+  <p>To save effort a model can set a <b>rate manual</b>: a base rate on limit per sector, slopes for the autonomy and safety signals, and a multiplier per red flag. It then auto-quotes every applicant the model has not priced by hand. Several of the best early games were played almost entirely through the manual.</p>
+</section>
+
+<section class="chapter" id="lag">
+  <p class="kicker">05</p>
+  <h2>Claims arrive late</h2>
+  <p>An incident in quarter <i>t</i> is reported somewhere between <i>t</i>+1 and <i>t</i>+8. Policies last four quarters. So when a policy expires, most of its claims have not yet arrived, and an insurer that only counts reported claims will believe it is making money on business that is in fact losing it.</p>
+  <figure class="chart">
+    <figcaption><div class="title">How long claims take to be reported</div><div class="sub">Every claim in one bot-only game (seed <span data-world="seed"></span>), by quarters between incident and report.</div></figcaption>
+    <div id="chart-lag"></div>
+  </figure>
+  <p>The cure is the <b>IBNR reserve</b> (incurred but not reported): money set aside now for claims that have already happened and will be reported later. The model sets its own IBNR. Booking too little flatters reported equity, which permits larger dividends and makes the model feel clever. The regulator, however, audits every quarter and forces booked reserves up to at least <span data-p="AUDIT_FLOOR" data-fmt="pct"></span> of what it estimates is truly owed, including the claims the insurer has not heard about yet. Solvency is judged on the audited figure.</p>
+  <div class="aside"><p>Three equities appear in the game. <b>Reported</b> uses the model's own reserves. <b>Audited</b> uses the regulator's floor and decides solvency. <b>True</b> uses the simulation's full knowledge of every claim and is used only for the final score. The model sees the first two.</p></div>
+</section>
+
+<section class="chapter" id="claims">
+  <p class="kicker">06</p>
+  <h2>Pay, settle, deny or fight</h2>
+  <img class="section-art" src="img/stamp.png" alt="A rubber stamp beside a claim form stamped SETTLED." width="612" height="424" loading="lazy">
+  <p>Every reported claim needs a decision. Each has a hidden probability that a court would hold the insurer liable, which depends on how murky the facts are (the model sees a noisy murkiness score) and on precedent, which court rulings shift during the game.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Action</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>Pay</td><td>Pays the covered amount. Small boost to reputation. Claims left undecided are paid.</td></tr>
+      <tr><td>Settle at s%</td><td>The claimant accepts if s is at least 90% of the court's likely award. If not, the case goes to court and the insurer pays a <span data-p="REJECTED_SETTLE_FEE" data-fmt="pct"></span> fee.</td></tr>
+      <tr><td>Contest</td><td>Goes to court for 2 to 6 quarters. Fee of <span data-p="CONTEST_FEE" data-fmt="pct"></span> of the claim. Lose and you pay the claim plus 10% interest; win and you pay nothing.</td></tr>
+      <tr><td>Deny</td><td>The claimant sues <span data-p="SUE_PROB_AFTER_DENIAL" data-fmt="pct"></span> of the time. If they win, you pay the claim plus interest plus a bad-faith award of <span data-p="BAD_FAITH_LOADING" data-fmt="pct"></span>. Wrongly denying a valid claim costs reputation either way.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="toy" id="toy-claims">
+    <h4>Toy: the expected cost of each choice, per $1 of claim</h4>
+    <div class="controls">
+      <label>Probability a court finds you liable <output id="cl-p-out"></output><input type="range" id="cl-p" min="0.05" max="0.99" step="0.01" value="0.6"></label>
+      <label>Your settlement offer <output id="cl-s-out"></output><input type="range" id="cl-s" min="0.05" max="1" step="0.01" value="0.55"></label>
+    </div>
+    <div id="chart-claims"></div>
+    <p class="verdict" id="cl-verdict"></p>
+  </div>
+  <p>In the first version of the game, denying every claim beat the reference insurer. The current rules were tuned until that stopped being true. Settling close to the court's view is now the best policy, which requires the model to estimate liability rather than just be stingy.</p>
+</section>
+
+<section class="chapter" id="capital">
+  <p class="kicker">07</p>
+  <h2>Capital and the regulator</h2>
+  <p>Each insurer starts with <span data-p="START_EQUITY"></span> of equity ($m throughout). Three rules keep it honest:</p>
+  <div class="grid">
+    <div class="card"><span class="tag">Rule</span><h4>Solvency ratio</h4><p>Audited equity must stay above <span data-p="K_REG" data-fmt="pct"></span> of premium written in the last four quarters. Below that line the insurer may not write new business until it recovers or raises capital.</p></div>
+    <div class="card"><span class="tag">Rule</span><h4>Single-risk limit</h4><p>On any one policy, the part of the limit the insurer keeps (after reinsurance) may not exceed <span data-p="NET_LINE_MAX" data-fmt="pct"></span> of audited equity. Big clients therefore need reinsurance, or smaller limits.</p></div>
+    <div class="card"><span class="tag">Rule</span><h4>Insolvency</h4><p>Negative audited equity ends the game for that insurer. Its policies are cancelled and a guarantee fund levies the survivors (capped per quarter) to pay its claims.</p></div>
+  </div>
+  <div class="toy" id="toy-line">
+    <h4>Toy: the largest policy you may write</h4>
+    <div class="controls">
+      <label>Audited equity <output id="ln-e-out"></output><input type="range" id="ln-e" min="2" max="80" step="1" value="40"></label>
+      <label>Reinsurance attaches at <output id="ln-a-out"></output><input type="range" id="ln-a" min="0" max="20" step="0.5" value="5"></label>
+      <label>Reinsurance limit <output id="ln-l-out"></output><input type="range" id="ln-l" min="0" max="50" step="1" value="25"></label>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v" id="ln-net"></div><div class="k">maximum net line</div></div>
+      <div class="stat"><div class="v" id="ln-gross"></div><div class="k">largest limit allowed</div></div>
+      <div class="stat"><div class="v" id="ln-sizes"></div><div class="k">client sizes you can fully cover</div></div>
+    </div>
+    <p class="verdict" id="ln-verdict"></p>
+  </div>
+  <p>Capital can be <b>raised</b> from shareholders (up to <span data-p="CAPITAL_RAISE_MAX"></span>× the starting equity), at a cost of $<span id="dil"></span> in the score for every $1 injected. It can be <b>returned</b> as dividends, limited by reported equity and the regulator. Both decisions are scored, below.</p>
+</section>
+
+<section class="chapter" id="reins">
+  <p class="kicker">08</p>
+  <h2>Reinsurance</h2>
+  <img class="section-art" src="img/umbrella.png" alt="A small robot standing dry under an umbrella while rain falls around it." width="777" height="614" loading="lazy">
+  <p>An NPC reinsurer sells per-claim excess-of-loss cover: the insurer chooses an attachment and a limit, and the reinsurer pays the slice of any single claim above the attachment, up to the limit. Prices for a grid of options are in every briefing and are based on the reinsurer's own view of the insurer's book, including catastrophes, at <span data-p="REINS_BASE_LOAD"></span>× expected loss. That view is noisy and sees vendor defects a quarter late. Prices harden after market-wide losses.</p>
+  <p>Reinsurance does two jobs: it stops a single claim from ending the company, and it lets a small insurer write large clients within the single-risk limit. It costs money every quarter. Under the current rules, an otherwise identical insurer that never buys it does worse.</p>
+</section>
+
+<section class="chapter" id="events">
+  <p class="kicker">09</p>
+  <h2>Things that happen</h2>
+  <p>The news is real inside the game. Not every scary headline produces claims.</p>
+  <div class="grid">
+    <div class="card"><span class="tag">Vendor defect</span><h4>Creative interpretations</h4><p>A vendor ships a bad update. For two quarters, every client on that vendor has 3 to 6 times its usual incidents. Concentration on one vendor is the risk.</p></div>
+    <div class="card"><span class="tag">Court ruling</span><h4>Precedent moves</h4><p>A court holds deployers (or vendors) liable in a sector. Claim frequency and liability probabilities shift permanently for everyone in that sector.</p></div>
+    <div class="card"><span class="tag">Catastrophe</span><h4>Correlated morbidity occurrence</h4><p>Rare (about 3% a quarter). Hits a random 1 to 3% of all clients at once with large losses. Excludable with a catastrophe carve-out, at the cost of attractiveness.</p></div>
+    <div class="card"><span class="tag">Regulation</span><h4>Mandates and safe harbours</h4><p>Mandatory cover doubles demand for eight quarters and removes the option of going uninsured. A safe harbour cuts claims by a fifth.</p></div>
+    <div class="card"><span class="tag">False alarm</span><h4>Nothing imminently occurs</h4><p>A report warns of an imminent incident. None follows. Punishes panic.</p></div>
+    <div class="card"><span class="tag">Drift</span><h4>Quiet change</h4><p>Base rates in every sector wander slowly over the decade. Punishes never re-pricing.</p></div>
+  </div>
+  <figure class="chart">
+    <figcaption><div class="title">Market price adequacy over one game</div><div class="sub">Premium charged across the whole market divided by the true expected loss of the business written, seed <span data-world="seed"></span>, bot-only. Vertical lines are events.</div></figcaption>
+    <div id="chart-cycle"></div>
+  </figure>
+</section>
+
+<section class="chapter" id="scoring">
+  <p class="kicker">10</p>
+  <h2>Scoring</h2>
+  <p>Shareholders gave the company <span data-p="START_EQUITY"></span> and expect <span data-p="HURDLE" data-fmt="pct"></span> a quarter (about 8% a year) in return. Cash in the company earns only <span data-p="INVEST_RATE" data-fmt="pct"></span> a quarter, so idle capital is a cost.</p>
+  <ul>
+    <li><b>Value</b> = final true equity + every dividend paid − <span id="dil2"></span>× every injection, with each dividend and injection grown at the hurdle rate from the quarter it happened.</li>
+    <li><b>R</b> = value ÷ (<span data-p="START_EQUITY"></span> × 1.02<sup>40</sup>). <b>R = 1</b> means the company earned exactly what shareholders required. Handing all the money back in quarter one scores about 1. Doing nothing at all scores <span id="null-r"></span>, because cash earns less than the hurdle.</li>
+    <li><b>Insolvency</b>: final equity counts as zero, and dividends paid in the <span data-p="CLAWBACK_Q"></span> quarters before insolvency are clawed back. Dividends paid earlier are kept: shareholders have limited liability, so recklessness is punished but not infinitely.</li>
+  </ul>
+  <h3>Paired comparison</h3>
+  <p>Luck matters a great deal: some seeds have two catastrophes and some have none. So each model's game is compared with the same seed played by the reference actuary sitting in the same seat. The headline is the difference in log R, averaged over seeds, together with survival rate, median R and how often the model beats the reference outright. Ten to thirty seeds per model are needed to tell close models apart.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Median R by strategy, ten seeds</div><div class="sub">Each scripted strategy plays the subject's seat against the same four rivals. The line at 1.0 is "give the money back".</div></figcaption>
+    <div id="chart-scores"></div>
+  </figure>
+</section>
+
+<section class="chapter" id="cast">
+  <p class="kicker">11</p>
+  <h2>The rivals</h2>
+  <p>The four scripted insurers in every game, plus the scripted strategies used to test the benchmark. Their rules are fixed for an environment version. The rivals see the same dossiers the model sees, but they are built with a slightly wrong version of the true risk model, which gives them a head start the model has to make up through reasoning and experience.</p>
+  <div class="grid" id="cast"></div>
+</section>
+
+<section class="chapter" id="interface">
+  <p class="kicker">12</p>
+  <h2>What the model actually sees</h2>
+  <p>Each quarter is a fresh conversation. The model gets a fixed system prompt, a briefing, and its own notes from last quarter (up to 6,000 characters). Nothing else carries over, so whatever it does not write down, it forgets. Below is a real briefing, generated by the simulation at quarter <span id="brief-q"></span> of seed <span data-world="seed"></span>.</p>
+  <details class="card"><summary><b>The briefing</b> (click to expand)</summary><pre id="briefing" style="white-space:pre-wrap;font-size:13px;overflow-x:auto"></pre></details>
+  <details class="card" style="margin-top:12px"><summary><b>The system prompt</b></summary><pre id="system" style="white-space:pre-wrap;font-size:13px"></pre></details>
+  <h3>The tools</h3>
+  <div class="table-wrap"><table id="tools"><thead><tr><th>Tool</th><th>What it does</th></tr></thead><tbody></tbody></table></div>
+  <p>Every model gets the same prompt, tools, a cap of 25 tool-calling rounds per quarter, and no special sampling settings. Refusals and errors are logged, not retried with another model.</p>
+</section>
+
+<section class="chapter" id="caveats">
+  <p class="kicker">13</p>
+  <h2>Caveats</h2>
+  <ul>
+    <li><b>Stylised, on purpose.</b> The world is simplified and its parameters were chosen to make judgement matter, not to match any real market. Profit margins in the bot-only market are higher than real insurers enjoy.</li>
+    <li><b>Unequal information.</b> The rivals are built from a near-correct risk model; the language model starts with none. The plan is to offer the model the same imperfect actuarial note as the headline setting.</li>
+    <li><b>Noise.</b> Outcomes depend heavily on the seed and on the model's own randomness. Individual games are anecdotes; only many seeds make a ranking.</li>
+    <li><b>Versions.</b> Any change to the rules bumps the environment version, and scores are only comparable within one. This page describes <span data-p="ENV_VERSION"></span>.</li>
+    <li><b>Tone.</b> Catastrophes are abstract shocks with deadpan headlines. Nothing in the simulation depicts real people, real companies or real methods of harm.</li>
+  </ul>
+</section>
+
+<section class="chapter" id="transcripts">
+  <p class="kicker">14</p>
+  <h2>A quarter, as played</h2>
+  <p>What the models actually send back. Each tab is one real quarter from the second wave of games (environment <span data-p="ENV_VERSION"></span>), chosen because it exercises most of the tools. Every call is shown in order: the arguments the model sent, and the game's reply. Nothing takes effect until the final <code>end_turn</code>.</p>
+  <p style="font-size:15px;color:var(--ink-2)">Long lists are shortened to their first few items and only the first two applicants of each page are shown. The models' free-text reasoning between calls is not logged, so what you see is what they did rather than what they thought.</p>
+  <div class="tabs" role="tablist" id="turn-tabs"></div>
+  <div id="turn-body"></div>
+</section>
+
+</main>
+</div>
+
+<footer class="site"><div class="inner">Act of God &amp; Co. is a hobby benchmark. All companies, vendors and events are fictional. Figures on this page are generated from the simulation by <code>python -m website.build</code>.</div></footer>
+<script src="explain.js"></script>
+</body>
+</html>

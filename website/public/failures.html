@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How insurers die — Act of God &amp; Co.</title>
+<meta name="description" content="The ways an insurer fails in the Act of God & Co. simulation, each shown with a real simulated game.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='4' y='25' font-size='24' font-family='Georgia'%3E%C2%A7%3C/text%3E%3C/svg%3E">
+<script src="data.js"></script>
+<script src="charts.js"></script>
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="brand" href="index.html">Act of God <span>&amp;</span> Co.</a>
+  <nav>
+    <a href="index.html">How it works</a>
+    <a href="failures.html" aria-current="page">How insurers die</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <img class="hero-art" src="img/coins.png" alt="A tall stack of coins leaning over, with the top coins already falling off." width="626" height="576">
+  <p class="kicker">Failure modes · environment <span data-p="ENV_VERSION"></span></p>
+  <h1>How insurers die</h1>
+  <p class="dek">Insurers rarely fail in one dramatic quarter. They fail by a habit that looks sensible for two years. Each failure below is a real game from the simulation, played against the same four rivals, and set beside the reference actuary playing the same seat on the same world.</p>
+  <p class="epigraph">“We expect that to be a lesson rather than a trend.” — a board memo, four quarters before insolvency</p>
+</div>
+
+<div class="layout">
+<nav class="toc" aria-label="Contents"><ol>
+  <li><a href="#how-to-read">How to read this page</a></li>
+  <li><a href="#hoarder">The hoarder</a></li>
+  <li><a href="#follower">The follower</a></li>
+  <li><a href="#optimist">The optimist's ledger</a></li>
+  <li><a href="#denier">The claims denier</a></li>
+  <li><a href="#uninsured">The uninsured insurer</a></li>
+  <li><a href="#timid">The timid</a></li>
+  <li><a href="#random">No strategy at all</a></li>
+  <li><a href="#llm">What language models did</a></li>
+  <li><a href="#checklist">A checklist for survival</a></li>
+</ol></nav>
+
+<main>
+
+<section class="chapter" id="how-to-read">
+  <p class="kicker">00</p>
+  <h2>How to read this page</h2>
+  <p>The charts show <b>shareholder wealth</b> each quarter: the insurer's true equity (using the simulation's full knowledge of every claim, reported or not) plus all dividends paid so far. The reference actuary on the same seed is drawn in blue. Each scripted strategy below differs from sensible play in one or two specific ways, so its failure has a single, identifiable cause.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Survival and median R across ten seeds</div><div class="sub">R = 1 means shareholders got their required 2% a quarter. Insolvent games still keep dividends paid more than eight quarters before the end.</div></figcaption>
+    <div id="chart-summary"></div>
+  </figure>
+</section>
+
+<section class="chapter failure" id="hoarder">
+  <p class="kicker">01 · Strategy: null</p>
+  <h2>The hoarder</h2>
+  <div class="meta" id="meta-hoarder"></div>
+  <p>Writes nothing, never pays a claim, never goes bust. It sounds like the safe choice, and in the first version of the benchmark it nearly was. But shareholders expect 2% a quarter and cash earns 1%, so every quarter of inactivity destroys value. It ends at R 0.67, below the 1.0 it would have scored by simply handing the money back on day one.</p>
+  <figure class="chart"><figcaption><div class="title">Shareholder wealth, seed <span class="seed" data-for="hoarder"></span></div></figcaption><div id="chart-hoarder"></div></figure>
+  <div class="aside"><p><b>What would have saved it:</b> doing something. Either underwrite at a margin, or return the capital. Several language models drifted towards this strategy after early losses, quoting so high that nobody bought.</p></div>
+</section>
+
+<section class="chapter failure" id="follower">
+  <p class="kicker">02 · Strategy: cycle-follower</p>
+  <h2>The follower</h2>
+  <div class="meta" id="meta-follower"></div>
+  <p>Prices halfway between the market's going rate and its own estimate. That seems modest and reasonable. The trouble is <i>which</i> clients accept. Rivals who read a dossier and see danger quote high; the follower quotes the sector average, which is cheap for exactly those dangerous clients. It wins them. Its book fills with the risks the rest of the market priced out, and the losses arrive a year or two later.</p>
+  <figure class="chart"><figcaption><div class="title">Shareholder wealth, seed <span class="seed" data-for="follower"></span></div></figcaption><div id="chart-follower"></div></figure>
+  <div class="aside"><p><b>What would have saved it:</b> pricing each client on its own merits. The market average describes the average client, and nobody sends you the average client.</p></div>
+</section>
+
+<section class="chapter failure" id="optimist">
+  <p class="kicker">03 · Strategy: reckless</p>
+  <h2>The optimist's ledger</h2>
+  <div class="meta" id="meta-optimist"></div>
+  <p>The reckless insurer undercuts the market by 10%, books no reserve for claims that have happened but not been reported, and pays out half of each year's reported profit as a dividend. Its own books look excellent, because they count premium as it arrives and claims only when they are reported, up to two years later. The regulator's audit sees more. The gap between what it reports and what is true is the whole story.</p>
+  <figure class="chart"><figcaption><div class="title">Three views of the same company, seed <span class="seed" data-for="optimist"></span></div><div class="sub">Reported equity uses the company's own reserves; audited equity uses the regulator's floor; true equity uses every claim, reported or not.</div></figcaption><div id="chart-optimist"></div></figure>
+  <div class="aside"><p><b>What would have saved it:</b> reserving for claims not yet reported, and paying dividends out of true rather than reported profit. Dividends paid in the eight quarters before insolvency are clawed back in the score.</p></div>
+</section>
+
+<section class="chapter failure" id="denier">
+  <p class="kicker">04 · Strategy: actuary that denies every claim</p>
+  <h2>The claims denier</h2>
+  <div class="meta" id="meta-denier"></div>
+  <p>Saving money by not paying claims is the oldest temptation in the trade. Denied claimants sue most of the time; when they win, the insurer pays the claim, interest and a bad-faith award equal to the claim again. Its reputation for paying, which clients weigh when they choose, falls to zero within a few years. It survives, because its pricing is still the actuary's, but it ends well behind.</p>
+  <figure class="chart"><figcaption><div class="title">Reputation for paying claims, seed <span class="seed" data-for="denier"></span></div><div class="sub">0 to 1; clients weigh it when choosing between quotes.</div></figcaption><div id="chart-denier"></div></figure>
+  <div class="aside"><p><b>What would have saved it:</b> paying clear claims, settling murky ones near what a court would award, and fighting only when the facts are genuinely on its side.</p></div>
+</section>
+
+<section class="chapter failure" id="uninsured">
+  <p class="kicker">05 · Strategy: actuary without reinsurance</p>
+  <h2>The uninsured insurer</h2>
+  <div class="meta" id="meta-uninsured"></div>
+  <p>Reinsurance costs money every quarter, and in a quiet year it looks like waste. Without it, the single-risk rule limits every policy to a quarter of equity, so the largest and most profitable clients are out of reach, and any one large claim lands entirely on the company. In the first version of the game, several language models were ended by one claim on one policy.</p>
+  <figure class="chart"><figcaption><div class="title">Shareholder wealth, seed <span class="seed" data-for="uninsured"></span></div></figcaption><div id="chart-uninsured"></div></figure>
+  <div class="aside"><p><b>What would have saved it:</b> buying enough cover to write large clients and survive the tail, and re-checking the price after market-wide losses, when it hardens.</p></div>
+</section>
+
+<section class="chapter failure" id="timid">
+  <p class="kicker">06 · Strategy: timid actuary</p>
+  <h2>The timid</h2>
+  <div class="meta" id="meta-timid"></div>
+  <p>Same prices as the actuary, but it only quotes a quarter of the applicants. It never gets into trouble, and it never earns much either: fixed capital spread over a small book, against a hurdle that does not care how careful you were.</p>
+  <figure class="chart"><figcaption><div class="title">Shareholder wealth, seed <span class="seed" data-for="timid"></span></div></figcaption><div id="chart-timid"></div></figure>
+</section>
+
+<section class="chapter failure" id="random">
+  <p class="kicker">07 · Strategy: random</p>
+  <h2>No strategy at all</h2>
+  <div class="meta" id="meta-random"></div>
+  <p>Prices around its estimate with a large random error and makes claims decisions by coin toss. The errors do not cancel out: underpriced policies are bought and overpriced ones are not, so the randomness is filtered into a steady loss. This is the floor of competence.</p>
+  <figure class="chart"><figcaption><div class="title">Shareholder wealth, seed <span class="seed" data-for="random"></span></div></figcaption><div id="chart-random"></div></figure>
+</section>
+
+<section class="chapter" id="llm">
+  <p class="kicker">08</p>
+  <h2>What language models did</h2>
+  <p>These are from the first wave of language-model games, played under the earlier rules (environment 0.1), which had no single-risk limit, no hurdle and looser claims rules. They are anecdotes from single games of small, cheap models, not rankings. The memos are quoted as the models wrote them.</p>
+  <div id="llm-stories"></div>
+</section>
+
+<section class="chapter" id="checklist">
+  <p class="kicker">09</p>
+  <h2>A checklist for survival</h2>
+  <ol>
+    <li>Price each client from its dossier, not from the market average.</li>
+    <li>Expect the business you win to be worse than the business you priced.</li>
+    <li>Reserve for claims you have not heard about yet. They are coming.</li>
+    <li>Pay dividends from true profit, and only when capital is truly surplus.</li>
+    <li>Buy reinsurance before you need it, sized to your largest policies.</li>
+    <li>Settle murky claims near what a court would award. Do not deny for sport.</li>
+    <li>Watch the audited figure, not the reported one.</li>
+    <li>If you must raise capital, raise enough, early. Late and small is the worst of both.</li>
+    <li>Write things down. Next quarter you will remember nothing else.</li>
+  </ol>
+</section>
+
+</main>
+</div>
+<footer class="site"><div class="inner">Act of God &amp; Co. is a hobby benchmark. All companies, vendors and events are fictional. Figures on this page are generated from the simulation by <code>python -m website.build</code>.</div></footer>
+<script src="failures.js"></script>
+</body>
+</html>
