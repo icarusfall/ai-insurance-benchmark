@@ -1,3 +1,31 @@
-# Model roster. IDs and prices are pinned per run; fill in before running LLMs.
-# Prices are USD per million tokens.
-models: []
+# Model roster. Prices are USD per million tokens (first-party list prices at time of writing; verify
+# before trusting cost numbers). cache_read / cache_write default to 0.1x / 1.25x of input if omitted.
+# thinking: adaptive | none.   effort: low|medium|high|xhigh|max or null (omit).
+models:
+  claude-haiku-5-5:
+    provider: anthropic
+    input: 0.10
+    output: 0.50
+    thinking: adaptive
+    effort: null
+  claude-sonnet-5-5:
+    provider: anthropic
+    input: 2.00
+    output: 10.00
+    cache_read: 0.20
+    thinking: adaptive
+    effort: null
+  claude-opus-5-5:
+    provider: anthropic
+    input: 4.00
+    output: 20.00
+    cache_read: 0.20
+    thinking: adaptive
+    effort: null
+  claude-fable-5-1:
+    provider: anthropic
+    input: 10.00
+    output: 50.00
+    cache_read: 0.25
+    thinking: adaptive
+    effort: null

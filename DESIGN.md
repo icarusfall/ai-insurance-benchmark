@@ -295,3 +295,12 @@ Delivery: the public site (A–C) is statically generated from the results store
 - **Safety/tone line**: catastrophe narration stays abstract (no operational detail about how an attack works). Worth a content review of the event templates.
 - **Context-policy fairness**: models with larger useful windows are handicapped by the fixed window. This is deliberate for comparability; a "long-context" variant could be added later.
 - **Judging pay-offs**: shareholder value with no time discounting rewards late gambling near the end of the game. Consider an end-of-game wind-down rule or a franchise-value term. **[decide before calibration]**
+
+## 18. Agent layer as built (v0)
+
+- **One fresh conversation per quarter.** The model gets the stable system prompt (cached), a structured briefing, and its own notes document. No chat history carries over, so there is nothing to compact and no thinking-block history editing. Persistent memory is `write_notes` (6000-character cap, replaced each time) plus a rolling eight-quarter table in the briefing.
+- **Tools** (`agents/tools.py`): `get_applicants` (paged), `submit_quotes`, `set_rate_manual`, `decline`, `decide_claims`, `set_ibnr`, `pay_dividend`, `raise_capital`, `set_reinsurance`, `predict_loss_ratio`, `write_notes`, `board_memo`, `end_turn`. Nothing takes effect until `end_turn`. Undecided claims are paid in full; applicants with no quote and no manual price are declined.
+- **Fairness choices.** Same prompt, tools, tool-call cap (25 rounds) and briefing for every model. No sampling parameters. Adaptive thinking where supported, effort only if set in `models.yaml`. **No refusal fallbacks**, because a silent switch to another model mid-game would contaminate the result; refusals are logged and the quarter proceeds with whatever was decided.
+- **Information tier 0**: no numeric loss priors in the prompt. The public last-quarter rate on line by sector is in the briefing, which is the only price anchor.
+- **Cost control.** Every call logs tokens (input, output, cache read, cache write), latency, tool-call count, request id and a snapshot of the price table to `runs/<run_id>/calls.jsonl`. A per-run `Budget` aborts when the cap is crossed. Decisions, memos, notes and predictions go to `game.jsonl` (the raw material for the story pipeline).
+- **Not yet done**: OpenRouter adapter for non-Anthropic models; scoring of `predict_loss_ratio`; parallel seed runner; batch mode.

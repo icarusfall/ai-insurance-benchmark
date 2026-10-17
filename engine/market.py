@@ -78,6 +78,8 @@ class Ins:
     reins: dict = None
     reins_cost_total: float = 0.0
     injected: float = 0.0
+    rep_n: list = field(default_factory=lambda: [0] * P.Q)
+    rep_amt: list = field(default_factory=lambda: [0.0] * P.Q)
     history: list = field(default_factory=list)
 
 
@@ -167,6 +169,33 @@ class Market:
         h = float(np.clip(a / e - 1.0, 0.0, 3.0)) if e > 0 else 0.0
         return P.REINS_BASE_LOAD + P.REINS_HARDENING * h
 
+    def reins_quote(self, name: str, attach: float, limit: float) -> float:
+        """Quarterly cost of a per-claim XoL treaty on this insurer's current in-force book."""
+        W = self.world
+        cost = 0.0
+        for pol in self.policies.values():
+            if pol.active and pol.insurer == name:
+                cost += W.expected_quarter_ceded(W.clients[pol.client], min(self.q, P.Q - 1), pol.limit, pol.ret,
+                                                 attach, limit)
+        return cost * self.reins_multiplier()
+
+    def _book(self, name: str) -> dict:
+        by_sector, by_provider = {}, {}
+        total = 0.0
+        for pol in self.policies.values():
+            if pol.active and pol.insurer == name:
+                c = self.world.clients[pol.client]
+                a = by_sector.setdefault(c.sector, dict(policies=0, premium=0.0, limit=0.0))
+                a["policies"] += 1
+                a["premium"] += pol.premium
+                a["limit"] += pol.limit
+                key = self.world.providers[c.provider].name if c.provider_stated else "undisclosed"
+                by_provider[key] = by_provider.get(key, 0.0) + pol.premium
+                total += pol.premium
+        by_sector = {k: {kk: round(vv, 3) for kk, vv in v.items()} for k, v in by_sector.items()}
+        by_provider = {k: round(v / total, 3) for k, v in by_provider.items()} if total else {}
+        return dict(by_sector=by_sector, provider_share_of_premium=by_provider)
+
     # --------------------------------------------------------------- the quarter
     def begin_quarter(self) -> dict:
         self.q += 1
@@ -228,6 +257,13 @@ class Market:
                      policies_in_force=sum(1 for p in self.policies.values() if p.active and p.insurer == me),
                      dividends_paid=round(ins.div_paid, 3),
                      capital_raise_remaining=round(P.CAPITAL_RAISE_MAX * P.START_EQUITY - ins.injected, 3)),
+            book=self._book(me),
+            recent=[dict(q=t, premium_written=round(ins.npw[t], 3), claims_reported=ins.rep_n[t],
+                         claims_reported_amount=round(ins.rep_amt[t], 3),
+                         paid=round(ins.history[t]["paid"], 3) if t < len(ins.history) else 0.0)
+                    for t in range(max(0, q - 8), q)],
+            reinsurance_quotes=[dict(attachment=a, limit=l, quarterly_cost=round(float(self.reins_quote(me, a, l)), 3))
+                                for a in (0.5, 1, 2, 5, 10) for l in (10, 25, 50)],
             public=dict(rol_by_sector_prev=dict(self.rol_prev), rol_index_prev=self.rol_index_prev,
                         insurers=shares))
 
@@ -246,6 +282,8 @@ class Market:
             h = self.hist.setdefault((cl.insurer, cl.client), dict(n_claims=0, total_covered=0.0))
             h["n_claims"] += 1
             h["total_covered"] = round(h["total_covered"] + cl.covered, 4)
+            ins.rep_n[q] += 1
+            ins.rep_amt[q] += cl.covered
             if ins.insolvent:
                 self._pay(cl, cl.covered)
                 self._close(cl)
@@ -501,8 +539,8 @@ class Market:
                 ins.bot.on_quarter_end(q)
 
     # --------------------------------------------------------------------- run
-    def run(self) -> dict:
-        for _ in range(P.Q):
+    def run(self, max_quarters: int = None) -> dict:
+        for _ in range(max_quarters or P.Q):
             views = self.begin_quarter()
             actions = {n: self.ins[n].bot.act(v) for n, v in views.items()}
             self.resolve(actions)

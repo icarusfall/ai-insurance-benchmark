@@ -104,6 +104,9 @@ python -m runner.simulate --seeds 20
 # is there an underwriting cycle? how much does the seed matter?
 python -m runner.diagnose --seeds 20
 
+# play one real model against the scripted rivals (needs an Anthropic API key; costs money)
+python -m runner.play --model claude-haiku-5-5 --seed 0 --quarters 4 --max-cost 1
+
 # tests
 python -m pytest
 ```
@@ -131,14 +134,15 @@ Starting equity is 40, so a value above 40 means the insurer grew. CR is the com
 | `bots/` | The scripted insurers |
 | `runner/` | Command-line runners and diagnostics |
 | `tests/` | Determinism and fairness tests |
-| `agents/`, `analysis/`, `web/`, `site/` | Planned: LLM adapters, scoring and charts, control room, public site |
+| `agents/` | LLM layer: system prompt and briefing, tool schemas, model adapters, cost and call logging |
+| `analysis/`, `web/`, `site/` | Planned: scoring and charts, control room, public site |
 
 ## Roadmap
 
 - [x] Design spec
 - [x] Bot-only market engine
 - [ ] Calibration: make the economy hard in the right ways (in progress)
-- [ ] LLM agent layer: tools, context policy, token and cost logging
+- [x] LLM agent layer: tools, context policy, token and cost logging (built and tested with a scripted fake model; not yet run live)
 - [ ] First benchmark runs across a model roster
 - [ ] Competitive mode and the conference experiments
 - [ ] Control room on Railway
