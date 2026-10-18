@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About — Act of God &amp; Co.</title>
+<meta name="description" content="Why this AI-liability insurance benchmark exists, what it can and cannot tell you yet, and who built it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='4' y='25' font-size='24' font-family='Georgia'%3E%C2%A7%3C/text%3E%3C/svg%3E">
+<script src="charts.js"></script>
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="brand" href="index.html">Act of God <span>&amp;</span> Co.</a>
+  <nav>
+    <a href="index.html">How it works</a>
+    <a href="failures.html">How insurers die</a>
+    <a href="results.html">Results</a>
+    <a href="play.html">Play it yourself</a>
+    <a href="about.html" aria-current="page">About</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <img class="hero-art" src="img/umbrella.png" alt="A small robot standing dry under an umbrella while rain falls around it." width="777" height="614">
+  <p class="kicker">About</p>
+  <h1>Why I built this</h1>
+  <p class="dek">A hobby project, made to find out what it takes to build a benchmark for AI agents that measures judgement rather than trivia, and to see what today's models do when you hand them an insurance company.</p>
+</div>
+
+<div class="layout" style="grid-template-columns: minmax(0, 1fr)">
+<main>
+
+<section class="chapter">
+  <h2>What I wanted to find out</h2>
+  <div class="grid">
+    <div class="card"><span class="tag">Question 1</span><h4>Can a benchmark avoid saturating?</h4><p>Many benchmarks are solved within a year of release. A long-horizon task with hidden information, delayed feedback and competitors should have no ceiling to bump against: a better model should simply make more money. Whether that holds as stronger models are tested is still to be checked.</p></div>
+    <div class="card"><span class="tag">Question 2</span><h4>Do models differ in interesting ways?</h4><p>Early answer: yes. On the same simulated worlds, cheap models range from comfortably beating shareholders' required return to going bust four times out of five, and they fail in recognisably different ways. The samples are still small; see <a href="results.html">Results</a>.</p></div>
+    <div class="card"><span class="tag">Question 3, later</span><h4>Does anything misaligned show up?</h4><p>The planned tournament mode puts several AI insurers in one market. If they drift into tacit price-fixing, or learn that denying valid claims pays under weaker rules, that would be worth knowing. Nothing like this has been tested yet.</p></div>
+  </div>
+  <p>One more thread interests me. Each insurer in the game assesses its own reserves, a regulator audits them against a floor, and only the simulation knows the truth. The gap between <b>reported</b>, <b>audited</b> and <b>true</b> equity, and what happens to firms nobody checks closely enough, is <a href="failures.html#optimist">one of the ways insurers die</a> here. It is a small, concrete version of a bigger question: how much weight should rest on safety claims that an organisation assesses against its own standards?</p>
+</section>
+
+<section class="chapter">
+  <h2>Where it stands</h2>
+  <ul>
+    <li><b>Built:</b> the simulation, scripted rival insurers, a model-agnostic agent layer (Anthropic, OpenAI, Google and open-weight models), batch runs with cost tracking, a calibration harness that checks no shortcut strategy beats the reference, and this site.</li>
+    <li><b>Run so far:</b> several waves of small, inexpensive models, under $30 of API spend so far. Larger models are next, on a budget of around £100.</li>
+    <li><b>Not yet built:</b> the tournament mode with several AI insurers competing; formal tests of whether the benchmark saturates; most of the statistics a published benchmark would need.</li>
+    <li><b>Reviewed along the way:</b> an early version had serious flaws (doing nothing scored almost as well as the reference, and denying every claim beat it). They were found with deliberately degenerate test strategies and fixed. The record is in the repository's calibration log.</li>
+  </ul>
+</section>
+
+<section class="chapter">
+  <h2>Who made it, and how</h2>
+  <p>I'm Charlie Ullman, an actuary working in investment risk in London. This is one of a series of hobby projects from a 2026 new year's resolution to ship one a week, and like the others it is <b>vibe-coded</b>: built in conversation with Claude Code, Anthropic's coding agent. The questions, the design choices, the calls on what to fix and what to keep, and the taste for deadpan jokes about mortality are mine; most of the typing is Claude's.</p>
+  <p>It is a personal project, unconnected with my employer, and uses no employer data. All companies, vendors and events in the simulation are fictional.</p>
+  <p>Code, design notes and run logs: <a href="https://github.com/icarusfall/ai-insurance-benchmark">github.com/icarusfall/ai-insurance-benchmark</a>. Other projects: <a href="https://icarusfall.github.io/">icarusfall.github.io</a>.</p>
+</section>
+
+</main>
+</div>
+<footer class="site"><div class="inner">A personal project by Charlie Ullman, vibe-coded with Claude Code. Not affiliated with any employer. All companies, vendors and events are fictional. <a href="about.html">About</a></div></footer>
+</body>
+</html>

@@ -234,3 +234,11 @@ aside.sidebar h4 { margin: 0 0 8px; font-size: 17px; }
 aside.sidebar p { font-size: 15px; margin: 0.4em 0; max-width: none; }
 aside.sidebar .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 8px 22px; }
 aside.sidebar.two { background: var(--lavender); }
+
+/* phones: the nav gets its own row under the brand */
+.masthead nav a { white-space: nowrap; }
+@media (max-width: 640px) {
+  .masthead .inner { gap: 6px 16px; }
+  .masthead nav { flex-basis: 100%; gap: 4px 16px; }
+  .masthead nav a { font-size: 14px; }
+}

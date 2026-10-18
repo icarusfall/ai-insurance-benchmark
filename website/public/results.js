@@ -17,6 +17,7 @@
   $("#batch").textContent = R.batch.replace("wave", "wave ");
   $("#batch-env").textContent = R.env_version;
   $("#batch-env-2").textContent = R.env_version;
+  $("#batch-env-3").textContent = R.env_version;
   $("#n-seeds").textContent = seeds.length;
   const refPath = medianPath(R.reference);
   const fmtR = v => v.toFixed(2);

@@ -7,7 +7,11 @@ Language models run an insurance company for ten years (40 quarters). The produc
 
 It is a benchmark in the spirit of Vending-Bench: no trick questions, just a long, boring-looking job where small judgement errors compound for years before they show up.
 
-**Status:** the simulation engine, the scripted rivals and the LLM agent layer (Anthropic, OpenAI, Gemini, OpenRouter) all work. A first wave of cheap models has partly run (13 games; see [`results/wave1_partial.md`](results/wave1_partial.md)). The project is paused for a design review: see [`HANDOVER.md`](HANDOVER.md). The web control room and public site are not built yet.
+**Live site:** [ai-insurance-benchmark-production.up.railway.app](https://ai-insurance-benchmark-production.up.railway.app/): how it works, how insurers die, results, a playable version, and [why it exists](https://ai-insurance-benchmark-production.up.railway.app/about.html).
+
+**Status (October 2026):** the engine, scripted rivals, model-agnostic agent layer (Anthropic, OpenAI, Gemini, OpenRouter), batch runner with cost tracking, calibration harness and public site all work. Inexpensive models have run 20 games, with a 60-game wave in progress; larger models are next. An early design review ([`REVIEW.md`](REVIEW.md)) found serious flaws, which were fixed and are logged in [`CALIBRATION.md`](CALIBRATION.md). The tournament mode is not built yet.
+
+**How it was built:** vibe-coded with Claude Code as one of a series of weekly hobby projects. The questions, design decisions and judgement calls are mine; most of the typing is Claude's. A personal project, unconnected with any employer.
 
 ---
 
@@ -43,7 +47,7 @@ flowchart LR
 
 **5. You handle claims.** Pay, settle for less, deny, or fight in court. Claims are more or less murky. Denying a valid claim can lose you a bad-faith case and your reputation. Fighting is slow and costs legal fees.
 
-**6. A regulator watches.** Your capital must cover your premium volume. Fall below the line and you can't write new business. You can call on your shareholders for more capital, but every dollar costs you extra in the final score, so leaving it late is expensive. Fall below zero and you're insolvent, and a guarantee fund levies your surviving competitors to pay your orphaned claims.
+**6. A regulator watches.** It audits your reserves and compares your capital with a risk-based requirement, then acts on a graded ladder modelled on US risk-based capital: below one level no dividends, below the next no new business, below the last it takes over. You can call on your shareholders for more capital, but every dollar costs you extra in the final score, so leaving it late is expensive. When an insurer fails, a guarantee fund pays its smaller clients' claims, funded by capped levies on the survivors. (A hidden UK-flavoured variant swaps in Solvency-style capital rules, loser-pays courts and no bad-faith tort: `--regime uk`.)
 
 **7. Repeat for ten years.**
 
@@ -79,7 +83,7 @@ The same events, clients and incidents happen in every game that shares a seed, 
 
 ## What gets scored
 
-- **Shareholder value**: final equity plus dividends paid, less capital shareholders had to inject (with a dilution penalty). Insolvency scores zero.
+- **Shareholder value against a hurdle**: final equity plus dividends, less capital injected (with a dilution penalty), each grown at the 2% a quarter shareholders require. The headline ratio R is 1.0 when the insurer earned exactly that; doing nothing scores about 0.67. Insolvency claws back recent dividends.
 - **Survival** and time to ruin.
 - **Calibration**: each quarter the model predicts its own loss ratio; those predictions are scored, so good reasoning is rewarded even when the dice are unkind.
 - **Failure modes**, tagged automatically: price-war victim, reserving failure, concentration blow-up, slow to react to a court ruling.
@@ -111,18 +115,18 @@ python -m runner.play --model claude-haiku-5-5 --seed 0 --quarters 4 --max-cost 
 python -m pytest
 ```
 
-Example output (current calibration, work in progress):
+Example output (environment 0.3, 20 seeds):
 
 ```
 bot          score     sd  surv%    value     CR     prem  ruin_q
-actuary      -0.14   1.80     85     72.6   0.85    226.2    26.3
-reckless     -1.26   2.07     60     48.2   0.88    285.9    25.6
-cycle        -2.75   1.56     35     12.3   1.30    212.4    23.5
-predator     -0.40   1.92     80     63.8   0.83    206.2    29.5
-random       -2.64   1.65     50     12.6   1.08    205.8    27.3
+actuary       0.79   0.43    100    215.3   0.54    328.4     nan
+reckless     -1.10   0.92     50     45.9   1.02    249.2    28.4
+cycle        -1.90   0.79     40     14.0   1.09    252.6    25.3
+predator      0.76   0.44     95    208.1   0.58    309.8    21.0
+random       -2.15   0.38     25      3.8   1.29    138.2    26.1
 ```
 
-Starting equity is 40, so a value above 40 means the insurer grew. CR is the combined ratio (claims plus expenses over premium; below 1 is profitable).
+Score is ln R. CR is the combined ratio (claims plus expenses over premium; below 1 is profitable). To check that no shortcut strategy beats the reference, run `python -m runner.probe --seeds 20`.
 
 ## Models
 
@@ -141,21 +145,25 @@ Direct adapters for **Anthropic**, **OpenAI** and **Google Gemini**, plus **Open
 | `runner/` | Command-line runners and diagnostics |
 | `tests/` | Determinism, fairness, agent-loop and adapter tests |
 | `agents/` | LLM layer: system prompt and briefing, tool schemas, model adapters, cost and call logging |
-| `analysis/`, `web/`, `site/` | Planned: scoring and charts, control room, public site |
+| `website/` | The public site (static), its data exporter (`python -m website.build`) and the Blender scripts for its illustrations |
+| [`REVIEW.md`](REVIEW.md), [`V0_2_PROPOSAL.md`](V0_2_PROPOSAL.md) | The design review and the changes it led to |
 
 ## Roadmap
 
 - [x] Design spec
 - [x] Bot-only market engine
-- [ ] Calibration: make the economy hard in the right ways (in progress)
-- [x] LLM agent layer: tools, context policy, token and cost logging (built and tested with a scripted fake model; not yet run live)
-- [~] First benchmark runs across a model roster (wave 1 partial, paused for review)
-- [ ] Competitive mode and the conference experiments
+- [x] Calibration, with probe strategies that must not beat the reference
+- [x] LLM agent layer: tools, context policy, token and cost logging
+- [x] Benchmark runs: inexpensive models (one wave complete, one in progress)
+- [x] Public site: how it works, how insurers die, results, play it yourself
+- [x] Regulatory regimes: US-flavoured headline, hidden UK variant
+- [ ] Larger models (mid tier, then a flagship taster)
+- [ ] Saturation check: does a stronger model keep scoring higher?
+- [ ] Competitive mode: several AI insurers in one market, and whether they drift into tacit price-fixing
 - [ ] Control room on Railway
-- [ ] Public site: how it works, narrated stories from real runs, full results
 
 ## Honest caveats
 
-- This is a hobby project, built for fun and curiosity rather than publication. Treat results as indicative.
+- This is a hobby project, built for fun and curiosity rather than publication. Treat results as indicative: samples are small.
 - The economy is a model. Its numbers are tuned to make the game interesting, not to predict real-world AI liability.
 - Scores are only comparable within the same environment version and information tier.
