@@ -1,6 +1,6 @@
 """All tunable constants. Everything here is a [tune] placeholder until calibrated (see DESIGN.md)."""
 
-ENV_VERSION = "0.2.0-dev"
+ENV_VERSION = "0.2.1-dev"   # 0.2.1: briefing solvency ratio matches the audit; dossier grammar
 
 Q = 40                      # quarters
 START_EQUITY = 40.0        # $m

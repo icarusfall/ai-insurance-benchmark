@@ -225,7 +225,9 @@ class World:
                else "a modest safety function" if c.safety_obs > 0.35 else "no discernible safety function")
         prov = self.providers[c.provider].name if c.provider_stated else "an undisclosed foundation-model vendor"
         flags = (" Notes: " + "; ".join(c.red_flags) + ".") if c.red_flags else ""
-        return (f"{c.name}: a {P.SIZE_WORDS[c.size]} {c.sector.replace('_', ' ')} firm deploying {aut} agents "
+        size = P.SIZE_WORDS[c.size]
+        article = "an" if size[0] in "aeiou" else "a"
+        return (f"{c.name}: {article} {size} {c.sector.replace('_', ' ')} firm deploying {aut} agents "
                 f"built on {prov}. It reports {saf}.{flags}")
 
     # --------------------------------------------------------------- truth rates

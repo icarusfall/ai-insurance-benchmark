@@ -96,3 +96,7 @@ Against the targets:
 - Missed: **the market is too profitable.** Reference median R is about 1.9 (target 1.2 to 1.6) and the actuary's combined ratio is 0.54. The equilibrium margin is high because clients will pay well above expected loss (the self-insure option compares against perceived cost and price sensitivity is moderate).
 - Missed: **reckless is no longer the early star.** At Q20 its median equity plus dividends is 30 against the actuary's 87. Denying claims is now expensive and, without reinsurance, its limits are capped at its net line.
 - Side effect: **claims skill earns little.** pay_all now ties the reference and low_settle is slightly below it. No shortcut wins, but careful settlement does not win either.
+
+## Environment v0.2.1-dev (2026-10-18)
+
+Model-facing fixes only; no scored mechanics or bot inputs changed, so the v0.2 calibration and probe results stand. (1) The briefing's solvency ratio is now the one the regulator computed at the last audit, so a restricted insurer always sees a ratio below 1 (in wave 2 it was recomputed on the next quarter's window, and Haiku was shown 9.1 while restricted). (2) Dossiers say "an enormous" rather than "a enormous". Wave 2 remains the v0.2.0 baseline.

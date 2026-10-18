@@ -68,6 +68,7 @@ class Ins:
     div_paid: float = 0.0
     ibnr: float = 0.0
     rating: float = 1.0
+    solvency_ratio: float = None      # as the regulator computed it at the last audit (None: no premium written)
     reported_eq: float = P.START_EQUITY
     audited_eq: float = P.START_EQUITY
     npw: list = field(default_factory=lambda: [0.0] * P.Q)
@@ -258,7 +259,7 @@ class Market:
             claims=claims,
             own=dict(cash=round(ins.cash, 3), reported_equity=round(ins.reported_eq, 3),
                      audited_equity=round(ins.audited_eq, 3),
-                     solvency_ratio=(round(ins.audited_eq / (P.K_REG * npw4), 2) if npw4 > 0 else None),
+                     solvency_ratio=(round(ins.solvency_ratio, 2) if ins.solvency_ratio is not None else None),
                      max_net_line=round(self.net_line_cap(ins), 3),
                      rating=rating_letter(ins.rating), rating_score=round(ins.rating, 3),
                      restricted=ins.restricted, npw4=round(npw4, 3), ibnr_booked=round(ins.ibnr, 3),
@@ -523,6 +524,8 @@ class Market:
             audited_res = max(booked, P.AUDIT_FLOOR * true_unpaid)
             ins.audited_eq = ins.cash - upr - audited_res
             ins.restricted = bool(ins.audited_eq < P.K_REG * npw4)   # plain bool: numpy bools log as "False"
+            # the briefing shows this same ratio, so a restricted insurer always sees a ratio below 1
+            ins.solvency_ratio = float(ins.audited_eq / (P.K_REG * npw4)) if npw4 > 0 else None
             ins.rating = float(np.clip(ins.audited_eq / max(npw4, 8.0) / P.RATING_FULL, 0.0, 1.0))
             if ins.audited_eq < 0:
                 newly.append(ins)

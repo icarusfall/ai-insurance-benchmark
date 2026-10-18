@@ -82,3 +82,22 @@ def test_dividends_clawed_back_near_insolvency():
     ins.insolvent, ins.insolvent_q = True, 20
     ins.div_q[5], ins.div_q[15] = 10.0, 10.0          # 15 is inside the 8-quarter window, 5 is not
     assert abs(m.value("actuary") - 10.0 * (1 + P.HURDLE) ** (P.Q - 1 - 5)) < 1e-9
+
+
+def test_briefing_solvency_ratio_matches_restriction():
+    """A restricted insurer must never be shown a solvency ratio of 1 or more."""
+    for seed in range(4):
+        m = Market(seed, bots.make(["reckless", "cycle", "actuary"]))
+        for _ in range(P.Q):
+            views = m.begin_quarter()
+            for v in views.values():
+                sr = v["own"]["solvency_ratio"]
+                if v["own"]["restricted"]:
+                    assert sr is not None and sr < 1
+            m.resolve({n: m.ins[n].bot.act(v) for n, v in views.items()})
+
+
+def test_dossier_articles():
+    w = World(7)
+    assert not any(" a enormous" in c.text for c in w.clients)
+    assert any(" an enormous" in c.text for c in w.clients)
