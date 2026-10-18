@@ -117,3 +117,18 @@ def test_nonretryable_errors_are_not_swallowed(monkeypatch):
         assert False
     except H.AdapterError as e:
         assert e.retryable is False
+
+
+def test_anthropic_cache_marker_on_newest_message_only():
+    from agents.adapters import with_cache_marker
+    msgs = [{"role": "user", "content": "briefing"},
+            {"role": "assistant", "content": [{"type": "tool_use", "id": "t1", "name": "x", "input": {}}]},
+            {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1", "content": "a"},
+                                         {"type": "tool_result", "tool_use_id": "t2", "content": "b"}]}]
+    out = with_cache_marker(msgs)
+    assert out[-1]["content"][-1]["cache_control"] == {"type": "ephemeral"}
+    assert "cache_control" not in out[-1]["content"][0]
+    assert "cache_control" not in msgs[-1]["content"][-1]                       # history untouched
+    first = with_cache_marker(msgs[:1])
+    assert first[0]["content"] == [{"type": "text", "text": "briefing", "cache_control": {"type": "ephemeral"}}]
+    assert msgs[0]["content"] == "briefing"

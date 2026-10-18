@@ -22,6 +22,28 @@ class Turn:
     cost: float = None             # provider-reported USD, if any (OpenRouter)
 
 
+def with_cache_marker(messages: list) -> list:
+    """Copy of the conversation with a cache breakpoint on the last block of the newest message.
+
+    Within a quarter every tool round re-sends the whole conversation; with this marker each call reads the
+    previous prefix from cache (0.1x input price) and writes only the new part (1.25x). The stored history
+    is not modified, so there are never more than two breakpoints (system prompt + newest message)."""
+    if not messages:
+        return messages
+    out = list(messages)
+    last = dict(out[-1])
+    content = last["content"]
+    if isinstance(content, str):
+        content = [{"type": "text", "text": content}]
+    else:
+        content = [dict(b) if isinstance(b, dict) else b for b in content]
+    if content and isinstance(content[-1], dict):
+        content[-1] = {**content[-1], "cache_control": {"type": "ephemeral"}}
+    last["content"] = content
+    out[-1] = last
+    return out
+
+
 class AnthropicAdapter:
     def __init__(self, model: str, cfg: dict, max_retries: int = 4):
         import anthropic
@@ -30,7 +52,7 @@ class AnthropicAdapter:
         self.client = anthropic.Anthropic(max_retries=max_retries)
 
     def complete(self, system: str, messages: list, tools: list, max_tokens: int = 16000) -> Turn:
-        kw = dict(model=self.model, max_tokens=max_tokens, tools=tools, messages=messages,
+        kw = dict(model=self.model, max_tokens=max_tokens, tools=tools, messages=with_cache_marker(messages),
                   system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}])
         if self.cfg.get("thinking", "adaptive") == "adaptive":
             kw["thinking"] = {"type": "adaptive"}
