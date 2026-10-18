@@ -46,6 +46,7 @@
   <li><a href="#scoring">Scoring</a></li>
   <li><a href="#cast">The rivals</a></li>
   <li><a href="#interface">What the model actually sees</a></li>
+  <li><a href="#simplifications">Where we simplified</a></li>
   <li><a href="#caveats">Caveats</a></li>
   <li><a href="#transcripts">A quarter, as played</a></li>
 </ol></nav>
@@ -95,7 +96,7 @@
     <li><b>Claims decisions resolve.</b> Paid, settled, denied or sent to court. Cases already in court may conclude.</li>
     <li><b>Reinsurance takes effect,</b> then <b>clients choose.</b> All quotes are sealed. Each applicant picks the best offer, or none.</li>
     <li><b>Incidents happen</b> on every policy in force, drawn from the pre-generated world. Each becomes a claim that will be reported between one and eight quarters later.</li>
-    <li><b>The books close.</b> Premiums earned, investment income (1% a quarter on cash), guarantee-fund levies, capital raised, dividends paid. Then the regulator audits reserves, sets the solvency ratio and restrictions, and declares anyone with negative audited equity insolvent.</li>
+    <li><b>The books close.</b> Premiums earned, investment income (1% a quarter on cash), guarantee-fund levies, capital raised, dividends paid. Then the regulator audits reserves, works out each insurer's required capital and capital ratio, applies the ladder of interventions (no dividends, no new business, takeover), and declares insolvent anyone it takes over or whose audited equity is negative.</li>
   </ol>
 </section>
 
@@ -135,6 +136,12 @@
     <div id="chart-lag"></div>
   </figure>
   <p>The cure is the <b>IBNR reserve</b> (incurred but not reported): money set aside now for claims that have already happened and will be reported later. The model sets its own IBNR. Booking too little flatters reported equity, which permits larger dividends and makes the model feel clever. The regulator, however, audits every quarter and forces booked reserves up to at least <span data-p="AUDIT_FLOOR" data-fmt="pct"></span> of what it estimates is truly owed, including the claims the insurer has not heard about yet. Solvency is judged on the audited figure.</p>
+  <aside class="sidebar">
+    <p class="tag">Sidebar · policy timing</p>
+    <h4>Occurrence or claims-made?</h4>
+    <p>Our policies are written on an <b>occurrence</b> basis: a policy pays for incidents that <i>happen</i> while it is in force, however late the claim arrives. Much real professional, technology and cyber liability cover, and probably most early AI liability cover, is written <b>claims-made</b> instead: the policy pays for claims <i>made</i> while it is in force, so an insurer's exposure ends far sooner. Claims-made cover brings its own delays (retroactive dates, and extended reporting periods bought when a policy ends), but the tail is much shorter.</p>
+    <p>We use occurrence cover on purpose. The long, hidden delay between an incident and the bill is one of the most important things an insurer has to reason about, and it is exactly where overconfident models come unstuck.</p>
+  </aside>
   <div class="aside"><p>Three equities appear in the game. <b>Reported</b> uses the model's own reserves. <b>Audited</b> uses the regulator's floor and decides solvency. <b>True</b> uses the simulation's full knowledge of every claim and is used only for the final score. The model sees the first two.</p></div>
 </section>
 
@@ -161,6 +168,14 @@
     <div id="chart-claims"></div>
     <p class="verdict" id="cl-verdict"></p>
   </div>
+  <aside class="sidebar two">
+    <p class="tag">Sidebar · claims and the courts</p>
+    <h4>Why the headline game feels American</h4>
+    <div class="cols">
+      <div><b>United States (our headline)</b><p>Insurers who unreasonably deny claims face a <i>bad-faith</i> tort: damages beyond the policy, sometimes punitive. Each side pays its own legal costs. Juries, fifty state jurisdictions and "social inflation" make awards large and precedent volatile. We model this with a bad-faith award equal to the claim, a 10% contest fee, and court rulings that shift liability sector by sector.</p></div>
+      <div><b>United Kingdom (a hidden variant)</b><p>No bad-faith tort: since 2017 an insurer that pays unreasonably late owes damages for the delay. The loser of a case pays most of the winner's costs, and judgment debts carry statutory interest. Civil cases have no jury and awards are lower. Conduct is policed by the regulator and, for small businesses, the Financial Ombudsman. In our UK variant, denying claims is therefore cheaper, court fights are higher-stakes both ways, and awards are smaller.</p></div>
+    </div>
+  </aside>
   <p>In the first version of the game, denying every claim beat the reference insurer. The current rules were tuned until that stopped being true. Settling close to the court's view is now the best policy, which requires the model to estimate liability rather than just be stingy.</p>
 </section>
 
@@ -169,9 +184,9 @@
   <h2>Capital and the regulator</h2>
   <p>Each insurer starts with <span data-p="START_EQUITY"></span> of equity ($m throughout). Three rules keep it honest:</p>
   <div class="grid">
-    <div class="card"><span class="tag">Rule</span><h4>Solvency ratio</h4><p>Audited equity must stay above <span data-p="K_REG" data-fmt="pct"></span> of premium written in the last four quarters. Below that line the insurer may not write new business until it recovers or raises capital.</p></div>
+    <div class="card"><span class="tag">Rule</span><h4>Capital ratio</h4><p>The regulator sets required capital from the premium written in the last four quarters and the audited reserves, and compares it with audited equity. Below a ratio of <span id="lad-div"></span> no dividends; below <span id="lad-res"></span> no new business; below <span id="lad-seize"></span> it takes over.</p></div>
     <div class="card"><span class="tag">Rule</span><h4>Single-risk limit</h4><p>On any one policy, the part of the limit the insurer keeps (after reinsurance) may not exceed <span data-p="NET_LINE_MAX" data-fmt="pct"></span> of audited equity. Big clients therefore need reinsurance, or smaller limits.</p></div>
-    <div class="card"><span class="tag">Rule</span><h4>Insolvency</h4><p>Negative audited equity ends the game for that insurer. Its policies are cancelled and a guarantee fund levies the survivors (capped per quarter) to pay its claims.</p></div>
+    <div class="card"><span class="tag">Rule</span><h4>Insolvency</h4><p>Regulatory takeover, or negative audited equity, ends the game for that insurer. Its policies are cancelled. A guarantee fund pays its smaller clients' claims, funded by levies on the survivors of at most <span data-p="LEVY_CAP_ANNUAL" data-fmt="pct"></span> of their premium a year.</p></div>
   </div>
   <div class="toy" id="toy-line">
     <h4>Toy: the largest policy you may write</h4>
@@ -187,6 +202,14 @@
     </div>
     <p class="verdict" id="ln-verdict"></p>
   </div>
+  <aside class="sidebar two">
+    <p class="tag">Sidebar · capital regimes</p>
+    <h4>A ladder, not a cliff</h4>
+    <div class="cols">
+      <div><b>United States: risk-based capital</b><p>State regulators compare an insurer's capital with a risk-based formula and act at fixed levels: at 200% the company must file a plan, at 150% the regulator orders corrective action, at 70% it must take control. Dividends above a statutory limit (the larger of 10% of surplus or a year's income) need approval. Our ladder follows these levels with a simplified formula.</p></div>
+      <div><b>United Kingdom: Solvency UK</b><p>The UK (like the EU's Solvency II, from which it has barely diverged for this purpose) requires capital to survive a one-in-200-year year: the Solvency Capital Requirement. Breach it and the firm has months to recover; breach the much lower Minimum Capital Requirement and it loses its authorisation. The requirement is more demanding than the US one, which our UK variant reflects.</p></div>
+    </div>
+  </aside>
   <p>Capital can be <b>raised</b> from shareholders (up to <span data-p="CAPITAL_RAISE_MAX"></span>× the starting equity), at a cost of $<span id="dil"></span> in the score for every $1 injected. It can be <b>returned</b> as dividends, limited by reported equity and the regulator. Both decisions are scored, below.</p>
 </section>
 
@@ -251,8 +274,33 @@
   <p>Every model gets the same prompt, tools, a cap of 25 tool-calling rounds per quarter, and no special sampling settings. Refusals and errors are logged, not retried with another model.</p>
 </section>
 
-<section class="chapter" id="caveats">
+<section class="chapter" id="simplifications">
   <p class="kicker">13</p>
+  <h2>Where we simplified, and why</h2>
+  <p>The game is a stylised market, built so that judgement matters and results can be compared. Where reality is messier, we chose the simpler version on purpose:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Area</th><th>Real world</th><th>In the game</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Policy basis</td><td>Much liability cover is claims-made</td><td>Occurrence cover; claims up to eight quarters late</td><td>Keeps the long tail, which tests reasoning about delay</td></tr>
+      <tr><td>Required capital</td><td>Detailed formulas (US RBC) or one-in-200-year models (UK SCR)</td><td>One formula on premium and reserves, plus a ladder of interventions</td><td>Captures the incentives without the actuarial machinery</td></tr>
+      <tr><td>Reserves</td><td>US statutory reserves undiscounted; UK best estimate, discounted, plus a risk margin</td><td>Undiscounted; the regulator's floor is 60% of what is truly owed</td><td>Lets an insurer flatter itself for a while, then catches it</td></tr>
+      <tr><td>Investments</td><td>Bond portfolios, market risk, asset-liability matching</td><td>A flat 1% a quarter on cash</td><td>Keeps the test about underwriting</td></tr>
+      <tr><td>Reinsurance</td><td>Many structures; reinsurers can fail; collateral rules</td><td>One per-claim excess-of-loss treaty, priced from a noisy view of the truth; no reinsurer failure</td><td>Enough to test sizing and timing decisions</td></tr>
+      <tr><td>Courts</td><td>Juries, appeals, settlements in the shadow of trial</td><td>A hidden probability of liability per claim; rulings shift whole sectors</td><td>Outcomes stay random but reproducible</td></tr>
+      <tr><td>Rate regulation</td><td>US admitted business often needs rate filings; novel risks go to surplus lines</td><td>Free pricing (as in surplus lines and UK commercial insurance)</td><td>AI liability would most likely be written this way</td></tr>
+      <tr><td>Distribution and expenses</td><td>Brokers, commissions, underwriting staff</td><td>A flat 20% of premium</td><td>Not what we are testing</td></tr>
+      <tr><td>Tax</td><td>Corporate tax, reserve discounting for tax</td><td>None</td><td>Same for everyone; would only shift the numbers</td></tr>
+    </tbody>
+  </table></div>
+  <aside class="sidebar">
+    <p class="tag">Sidebar · other regimes</p>
+    <h4>And elsewhere</h4>
+    <p><b>EU:</b> Solvency II, essentially the UK variant; the revised Product Liability Directive extends strict liability to software, including AI. <b>Bermuda:</b> risk-based capital recognised as equivalent to Solvency II, but a wholesale market of reinsurers, large-company specialty insurers and captives; liability disputes under the "Bermuda Form" go to arbitration in London rather than to a jury, and there is no policyholder guarantee fund. A Bermuda variant would keep UK-style capital and swap courts for arbitration. It is on the list.</p>
+  </aside>
+</section>
+
+<section class="chapter" id="caveats">
+  <p class="kicker">14</p>
   <h2>Caveats</h2>
   <ul>
     <li><b>Stylised, on purpose.</b> The world is simplified and its parameters were chosen to make judgement matter, not to match any real market. Profit margins in the bot-only market are higher than real insurers enjoy.</li>
@@ -264,7 +312,7 @@
 </section>
 
 <section class="chapter" id="transcripts">
-  <p class="kicker">14</p>
+  <p class="kicker">15</p>
   <h2>A quarter, as played</h2>
   <p>What the models actually send back. Each tab is one real quarter from the second wave of games (environment <span id="turn-env"></span>), chosen because it exercises most of the tools. Every call is shown in order: the arguments the model sent, and the game's reply. Nothing takes effect until the final <code>end_turn</code>.</p>
   <p style="font-size:15px;color:var(--ink-2)">Long lists are shortened to their first few items and only the first two applicants of each page are shown. The models' free-text reasoning between calls is not logged, so what you see is what they did rather than what they thought.</p>

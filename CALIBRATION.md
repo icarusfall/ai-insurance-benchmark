@@ -100,3 +100,28 @@ Against the targets:
 ## Environment v0.2.1-dev (2026-10-18)
 
 Model-facing fixes only; no scored mechanics or bot inputs changed, so the v0.2 calibration and probe results stand. (1) The briefing's solvency ratio is now the one the regulator computed at the last audit, so a restricted insurer always sees a ratio below 1 (in wave 2 it was recomputed on the next quarter's window, and Haiku was shown 9.1 while restricted). (2) Dossiers say "an enormous" rather than "a enormous". Wave 2 remains the v0.2.0 baseline.
+
+## Environment v0.3.0-dev (2026-10-18): regulatory regimes
+
+Headline rules are US-flavoured: required capital = sqrt((0.22 P)^2 + (0.30 R)^2) (P trailing-4q premium, R audited reserves, floor 1.0); capital ratio = audited equity / required; ladder after US RBC action levels (below 2.0 no dividends, below 1.5 no new business, below 0.7 regulator takes over = insolvent). Dividends: ordinary up to max(10% of equity, last 4 quarters' income) per 4 quarters; more only if the ratio stays at least 3.0. Guarantee levies capped at 2% of trailing premium a year (was 12% a quarter); the fund covers only clients up to mid-sized. The scripted actuary raises capital when its ratio nears the restriction level.
+
+Hidden UK preset (`--regime uk`, version suffix `+uk`): standard-formula-style SCR (3 x sqrt((0.14P)^2 + (0.11R)^2 + correlation 0.5)); no dividends below 1.3; restriction after two audits below 1.0; takeover below 0.35 (MCR); late-payment damages of 15% instead of a bad-faith award; loser pays (claimant costs 15% when the insurer loses, 60% fee recovery when it wins); interest 8%; awards 0.8x; precedent shifts 0.7x; compensation scheme pays 90% for the smallest clients only.
+
+Probes, 20 seeds (paired delta in ln R):
+
+| probe | US v0.3 | UK v0.3 |
+|---|---|---|
+| null | -1.25 | -0.99 |
+| liquidate | -0.89 | -0.62 |
+| pay_all | -0.07 [-0.19, +0.05] | +0.01 [-0.07, +0.10] |
+| deny_all | -0.36 [-0.53, -0.21] | -0.01 [-0.08, +0.06] |
+| contest_all | -0.12 | -0.15 |
+| low_settle | -0.14 | -0.08 |
+| margin_up | -0.01 [-0.10, +0.08] | -0.06 |
+| margin_down | -0.16 | -0.07 |
+| no_reins | -0.31 | -0.32 |
+| timid | -0.52 | -0.39 |
+
+No probe beats the reference with a CI clear of zero in either regime. Reference median value: US 201 (R about 2.3), UK 154 (R about 1.75; capital is costlier). Under UK rules denial is about free (no bad-faith tort), which matches the real regime's reliance on conduct regulation rather than litigation; a conduct fine for systematic wrongful denial would be the lever if that is unwanted.
+
+US bot-only market, 20 seeds: actuary 100% survival, value 215; predator 95%, 208; reckless 50%, 46; cycle 40%, 14; random 25%, 4.

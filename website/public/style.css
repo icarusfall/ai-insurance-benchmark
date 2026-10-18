@@ -226,3 +226,11 @@ fieldset.reins label, .choices label { display: block; font-size: 15px; margin: 
 #ending { background: linear-gradient(160deg, var(--mint), var(--surface) 60%); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
 #ending h2 { margin-top: 0; }
 .perk { background: var(--lavender); border-radius: 6px; padding: 0 5px; }
+
+/* sidebars: real-world context beside the game's rules */
+aside.sidebar { background: var(--sky); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; margin: 22px 0; max-width: 100%; }
+aside.sidebar .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+aside.sidebar h4 { margin: 0 0 8px; font-size: 17px; }
+aside.sidebar p { font-size: 15px; margin: 0.4em 0; max-width: none; }
+aside.sidebar .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 8px 22px; }
+aside.sidebar.two { background: var(--lavender); }

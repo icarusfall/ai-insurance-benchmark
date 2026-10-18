@@ -19,7 +19,10 @@ def main():
     ap.add_argument("--seeds", type=int, default=20)
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--probes", default=",".join(bots.PROBE_NAMES))
+    ap.add_argument("--regime", default="us", help="regulatory regime preset (us is the headline; uk is a variant)")
     a = ap.parse_args()
+    from engine import params as _P
+    _P.set_regime(a.regime)
     seeds = range(a.start, a.start + a.seeds)
     refs = {s: play(s, bots.REGISTRY["actuary"]()) for s in seeds}
     ref_v = [refs[s]["value"] for s in seeds]

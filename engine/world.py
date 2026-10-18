@@ -155,7 +155,7 @@ class World:
                 for t in range(e.q, min(P.Q, e.q + e.data["duration"])):
                     self.flawmult[t, e.data["provider"]] = max(self.flawmult[t, e.data["provider"]], e.data["mult"])
             elif e.kind == "ruling":
-                self.prec_shift[e.q:, P.SECTOR_IDX[e.data["sector"]]] += e.data["delta"]
+                self.prec_shift[e.q:, P.SECTOR_IDX[e.data["sector"]]] += e.data["delta"] * P.RULING_SCALE
             elif e.kind == "mandate":
                 self.arrival_mult[e.q:e.q + e.data["duration"]] = 2.0
                 self.outside_pen[e.q:] = 3.0

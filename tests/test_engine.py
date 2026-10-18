@@ -85,7 +85,7 @@ def test_dividends_clawed_back_near_insolvency():
 
 
 def test_briefing_solvency_ratio_matches_restriction():
-    """A restricted insurer must never be shown a solvency ratio of 1 or more."""
+    """A restricted insurer must always be shown a capital ratio below the restriction level."""
     for seed in range(4):
         m = Market(seed, bots.make(["reckless", "cycle", "actuary"]))
         for _ in range(P.Q):
@@ -93,7 +93,7 @@ def test_briefing_solvency_ratio_matches_restriction():
             for v in views.values():
                 sr = v["own"]["solvency_ratio"]
                 if v["own"]["restricted"]:
-                    assert sr is not None and sr < 1
+                    assert sr is not None and sr < P.LADDER["restricted"]
             m.resolve({n: m.ins[n].bot.act(v) for n, v in views.items()})
 
 
@@ -101,3 +101,27 @@ def test_dossier_articles():
     w = World(7)
     assert not any(" a enormous" in c.text for c in w.clients)
     assert any(" an enormous" in c.text for c in w.clients)
+
+
+
+def test_uk_regime_switches_rules_and_version():
+    try:
+        P.set_regime("uk")
+        assert P.ENV_VERSION.endswith("+uk") and P.LADDER["restricted"] == 1.0 and P.GUARANTEE_MAX_SIZE == 0
+        r = run(1)
+        assert all(len(x["history"]) == P.Q for x in r["insurers"].values())
+    finally:
+        P.set_regime("us")
+    assert not P.ENV_VERSION.endswith("+uk") and P.LADDER["restricted"] == 1.5
+
+
+def test_levy_never_exceeds_annual_cap():
+    m = Market(3, bots.make(LINEUP))
+    m.run()
+    levied = 0.0
+    for ins in m.ins.values():
+        for q in range(P.Q):
+            if ins.levy_q[q] > 0:                  # a levy is only charged while there is room under the cap
+                levied += ins.levy_q[q]
+                cap = P.LEVY_CAP_ANNUAL * max(sum(ins.npw[max(0, q - 3):q + 1]), 5.0)
+                assert sum(ins.levy_q[max(0, q - 3):q + 1]) <= cap + 1e-6

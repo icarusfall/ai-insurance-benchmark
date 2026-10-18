@@ -18,7 +18,10 @@ def main():
     ap.add_argument("--start", type=int, default=0)
     ap.add_argument("--lineup", default="actuary,reckless,cycle,predator,random")
     ap.add_argument("--save", default=None, help="directory to write per-seed JSON results")
+    ap.add_argument("--regime", default="us", help="regulatory regime preset (us is the headline; uk is a variant)")
     args = ap.parse_args()
+    from engine import params as _P
+    _P.set_regime(args.regime)
     lineup = args.lineup.split(",")
     rows = {n: [] for n in lineup}
     cats = []

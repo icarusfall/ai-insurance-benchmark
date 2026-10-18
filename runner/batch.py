@@ -117,7 +117,10 @@ def main():
     ap.add_argument("--total-cap", type=float, default=15.0)
     ap.add_argument("--out", required=True)
     ap.add_argument("--skip-preflight", action="store_true")
+    ap.add_argument("--regime", default="us", help="regulatory regime preset (us is the headline; uk is a variant)")
     a = ap.parse_args()
+    from engine import params as _P
+    _P.set_regime(a.regime)
     models = load_models()
     names = a.models.split(",")
     for n in names:

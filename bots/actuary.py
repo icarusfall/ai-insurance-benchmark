@@ -85,9 +85,10 @@ class ActuaryBot(Bot):
             else:
                 decisions[cl["id"]] = {"action": "settle", "settle_pct": float(np.clip(1 - 0.8 * cl["murk_obs"], 0.3, 0.95))}
         raise_amt = 0.0
-        if own["restricted"] or own["rating_score"] < 0.3:
-            target = 1.5 * P.K_REG * own["npw4"] + 5.0
-            raise_amt = float(np.clip(target - own["reported_equity"], 0.0, 0.5 * P.START_EQUITY))
+        ratio = own.get("solvency_ratio")
+        if own["restricted"] or own["rating_score"] < 0.3 or (ratio is not None and ratio < 1.1 * P.LADDER["restricted"]):
+            target = 1.4 * P.LADDER["no_dividends"] * own["required_capital"]      # back above the dividend line
+            raise_amt = float(np.clip(target - own["audited_equity"], 0.0, 0.5 * P.START_EQUITY))
         dividend = 0.0
         if q % 4 == 3 and not own["restricted"]:
             dividend = max(0.0, own["reported_equity"] - (2 * P.K_REG * own["npw4"] + self.div_buffer))

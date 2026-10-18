@@ -24,7 +24,10 @@ def main():
     ap.add_argument("--quarters", type=int, default=P.Q)
     ap.add_argument("--max-cost", type=float, default=5.0, help="hard USD cap for this run")
     ap.add_argument("--runs-dir", default="runs")
+    ap.add_argument("--regime", default="us")
     a = ap.parse_args()
+    from engine import params as _P
+    _P.set_regime(a.regime)
     import os
     load_env()
     models = load_models()

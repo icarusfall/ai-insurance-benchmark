@@ -22,6 +22,7 @@ class LLMBot(Bot):
         self.runlog = runlog
         self.max_tokens = max_tokens
         self.state = {"notes": "", "manual": None}
+        self.system = pr.system_prompt()          # fixed for the game, built from the active regime
         self.totals = dict(input=0, output=0, cache_read=0, cache_write=0, calls=0, usd=0.0)
         self.errors = 0
         self.refusals = 0
@@ -41,7 +42,7 @@ class LLMBot(Bot):
         tool_log, refusal = [], False
         for rnd in range(MAX_ROUNDS):
             try:
-                turn = self.adapter.complete(pr.SYSTEM, messages, TOOLS, self.max_tokens)
+                turn = self.adapter.complete(self.system, messages, TOOLS, self.max_tokens)
             except AdapterError as e:            # transient provider failure after retries: play on with what we have
                 if not e.retryable:
                     raise

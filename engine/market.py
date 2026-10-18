@@ -53,6 +53,7 @@ class Claim:
     resolve_q: int = -1
     bad_faith: bool = False
     cede: float = 0.0
+    fee: float = 0.0
 
 
 @dataclass
@@ -68,7 +69,11 @@ class Ins:
     div_paid: float = 0.0
     ibnr: float = 0.0
     rating: float = 1.0
-    solvency_ratio: float = None      # as the regulator computed it at the last audit (None: no premium written)
+    solvency_ratio: float = None      # capital ratio as the regulator computed it at the last audit
+    required: float = 0.0             # required capital at the last audit
+    level: str = ""                   # regulatory ladder level at the last audit ("" = none)
+    below_q: int = 0                  # consecutive audits below the restriction level
+    levy_q: list = field(default_factory=lambda: [0.0] * P.Q)
     reported_eq: float = P.START_EQUITY
     audited_eq: float = P.START_EQUITY
     npw: list = field(default_factory=lambda: [0.0] * P.Q)
@@ -84,6 +89,12 @@ class Ins:
     rep_n: list = field(default_factory=lambda: [0] * P.Q)
     rep_amt: list = field(default_factory=lambda: [0.0] * P.Q)
     history: list = field(default_factory=list)
+
+
+def required_capital(premium4: float, reserves: float) -> float:
+    """Simplified risk-based capital: premium risk and reserve risk combined with a correlation, scaled."""
+    a, b = P.REQ_PREMIUM_FACTOR * premium4, P.REQ_RESERVE_FACTOR * reserves
+    return max(P.REQ_MIN, P.REQ_SCALE * math.sqrt(a * a + b * b + 2 * P.REQ_CORR * a * b))
 
 
 def rating_letter(r: float) -> str:
@@ -148,7 +159,7 @@ class Market:
         for cid in self.open[name]:
             cl = self.claims[cid]
             if cl.status == "court":
-                load = 1 + P.INTEREST_LOADING + (P.BAD_FAITH_LOADING if cl.bad_faith else 0.0)
+                load = 1 + P.INTEREST_LOADING + P.CLAIMANT_COSTS + (P.BAD_FAITH_LOADING if cl.bad_faith else 0.0)
                 t += cl.covered * (1 - cl.cede) * self.world.liability_p(self.q, cl.sector, cl.murk) * load
             else:
                 t += cl.covered * (1 - cl.cede) * 0.9
@@ -260,6 +271,7 @@ class Market:
             own=dict(cash=round(ins.cash, 3), reported_equity=round(ins.reported_eq, 3),
                      audited_equity=round(ins.audited_eq, 3),
                      solvency_ratio=(round(ins.solvency_ratio, 2) if ins.solvency_ratio is not None else None),
+                     required_capital=round(ins.required, 3), regulatory_level=ins.level,
                      max_net_line=round(self.net_line_cap(ins), 3),
                      rating=rating_letter(ins.rating), rating_score=round(ins.rating, 3),
                      restricted=ins.restricted, npw4=round(npw4, 3), ibnr_booked=round(ins.ibnr, 3),
@@ -332,7 +344,11 @@ class Market:
         ins = self.ins[cl.insurer]
         amt = amt * (1 - cl.cede)
         if ins.insolvent:
-            self.fund_outlay += amt
+            if self.world.clients[cl.client].size <= P.GUARANTEE_MAX_SIZE:
+                self.fund_outlay += amt * P.GUARANTEE_SHARE
+                self.fund_shortfall += amt * (1 - P.GUARANTEE_SHARE)
+            else:
+                self.fund_shortfall += amt                      # unprotected: the claimant is an unsecured creditor
         else:
             ins.cash -= amt
             ins.paid_total += amt
@@ -347,6 +363,7 @@ class Market:
         cl.resolve_q = self.q + P.COURT_DELAY[0] + int(((cl.u_court * 7.31) % 1.0) * (P.COURT_DELAY[1] - P.COURT_DELAY[0] + 1))
         self.court_due.setdefault(cl.resolve_q, []).append(cl.id)
         if fee:
+            cl.fee = fee
             self._pay(cl, fee)
             self.ins[cl.insurer].expense_total += fee
         self.open[cl.insurer].add(cl.id)
@@ -382,10 +399,13 @@ class Market:
         ins = self.ins[cl.insurer]
         p_l = self.world.liability_p(self.q, cl.sector, cl.murk)
         if cl.u_court < p_l:
-            self._pay(cl, cl.covered * (1 + P.INTEREST_LOADING + (P.BAD_FAITH_LOADING if cl.bad_faith else 0)))
+            self._pay(cl, cl.covered * (1 + P.INTEREST_LOADING + P.CLAIMANT_COSTS
+                                        + (P.BAD_FAITH_LOADING if cl.bad_faith else 0)))
             ins.rep = max(0.0, ins.rep - 0.05)
         else:
             ins.rep = min(1.0, ins.rep + 0.01)
+            if P.COST_RECOVERY and cl.fee and not ins.insolvent:      # loser pays: recover most of your costs
+                ins.cash += P.COST_RECOVERY * cl.fee
         self._close(cl)
 
     # ----------------------------------------------------------------- binding
@@ -487,8 +507,10 @@ class Market:
             levied = 0.0
             for i in live:
                 share = self.npw4(i) / tot if tot > 0 else 1 / len(live)
-                levy = min(self.fund_outlay * share, P.LEVY_CAP * max(self.npw4(i), 5.0))
+                room = P.LEVY_CAP_ANNUAL * max(self.npw4(i), 5.0) - sum(i.levy_q[max(0, q - 3):q])
+                levy = max(0.0, min(self.fund_outlay * share, room))
                 i.cash -= levy
+                i.levy_q[q] += levy
                 levied += levy
             self.fund_total += levied
             self.fund_shortfall += self.fund_outlay - levied
@@ -513,21 +535,26 @@ class Market:
             booked = self._case_reserve(ins.name) + ins.ibnr
             ins.reported_eq = ins.cash - upr - booked
             npw4 = self.npw4(ins)
+            true_unpaid = self._true_unpaid(ins.name)
+            audited_res = max(booked, P.AUDIT_FLOOR * true_unpaid)
+            req = required_capital(npw4, audited_res)
             div = float(act.get("dividend") or 0.0)
             if div > 0:
-                allow = max(0.0, min(div, ins.reported_eq - 2 * P.K_REG * npw4, ins.cash))
+                allow = self._dividend_allowed(ins, div, req, ins.cash - upr - audited_res)
                 ins.cash -= allow
                 ins.div_paid += allow
                 ins.div_q[q] += allow
                 ins.reported_eq -= allow
-            true_unpaid = self._true_unpaid(ins.name)
-            audited_res = max(booked, P.AUDIT_FLOOR * true_unpaid)
             ins.audited_eq = ins.cash - upr - audited_res
-            ins.restricted = bool(ins.audited_eq < P.K_REG * npw4)   # plain bool: numpy bools log as "False"
-            # the briefing shows this same ratio, so a restricted insurer always sees a ratio below 1
-            ins.solvency_ratio = float(ins.audited_eq / (P.K_REG * npw4)) if npw4 > 0 else None
+            ins.required = req
+            ins.solvency_ratio = float(ins.audited_eq / req)     # the briefing shows this same figure
+            ratio = ins.solvency_ratio
+            ins.below_q = ins.below_q + 1 if ratio < P.LADDER["restricted"] else 0
+            ins.restricted = bool(ratio < P.LADDER["restricted"] and ins.below_q > P.RESTRICT_AFTER_Q)
+            ins.level = ("seized" if ratio < P.LADDER["seized"] else "restricted" if ratio < P.LADDER["restricted"]
+                         else "no_dividends" if ratio < P.LADDER["no_dividends"] else "")
             ins.rating = float(np.clip(ins.audited_eq / max(npw4, 8.0) / P.RATING_FULL, 0.0, 1.0))
-            if ins.audited_eq < 0:
+            if ins.audited_eq < 0 or ratio < P.LADDER["seized"]:
                 newly.append(ins)
         for ins in newly:
             ins.insolvent = True
@@ -553,6 +580,22 @@ class Market:
         for ins in self.ins.values():
             if not ins.insolvent:
                 ins.bot.on_quarter_end(q)
+
+    def _dividend_allowed(self, ins: Ins, div: float, req: float, audited_before: float) -> float:
+        """Regulatory limit on a dividend. Never below the no-dividends level of the ladder; under US rules
+        ordinary dividends are limited to max(10% of equity, last 4 quarters' income) per 4 quarters and anything
+        more ("extraordinary") is approved only for well-capitalised insurers."""
+        q = self.q
+        cap = min(div, ins.cash, max(ins.reported_eq, 0.0), audited_before - P.DIVIDEND_MIN_RATIO * req)
+        if P.DIVIDEND_RULE == "us":
+            past = sum(ins.div_q[max(0, q - 3):q])
+            before = ins.history[q - 4]["reported_eq"] if q >= 4 else P.START_EQUITY
+            income = ins.reported_eq + past - sum(ins.inj_q[max(0, q - 3):q + 1]) - before
+            ordinary = max(0.0, max(0.1 * ins.reported_eq, income) - past)
+            if cap > ordinary:
+                extraordinary = audited_before - P.EXTRAORDINARY_RATIO * req
+                cap = min(cap, max(ordinary, extraordinary))
+        return max(0.0, cap)
 
     # --------------------------------------------------------------------- run
     def run(self, max_quarters: int = None) -> dict:

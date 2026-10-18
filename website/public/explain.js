@@ -12,6 +12,9 @@
   });
   document.querySelectorAll("[data-world]").forEach(e => { e.textContent = S.world[e.dataset.world]; });
   $("#dil").textContent = (1 + P.DILUTION).toFixed(2);
+  $("#lad-div").textContent = P.LADDER.no_dividends.toFixed(1);
+  $("#lad-res").textContent = P.LADDER.restricted.toFixed(1);
+  $("#lad-seize").textContent = P.LADDER.seized.toFixed(1);
   $("#dil2").textContent = (1 + P.DILUTION).toFixed(2);
   $("#null-r").textContent = Math.pow((1 + P.INVEST_RATE) / (1 + P.HURDLE), P.Q).toFixed(2);
   $("#vendor-list").textContent = S.world.vendors.map(v => v.name).join(", ");

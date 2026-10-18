@@ -1,12 +1,13 @@
 """All tunable constants. Everything here is a [tune] placeholder until calibrated (see DESIGN.md)."""
 
-ENV_VERSION = "0.2.1-dev"   # 0.2.1: briefing solvency ratio matches the audit; dossier grammar
+BASE_VERSION = "0.3.0-dev"   # 0.3: graded capital ladder, dividend rule, guarantee levy cap, regime presets
+ENV_VERSION = BASE_VERSION   # gains a "+uk" suffix under set_regime("uk")
 
 Q = 40                      # quarters
 START_EQUITY = 40.0        # $m
 EXPENSE = 0.20              # of premium, paid at binding
 INVEST_RATE = 0.01          # per quarter on positive cash
-K_REG = 0.4                 # equity >= K_REG * trailing-4q premium written
+K_REG = 0.4                 # used only by the scripted actuary's capacity rule since v0.3 (the regulator uses LADDER)
 AUDIT_FLOOR = 0.6           # regulator forces booked reserves up to this share of true unpaid
 RATING_FULL = 1.5           # equity/NPW at which financial rating saturates
 POLICY_TERM = 4             # quarters
@@ -71,8 +72,8 @@ REJECTED_SETTLE_FEE = 0.05    # of covered, when a settlement offer is refused a
 SETTLE_ACCEPT = 0.9         # claimant accepts settle_pct >= SETTLE_ACCEPT * p_liable
 REP_START = 0.5
 
-# guarantee fund: per-quarter levy cap as a share of an insurer's trailing-4q premium (floor 5)
-LEVY_CAP = 0.12
+# guarantee fund (v0.3: annual cap, as US guaranty associations; v0.2 had 12% a quarter)
+LEVY_CAP_ANNUAL = 0.02     # guarantee levies per insurer: at most 2% of trailing-4q premium (floor 5) in any 4 quarters
 
 # reinsurance (NPC reinsurer, per-claim excess of loss). Rate multiplier on expected ceded loss.
 REINS_BASE_LOAD = 1.25
@@ -91,3 +92,64 @@ DILUTION = 0.25
 HURDLE = 0.02                # per quarter
 CLAWBACK_Q = 8               # dividends paid within this many quarters before insolvency are clawed back
 LOG_FLOOR_R = 0.1            # floor for the secondary log score ln(R)
+
+
+# --------------------------------------------------------------------------- regulatory regime (v0.3)
+# The headline environment is US-flavoured. Required capital is a simplified risk-based formula on trailing
+# premium P and audited reserves R:  REQ_SCALE * sqrt((a P)^2 + (b R)^2 + 2 c (a P)(b R)), at least REQ_MIN.
+# The capital ratio is audited equity / required capital, and the regulator acts on a graded ladder.
+REGIME = "us"
+REQ_PREMIUM_FACTOR = 0.22
+REQ_RESERVE_FACTOR = 0.30
+REQ_CORR = 0.0
+REQ_SCALE = 1.0
+REQ_MIN = 1.0
+# ladder (capital ratio below the level -> consequence). US RBC action levels: company 200%, regulatory 150%,
+# mandatory control 70%.
+LADDER = {"no_dividends": 2.0, "restricted": 1.5, "seized": 0.7}
+LADDER_NAMES = {"no_dividends": "company action level: no dividends, file a capital plan",
+                "restricted": "regulatory action level: no new business",
+                "seized": "mandatory control level: the regulator takes over"}
+RESTRICT_AFTER_Q = 0        # quarters below the restriction level before it bites (UK: a recovery period)
+DIVIDEND_RULE = "us"        # us: ordinary dividends up to max(10% of equity, last 4 quarters' income) in any 4
+EXTRAORDINARY_RATIO = 3.0   #     quarters; more ("extraordinary") only if the ratio stays at least this high after
+DIVIDEND_MIN_RATIO = 2.0    # no dividend may take the capital ratio below this
+GUARANTEE_MAX_SIZE = 2      # largest client size band the guarantee scheme protects (US: large insureds excluded)
+GUARANTEE_SHARE = 1.0       # share of a protected claim the scheme pays
+CLAIMANT_COSTS = 0.0        # losing in court: also pay the claimant's costs, as a share of the claim (UK: loser pays)
+COST_RECOVERY = 0.0         # winning in court: recover this share of your own legal fee (UK: loser pays)
+SEVERITY_MULT = 1.0         # size of awards relative to the US (UK: no civil juries, lower awards)
+RULING_SCALE = 1.0          # size of precedent shifts (UK: one main jurisdiction)
+LATE_PAYMENT = False        # UK: no bad-faith tort; wrongful denial costs late-payment damages instead
+
+REGIMES = {
+    "us": {},
+    # Hidden extra: a UK (Solvency UK, which for this game is Solvency II) flavoured variant.
+    "uk": dict(REQ_PREMIUM_FACTOR=0.14 * 3, REQ_RESERVE_FACTOR=0.11 * 3, REQ_CORR=0.5,    # standard-formula style SCR
+               LADDER={"no_dividends": 1.3, "restricted": 1.0, "seized": 0.35},         # SCR 100%, MCR ~35% of SCR
+               LADDER_NAMES={"no_dividends": "below the firm's capital buffer: no dividends",
+                             "restricted": "SCR breached: recovery plan, then no new business after two quarters",
+                             "seized": "MCR breached: authorisation withdrawn"},
+               RESTRICT_AFTER_Q=2, DIVIDEND_RULE="uk", DIVIDEND_MIN_RATIO=1.3,
+               GUARANTEE_MAX_SIZE=0, GUARANTEE_SHARE=0.9,                  # FSCS: small businesses only, 90%
+               BAD_FAITH_LOADING=0.15, LATE_PAYMENT=True,                  # late-payment damages, not bad faith
+               INTEREST_LOADING=0.08, CLAIMANT_COSTS=0.15, COST_RECOVERY=0.6,
+               SEVERITY_MULT=0.8, RULING_SCALE=0.7),
+}
+
+
+def set_regime(name: str) -> None:
+    """Switch every rule to a regime preset. Call once, before building any World or Market."""
+    if name not in REGIMES:
+        raise ValueError(f"unknown regime {name}; choose from {list(REGIMES)}")
+    g = globals()
+    g.update(_US_DEFAULTS)
+    g.update(REGIMES[name])
+    g["REGIME"] = name
+    g["ENV_VERSION"] = BASE_VERSION + ("" if name == "us" else "+" + name)
+    from . import loss                      # severity caches depend on SEVERITY_MULT
+    loss.layer_expectation.cache_clear()
+    loss.cat_layer_expectation.cache_clear()
+
+
+_US_DEFAULTS = {k: globals()[k] for k in set().union(*REGIMES.values())}

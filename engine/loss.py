@@ -14,7 +14,7 @@ _TG = ((np.arange(40) + 0.5) / 40) ** (-1.0 / P.TAIL_ALPHA)
 
 def base_severity(sector: str, size: int, z: float, sev_bias: float = 1.0) -> float:
     s = P.SECTORS[sector]
-    return math.exp(math.log(s["median"]) + s["sigma"] * z) * math.sqrt(P.SIZE_MULT[size]) * sev_bias
+    return math.exp(math.log(s["median"]) + s["sigma"] * z) * math.sqrt(P.SIZE_MULT[size]) * sev_bias * P.SEVERITY_MULT
 
 
 def severity(sector: str, size: int, z: float, u_tail: float) -> float:
@@ -33,7 +33,7 @@ def layer_expectation(sector: str, size: int, limit: float, retention: float,
                       sev_bias: float = 1.0) -> float:
     """E[min(max(X - retention, 0), limit)] per incident."""
     s = P.SECTORS[sector]
-    scale = math.sqrt(P.SIZE_MULT[size]) * sev_bias
+    scale = math.sqrt(P.SIZE_MULT[size]) * sev_bias * P.SEVERITY_MULT
     base = np.exp(math.log(s["median"]) + s["sigma"] * _ZG) * scale
 
     def lay(x):

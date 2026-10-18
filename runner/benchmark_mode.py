@@ -45,7 +45,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--subject", default="random", choices=list(bots.REGISTRY))
     ap.add_argument("--seeds", type=int, default=20)
+    ap.add_argument("--regime", default="us", help="regulatory regime preset (us is the headline; uk is a variant)")
     a = ap.parse_args()
+    from engine import params as _P
+    _P.set_regime(a.regime)
     rows = [paired(s, bots.REGISTRY[a.subject]) for s in range(a.seeds)]
     r = summarise(rows)
     print(f"subject={a.subject} seeds={r['n']}")
