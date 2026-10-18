@@ -69,7 +69,7 @@ def run_job(model: str, seed: int, out: str, models: dict, per_game_cap: float, 
     except Exception as e:                       # keep the batch alive; record the failure
         err = f"{type(e).__name__}: {str(e)[:300]}"
     r = m.result()["insurers"][SUBJECT]
-    res = dict(model=model, seed=seed, env_version=P.ENV_VERSION, R=r["R"], complete=err is None and len(r["history"]) == P.Q and bot.errors <= 4 and bot.unended <= 4, error=err,
+    res = dict(model=model, seed=seed, env_version=P.ENV_VERSION, R=r["R"], complete=err is None and len(r["history"]) == P.Q and bot.errors <= 4, error=err,
                quarters=len(r["history"]), score=r["score"], value=r["value"], insolvent=r["insolvent"],
                insolvent_q=r["insolvent_q"], combined_ratio=r["combined_ratio"], premium_written=r["premium_written"],
                injected=r["injected"], dividends=r["dividends"], tokens=bot.totals, adapter_errors=bot.errors,

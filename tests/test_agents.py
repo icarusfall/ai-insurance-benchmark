@@ -80,3 +80,30 @@ def test_toolbox_validation():
     assert json.loads(box.execute("submit_quotes", {"quotes": [{"id": 2, "premium": 1}, {"id": 1, "premium": -1}]}))["errors"]
     assert json.loads(box.execute("decide_claims", {"decisions": [{"id": 9, "action": "settle"}]}))["errors"]
     assert "error" in json.loads(box.execute("nonsense", {}))
+
+
+def test_rate_manual_updates_one_sector_at_a_time():
+    from agents.tools import ToolBox
+    state = {"notes": "", "manual": None}
+    view = {"applicants": [], "claims": [], "own": {"reinsurance": None, "max_net_line": 10.0}}
+    box = ToolBox(view, state)
+    box.t_set_rate_manual(base_rate_on_limit={"medical": 0.05}, autonomy_slope=0.8)
+    box.t_set_rate_manual(base_rate_on_limit={"finance": 0.04})
+    m = state["manual"]
+    assert m["base_rate_on_limit"] == {"medical": 0.05, "finance": 0.04}
+    assert m["autonomy_slope"] == 0.8                      # untouched when not given
+    box.t_set_rate_manual(base_rate_on_limit={"medical": 0})
+    assert state["manual"]["base_rate_on_limit"] == {"finance": 0.04}
+    box.t_set_rate_manual(clear=True)
+    assert state["manual"] is None
+
+
+def test_looping_model_is_scored_not_aborted(tmp_path):
+    """A model that never calls end_turn keeps playing; only failed connections abort a game."""
+    from agents.adapters import ScriptedAdapter
+    loop = ScriptedAdapter(lambda s, m, t: [("set_rate_manual", {"base_rate_on_limit": {"consumer": 0.03}})])
+    bot = LLMBot("subject", loop, "claude-sonnet-5-5", MODELS, None, RunLog(str(tmp_path), "loop", {}))
+    lineup = {"subject": bot}
+    lineup.update(bots.make(NPCS))
+    res = Market(1, lineup).run(5)
+    assert len(res["insurers"]["subject"]["history"]) == 5 and bot.unended == 5

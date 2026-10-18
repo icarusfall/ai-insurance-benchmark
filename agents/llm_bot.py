@@ -72,7 +72,10 @@ class LLMBot(Bot):
                 break
         if not box.done:
             self.unended += 1
-        self.bad_streak = self.bad_streak + 1 if (not box.done and not box.quotes) else 0
+        # abort only for infrastructure failure: quarters in which no model call succeeded. A model that loops or
+        # never calls end_turn still has its decisions applied and is scored; that failure is its own.
+        answered = any(t["tool"] != "_adapter_error" for t in tool_log)
+        self.bad_streak = 0 if answered else self.bad_streak + 1
         if self.bad_streak >= 3:
             raise AdapterError("three consecutive quarters without a completed turn; aborting", retryable=False)
         actions = box.actions()

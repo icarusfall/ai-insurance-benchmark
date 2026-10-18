@@ -28,12 +28,14 @@ TOOLS = [
              "cat_carveout": {"type": "boolean"}, "upstream_excl": {"type": "boolean"},
              "misuse_excl": {"type": "boolean"}}}}}}},
     {"name": "set_rate_manual",
-     "description": "Set a standing rating table that prices every applicant you have not quoted explicitly or declined. "
+     "description": "Set or update a standing rating table that prices every applicant you have not quoted explicitly or "
+                    "declined. Sectors you give are added or updated; sectors you leave out keep their current rate, so you can "
+                    "change one sector at a time. Slopes and the red-flag multiplier change only if you give them. "
                     "premium = base_rate_on_limit[sector] * limit * exp(autonomy_slope*(autonomy_signal-0.5) + "
                     "safety_slope*(safety_signal-0.5)) * red_flag_multiplier ** (number of red flags). A sector with no "
                     "base rate is not auto-quoted. The limit is the client's ideal limit, cut down where needed to the "
                     "largest limit the single-risk rule allows under your treaty. Persists across quarters until replaced "
-                    "or cleared.",
+                    "or cleared (clear=true removes the whole table; a base rate of 0 removes one sector).",
      "input_schema": {"type": "object", "properties": {
          "base_rate_on_limit": {"type": "object", "description": "sector -> annual premium as a fraction of limit",
                                 "properties": {s: {"type": "number"} for s in SECTORS}},
@@ -152,15 +154,28 @@ class ToolBox:
             ok += 1
         return {"accepted": ok, "errors": errs}
 
-    def t_set_rate_manual(self, base_rate_on_limit=None, autonomy_slope=0.0, safety_slope=0.0,
-                          red_flag_multiplier=1.0, clear=False):
+    def t_set_rate_manual(self, base_rate_on_limit=None, autonomy_slope=None, safety_slope=None,
+                          red_flag_multiplier=None, clear=False):
+        """Merges into the existing table (v0.3): models naturally set one sector at a time, and a replacing tool
+        silently wiped the other sectors, which sent some models into loops."""
         if clear:
             self.state["manual"] = None
             return {"manual": None}
-        base = {s: float(v) for s, v in (base_rate_on_limit or {}).items() if s in SECTORS and v > 0}
+        cur = self.state.get("manual") or dict(base_rate_on_limit={}, autonomy_slope=0.0, safety_slope=0.0,
+                                               red_flag_multiplier=1.0)
+        base = dict(cur["base_rate_on_limit"])
+        for s, v in (base_rate_on_limit or {}).items():
+            if s in SECTORS:
+                if float(v) > 0:
+                    base[s] = float(v)
+                else:
+                    base.pop(s, None)
         unknown = [s for s in (base_rate_on_limit or {}) if s not in SECTORS]
-        self.state["manual"] = dict(base_rate_on_limit=base, autonomy_slope=float(autonomy_slope),
-                                    safety_slope=float(safety_slope), red_flag_multiplier=float(red_flag_multiplier))
+        self.state["manual"] = dict(
+            base_rate_on_limit=base,
+            autonomy_slope=float(cur["autonomy_slope"] if autonomy_slope is None else autonomy_slope),
+            safety_slope=float(cur["safety_slope"] if safety_slope is None else safety_slope),
+            red_flag_multiplier=float(cur["red_flag_multiplier"] if red_flag_multiplier is None else red_flag_multiplier))
         return {"manual": self.state["manual"], "unknown_sectors_ignored": unknown, "valid_sectors": SECTORS}
 
     def t_decline(self, ids):
