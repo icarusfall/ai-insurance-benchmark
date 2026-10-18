@@ -20,6 +20,7 @@
     <a href="index.html" aria-current="page">How it works</a>
     <a href="failures.html">How insurers die</a>
     <a href="results.html">Results</a>
+    <a href="play.html">Play it yourself</a>
   </nav>
 </div></header>
 
@@ -265,7 +266,7 @@
 <section class="chapter" id="transcripts">
   <p class="kicker">14</p>
   <h2>A quarter, as played</h2>
-  <p>What the models actually send back. Each tab is one real quarter from the second wave of games (environment <span data-p="ENV_VERSION"></span>), chosen because it exercises most of the tools. Every call is shown in order: the arguments the model sent, and the game's reply. Nothing takes effect until the final <code>end_turn</code>.</p>
+  <p>What the models actually send back. Each tab is one real quarter from the second wave of games (environment <span id="turn-env"></span>), chosen because it exercises most of the tools. Every call is shown in order: the arguments the model sent, and the game's reply. Nothing takes effect until the final <code>end_turn</code>.</p>
   <p style="font-size:15px;color:var(--ink-2)">Long lists are shortened to their first few items and only the first two applicants of each page are shown. The models' free-text reasoning between calls is not logged, so what you see is what they did rather than what they thought.</p>
   <div class="tabs" role="tablist" id="turn-tabs"></div>
   <div id="turn-body"></div>

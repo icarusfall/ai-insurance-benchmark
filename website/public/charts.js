@@ -66,7 +66,7 @@
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart-svg", role: "img", "aria-label": opts.aria || "line chart" }, box);
     const xs = series.flatMap(s => s.points.map(p => p[0]));
     const ys = series.flatMap(s => s.points.map(p => p[1]).filter(v => v !== null && v !== undefined));
-    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    const x0 = opts.xMin ?? Math.min(...xs), x1 = opts.xMax ?? Math.max(...xs);
     const yt = niceTicks(opts.yMin ?? Math.min(0, ...ys), opts.yMax ?? Math.max(...ys), 5);
     const y0 = yt[0], y1 = yt[yt.length - 1];
     const X = v => m.l + (v - x0) / (x1 - x0 || 1) * (W - m.l - m.r);
@@ -84,7 +84,8 @@
       t.textContent = r.label;
     });
     const step = opts.xTick || Math.max(1, Math.round((x1 - x0) / 8));
-    const xticks = opts.xTicks || Array.from({ length: Math.floor((x1 - x0) / step) + 1 }, (_, i) => x0 + i * step);
+    const xticks = (opts.xTicks || Array.from({ length: Math.floor((x1 - x0) / step) + 1 }, (_, i) => x0 + i * step))
+      .filter(v => v >= x0 && v <= x1);
     for (const v of xticks) {
       const t = el("text", { x: X(v), y: H - m.b + 18, "text-anchor": "middle" }, svg);
       t.textContent = opts.xFormat ? opts.xFormat(v) : v;

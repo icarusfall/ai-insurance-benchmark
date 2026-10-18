@@ -199,7 +199,7 @@ def llm_turns() -> list:
     for p in glob.glob(os.path.join("runs", "wave2", "*", "s*", "game.jsonl")):
         with open(os.path.join(os.path.dirname(p), "manifest.json"), encoding="utf-8") as f:
             man = json.load(f)
-        model, seed = man["model"], man["seed"]
+        model, seed, env = man["model"], man["seed"], man.get("env_version")
         for r in (json.loads(l) for l in open(p, encoding="utf-8")):
             names = [t["tool"] for t in r["tools"]]
             if r["q"] < 6 or "end_turn" not in names or not r.get("memo"):
@@ -207,10 +207,10 @@ def llm_turns() -> list:
             score = (len(set(names)) + 3 * ("submit_quotes" in names) + 3 * ("decide_claims" in names)
                      + 2 * ("set_reinsurance" in names) + ("set_rate_manual" in names) - 0.1 * max(0, len(names) - 14))
             if score > best.get(model, (-1,))[0]:
-                best[model] = (score, seed, r)
-    for model, (_, seed, r) in sorted(best.items()):
+                best[model] = (score, seed, r, env)
+    for model, (_, seed, r, env) in sorted(best.items()):
         own = r["own"]
-        out.append(dict(model=model, seed=seed, quarter=r["q"] + 1, env_version=P.ENV_VERSION,
+        out.append(dict(model=model, seed=seed, quarter=r["q"] + 1, env_version=env,
                         position=dict(cash=own["cash"], reported_equity=own["reported_equity"],
                                       audited_equity=own.get("audited_equity"), solvency_ratio=own.get("solvency_ratio"),
                                       policies_in_force=own["policies_in_force"]),
@@ -244,12 +244,13 @@ def _per_quarter(cum_at_start: dict, total: float) -> list:
 
 def results(batch: str = "wave2") -> dict:
     """Every complete LLM game in a batch, as wealth paths, plus the reference actuary on the same seeds."""
-    models = {}
+    models, versions = {}, set()
     for p in sorted(glob.glob(os.path.join("runs", batch, "*", "s*", "result.json"))):
         with open(p, encoding="utf-8") as f:
             r = json.load(f)
-        if not r.get("complete") or r.get("env_version") != P.ENV_VERSION:
+        if not r.get("complete"):
             continue
+        versions.add(r.get("env_version"))
         rows = [json.loads(l) for l in open(os.path.join(os.path.dirname(p), "game.jsonl"), encoding="utf-8")]
         divs = _per_quarter({x["q"]: x["own"]["dividends_paid"] for x in rows}, r["dividends"])
         injs = _per_quarter({x["q"]: P.CAPITAL_RAISE_MAX * P.START_EQUITY - x["own"]["capital_raise_remaining"] for x in rows},
@@ -270,7 +271,10 @@ def results(batch: str = "wave2") -> dict:
         ins = m.ins[SUBJECT]
         ref.append(dict(seed=s, R=round(res["R"], 4), insolvent=res["insolvent"], insolvent_q=res["insolvent_q"],
                         path=wealth_path([h["true_eq"] for h in res["history"]], ins.div_q, ins.inj_q, res["insolvent_q"])))
-    return dict(batch=batch, env_version=P.ENV_VERSION, models=models, reference=ref)
+    if len(versions) > 1:
+        raise SystemExit(f"batch {batch} mixes environment versions {versions}")
+    # the reference is re-simulated with today's engine; that is only valid if no scored mechanics changed since
+    return dict(batch=batch, env_version=versions.pop() if versions else None, models=models, reference=ref)
 
 
 def main():

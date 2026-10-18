@@ -15,6 +15,8 @@
   const short = m => m.replace(/^.*\//, "");
   const seeds = [...new Set(models.flatMap(m => R.models[m].map(g => g.seed)))].sort((a, b) => a - b);
   $("#batch").textContent = R.batch.replace("wave", "wave ");
+  $("#batch-env").textContent = R.env_version;
+  $("#batch-env-2").textContent = R.env_version;
   $("#n-seeds").textContent = seeds.length;
   const refPath = medianPath(R.reference);
   const fmtR = v => v.toFixed(2);

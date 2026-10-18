@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play it yourself — Act of God &amp; Co.</title>
+<meta name="description" content="Run a small AI-liability insurer for twelve quarters and face the same kind of decisions the language models face in the benchmark.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='4' y='25' font-size='24' font-family='Georgia'%3E%C2%A7%3C/text%3E%3C/svg%3E">
+<script src="charts.js"></script>
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="brand" href="index.html">Act of God <span>&amp;</span> Co.</a>
+  <nav>
+    <a href="index.html">How it works</a>
+    <a href="failures.html">How insurers die</a>
+    <a href="results.html">Results</a>
+    <a href="play.html" aria-current="page">Play it yourself</a>
+  </nav>
+</div></header>
+
+<div class="hero">
+  <img class="hero-art" src="img/dice.png" alt="Two pastel dice and a coin on a small round plinth." width="670" height="428">
+  <p class="kicker">Intern edition</p>
+  <h1>Play it yourself</h1>
+  <p class="dek">Run a small insurer for twelve quarters. Price three lines of AI-liability business, set aside money for claims you have not heard about yet, buy reinsurance, rule on a claim each quarter and decide what to pay your shareholders. A house actuary plays the same world, with the same luck, alongside you.</p>
+  <p class="epigraph">This is a simplified cousin of the benchmark, with its own rules and numbers, and kinder. The language models in the real thing price fifty clients a quarter from their dossiers, for forty quarters, with no bail-out.</p>
+</div>
+
+<div class="layout" style="grid-template-columns: minmax(0, 1fr)">
+<main>
+
+<section class="chapter" id="intro">
+  <h2>How to play</h2>
+  <div class="grid">
+    <div class="card"><span class="tag">Goal</span><h4>Beat the hurdle</h4><p>Shareholders want 2% a quarter. Your score, R, is their wealth at the end against that path: 1.0 means you earned exactly what they asked. Cash sitting in the company earns only 1%.</p></div>
+    <div class="card"><span class="tag">Pricing</span><h4>Cheap wins, then hurts</h4><p>Undercut the going rate and you win more clients, but the extra ones are the riskier ones. Overprice and only the desperate buy.</p></div>
+    <div class="card"><span class="tag">The catch</span><h4>Nobody knows the true risk</h4><p>Each line may be riskier or safer than the whole market assumes. The market learns slowly. Can you learn faster?</p></div>
+    <div class="card"><span class="tag">The long tail</span><h4>Claims arrive late</h4><p>Only 40% of a quarter's claims are reported straight away; the rest trickle in over the next three quarters. Reserve for them, or the auditor will do it for you.</p></div>
+    <div class="card"><span class="tag">Kindness</span><h4>One bail-out, some hindsight</h4><p>If you go under once, the board injects $15m, at a cost to your score; the second time is final. Each quarter's report also tells you what your new policies will eventually cost. The real game never does.</p></div>
+  </div>
+  <p><button class="btn" id="start" type="button">Open for business</button></p>
+</section>
+
+<section class="chapter" id="game" hidden>
+  <div class="game-head">
+    <h2 id="q-label"></h2>
+    <span class="pill">world <span id="world-id"></span></span>
+  </div>
+  <div class="stats" id="status"></div>
+  <figure class="chart"><figcaption><div class="title">Shareholder wealth against the hurdle</div><div class="sub">You and the house actuary, same world, same luck. 1.0 is the hurdle.</div></figcaption><div id="chart-play"><p class="hint">The chart starts after your first quarter.</p></div></figure>
+
+  <div class="card briefing" id="briefing"></div>
+
+  <form id="play-form" class="toy">
+    <h3 style="margin-top:0">Your decisions this quarter</h3>
+    <div id="lines"></div>
+
+    <div class="controls">
+      <label>Reserving: assume claims will cost <output id="reserve-out"></output>
+        <input type="range" id="reserve" min="0" max="1.2" step="0.05" value="0.6"></label>
+      <label>Dividend to shareholders <output id="div-out"></output>
+        <input type="range" id="div" min="0" max="30" step="0.5" value="0"><span class="hint">Up to <span id="div-max"></span> (the regulator may allow less).</span></label>
+    </div>
+    <p class="hint">Reserving: the money set aside for claims that have happened but are not yet reported. Assume too little and your profits look wonderful until the auditor checks. At the going rate a line costs about 60% of its premium in claims, if the market has the risk right.</p>
+
+    <fieldset class="reins"><legend>Reinsurance</legend>
+      <label><input type="radio" name="reins" value="none"> None (free)</label>
+      <label><input type="radio" name="reins" value="standard" checked> Standard: costs 4% of premium, pays 60% of any bad surprise</label>
+      <label><input type="radio" name="reins" value="heavy"> Heavy: costs 9% of premium, pays 85% of any bad surprise</label>
+    </fieldset>
+
+    <h3>This quarter's claim</h3>
+    <div id="claim-card"></div>
+
+    <p id="preview" class="verdict"></p>
+    <p><button class="btn" type="submit">File the decisions and end the quarter</button></p>
+  </form>
+
+  <div id="ending" hidden></div>
+  <div id="log"></div>
+</section>
+
+</main>
+</div>
+<footer class="site"><div class="inner">Act of God &amp; Co. is a hobby benchmark. All companies, vendors and events are fictional. This game is a simplified illustration with its own rules; it is not the benchmark.</div></footer>
+<script src="play.js"></script>
+</body>
+</html>

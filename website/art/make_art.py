@@ -10,7 +10,7 @@ import os
 import sys
 
 import bpy
-from mathutils import Vector
+from mathutils import Euler, Vector
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "public", "img")
 PASTEL = {
@@ -244,7 +244,32 @@ def stamp():
     render("stamp")
 
 
-SCENES = {"office": office, "umbrella": umbrella, "coins": coins, "stamp": stamp}
+def dice():
+    """Two dice mid-roll beside a coin: the play page."""
+    reset()
+    ground(2.3, "lavender")
+    pips = {1: [(0, 0)], 2: [(-1, -1), (1, 1)], 3: [(-1, -1), (0, 0), (1, 1)], 4: [(-1, -1), (-1, 1), (1, -1), (1, 1)],
+            5: [(-1, -1), (-1, 1), (0, 0), (1, -1), (1, 1)], 6: [(-1, -1), (-1, 0), (-1, 1), (1, -1), (1, 0), (1, 1)]}
+
+    def die(loc, rot, colour, top, front, right):
+        b = box(loc, (1.1, 1.1, 1.1), colour, bevel=0.16, rot=rot)
+        d = 0.53
+        faces = {top: ((0, 0, 1), (1, 0, 0), (0, 1, 0)), front: ((0, -1, 0), (1, 0, 0), (0, 0, 1)), right: ((1, 0, 0), (0, 1, 0), (0, 0, 1))}
+        for n, (nrm, u, v) in faces.items():
+            for a_, b_ in pips[n]:
+                off = Vector(nrm) * d + Vector(u) * (0.27 * a_) + Vector(v) * (0.27 * b_)
+                ball(Euler(rot).to_matrix() @ off + Vector(loc), 0.1, "slate")       # placed in world space
+        return b
+
+    die((-0.6, 0.1, 0.55), (0, 0, 0.35), "white", 5, 3, 2)
+    die((0.85, -0.35, 0.55), (0, 0, -0.5), "peach", 6, 1, 4)
+    cyl((0.6, 1.1, 0.45), 0.45, 0.12, "gold", rot=(1.25, 0, 0.6), bevel=0.03)
+    lights()
+    camera(loc=(5.5, -7.0, 4.6), target=(0.1, 0, 0.6), lens=55)
+    render("dice")
+
+
+SCENES = {"office": office, "umbrella": umbrella, "coins": coins, "stamp": stamp, "dice": dice}
 
 if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []

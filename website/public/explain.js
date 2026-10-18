@@ -100,6 +100,7 @@
   (function () {
     const turns = S.turns || [];
     const tabs = $("#turn-tabs"), body = $("#turn-body");
+    $("#turn-env").textContent = turns.length ? turns[0].env_version : "";
     if (!turns.length) { body.innerHTML = "<p><i>No language-model games were available when this page was built.</i></p>"; return; }
     const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;");
     const pretty = v => esc(typeof v === "string" ? v : JSON.stringify(v, null, 2));

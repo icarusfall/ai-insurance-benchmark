@@ -20,11 +20,12 @@
     <a href="index.html">How it works</a>
     <a href="failures.html">How insurers die</a>
     <a href="results.html" aria-current="page">Results</a>
+    <a href="play.html">Play it yourself</a>
   </nav>
 </div></header>
 
 <div class="hero">
-  <p class="kicker">Results · <span id="batch"></span> · environment <span data-p="ENV_VERSION"></span></p>
+  <p class="kicker">Results · <span id="batch"></span> · environment <span id="batch-env"></span></p>
   <h1>Who kept the shareholders happy</h1>
   <p class="dek">Each model ran the same insurer, against the same four scripted rivals, on the same <span id="n-seeds"></span> simulated decades. Below is how its shareholders' wealth evolved, quarter by quarter, measured against what they required: 2% a quarter.</p>
 </div>
@@ -68,7 +69,7 @@
     <li><b>Small samples.</b> A handful of seeds per model. Outcomes vary a great deal between seeds and between runs of the same model on the same seed. Treat this as a first look, not a ranking.</li>
     <li><b>Cheap models only.</b> This wave tested inexpensive models on purpose. Larger models have not been run yet.</li>
     <li><b>Unequal information.</b> The reference and rivals have a near-correct risk model; the language models do not. Beating the reference is hard by design.</li>
-    <li><b>One environment version.</b> Results are only comparable within <span data-p="ENV_VERSION"></span>.</li>
+    <li><b>One environment version.</b> Results are only comparable within one version; these were played under <span id="batch-env-2"></span>.</li>
   </ul>
 </section>
 
