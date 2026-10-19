@@ -95,3 +95,6 @@ models:
     provider: openrouter
     input: 0.65
     output: 3.41
+    # Exception to "no special settings": at default effort Kimi spent its whole 16k output budget on hidden
+    # reasoning and never called a tool (pilot preflight, 2026-10-18). Medium effort makes it playable.
+    effort: medium
