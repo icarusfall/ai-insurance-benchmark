@@ -130,11 +130,13 @@
       const vx = x0 + ((e.clientX - r.left) / r.width * W - m.l) / (W - m.l - m.r) * (x1 - x0);
       const xv = Math.round(vx);
       cross.setAttribute("x1", X(xv)); cross.setAttribute("x2", X(xv));
-      const rows = series.map(s => {
-        const p = s.points.find(p => p[0] === xv);
-        return p && p[1] !== null && p[1] !== undefined
-          ? `<div class="row"><span><i style="background:var(${s.color})"></i>${s.name}</span><b>${(opts.tipFormat || fmt)(p[1])}</b></div>` : "";
-      }).join("");
+      // highest value first, so the tooltip reads as the ranking at this quarter
+      const rows = series
+        .map(s => ({ s, p: s.points.find(p => p[0] === xv) }))
+        .filter(({ p }) => p && p[1] !== null && p[1] !== undefined)
+        .sort((a, b) => b.p[1] - a.p[1])
+        .map(({ s, p }) => `<div class="row"><span><i style="background:var(${s.color})"></i>${s.name}</span><b>${(opts.tipFormat || fmt)(p[1])}</b></div>`)
+        .join("");
       const ev = (opts.events || []).filter(e => e.x === xv).map(e => `<div style="color:var(--muted)">${e.label}</div>`).join("");
       showTip(e, `<div class="t">${opts.xFormat ? opts.xFormat(xv) : (opts.xName || "Quarter") + " " + xv}</div>${rows}${ev}`);
     });
