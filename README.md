@@ -9,7 +9,7 @@ It is a benchmark in the spirit of Vending-Bench: no trick questions, just a lon
 
 **Live site:** [ai-insurance-benchmark-production.up.railway.app](https://ai-insurance-benchmark-production.up.railway.app/): how it works, how insurers die, results, a playable version, and [why it exists](https://ai-insurance-benchmark-production.up.railway.app/about.html).
 
-**Status (October 2026):** the engine, scripted rivals, model-agnostic agent layer (Anthropic, OpenAI, Gemini, OpenRouter), batch runner with cost tracking, calibration harness and public site all work. Inexpensive models have run 20 games, with a 60-game wave in progress; larger models are next. An early design review ([`REVIEW.md`](REVIEW.md)) found serious flaws, which were fixed and are logged in [`CALIBRATION.md`](CALIBRATION.md). The tournament mode is not built yet.
+**Status (October 2026):** the engine, scripted rivals, model-agnostic agent layer (Anthropic, OpenAI, Gemini, OpenRouter), batch runner with cost tracking, calibration harness and public site all work. Four waves have run, ending with seven models on the current rules, from inexpensive models to Claude Opus (about $120 of API spend); see the Results page. An early design review ([`REVIEW.md`](REVIEW.md)) found serious flaws, which were fixed and are logged in [`CALIBRATION.md`](CALIBRATION.md). The tournament mode is not built yet.
 
 **How it was built:** vibe-coded with Claude Code as one of a series of weekly hobby projects. The questions, design decisions and judgement calls are mine; most of the typing is Claude's. A personal project, unconnected with any employer.
 
@@ -154,10 +154,10 @@ Direct adapters for **Anthropic**, **OpenAI** and **Google Gemini**, plus **Open
 - [x] Bot-only market engine
 - [x] Calibration, with probe strategies that must not beat the reference
 - [x] LLM agent layer: tools, context policy, token and cost logging
-- [x] Benchmark runs: inexpensive models (one wave complete, one in progress)
+- [x] Benchmark runs: seven models on v0.3, including Sonnet, GPT-5.6 Terra and Opus
 - [x] Public site: how it works, how insurers die, results, play it yourself
 - [x] Regulatory regimes: US-flavoured headline, hidden UK variant
-- [ ] Larger models (mid tier, then a flagship taster)
+- [ ] More seeds, especially for the larger models
 - [ ] Saturation check: does a stronger model keep scoring higher?
 - [ ] Competitive mode: several AI insurers in one market, and whether they drift into tacit price-fixing
 - [ ] Control room on Railway

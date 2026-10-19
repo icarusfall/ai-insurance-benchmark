@@ -9,16 +9,19 @@
   }
   const med = a => { const s = [...a].sort((x, y) => x - y); const n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; };
   const medianPath = games => Array.from({ length: P.Q }, (_, t) => [t + 1, med(games.map(g => g.path[t]))]);
-  const models = Object.keys(R.models).sort();
-  const colours = ["--s2", "--s3", "--s4", "--s5", "--s7", "--s8"];          // slot 1 (blue) is the reference
+  const MIN_GAMES = 5;                     // models with fewer games are pilots: listed separately, not charted
+  const models = Object.keys(R.models).filter(m => R.models[m].length >= MIN_GAMES).sort();
+  const colours = ["--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];   // slot 1 (blue) is the reference
   const colourOf = Object.fromEntries(models.map((m, i) => [m, colours[i % colours.length]]));
   const short = m => m.replace(/^.*\//, "");
   const seeds = [...new Set(models.flatMap(m => R.models[m].map(g => g.seed)))].sort((a, b) => a - b);
+  const counts = models.map(m => R.models[m].length);
   $("#batch").textContent = R.batch.replace("wave", "wave ");
   $("#batch-env").textContent = R.env_version;
   $("#batch-env-2").textContent = R.env_version;
   $("#batch-env-3").textContent = R.env_version;
-  $("#n-seeds").textContent = seeds.length;
+  if (R.env_version === P.ENV_VERSION) $("#version-note").hidden = true;    // the explainer and results agree
+  $("#n-seeds").textContent = Math.min(...counts) === Math.max(...counts) ? seeds.length : `${Math.min(...counts)} to ${Math.max(...counts)}`;
   const refPath = medianPath(R.reference);
   const fmtR = v => v.toFixed(2);
 
@@ -57,17 +60,18 @@
     const g = R.models[m], Rs = g.map(x => x.R);
     return { m, n: g.length, surv: g.filter(x => !x.insolvent).length, medR: med(Rs), best: Math.max(...Rs), worst: Math.min(...Rs),
              beat: g.filter(x => refBySeed[x.seed] && x.R > refBySeed[x.seed].R).length,
+             rel: med(g.filter(x => refBySeed[x.seed]).map(x => x.R / refBySeed[x.seed].R)),
              usd: g.reduce((a, x) => a + x.usd, 0) / g.length, min: g.reduce((a, x) => a + x.minutes, 0) / g.length };
-  }).sort((a, b) => b.medR - a.medR);
+  }).sort((a, b) => b.rel - a.rel);     // same-world comparison: models played different numbers of seeds
   const refRow = { m: "Reference actuary", n: R.reference.length, surv: R.reference.filter(x => !x.insolvent).length,
                    medR: med(R.reference.map(x => x.R)), best: Math.max(...R.reference.map(x => x.R)), worst: Math.min(...R.reference.map(x => x.R)) };
   const t = $("#summary");
   t.innerHTML = `<thead><tr><th>Model</th><th class="num">Games</th><th class="num">Survived</th><th class="num">Median R</th>
-      <th class="num">Best</th><th class="num">Worst</th><th class="num">Beat the reference</th><th class="num">$ per game</th><th class="num">Minutes per game</th></tr></thead>
+      <th class="num">Best</th><th class="num">Worst</th><th class="num">Share of the reference's R</th><th class="num">Beat the reference</th><th class="num">$ per game</th><th class="num">Minutes per game</th></tr></thead>
     <tbody>${rows.map(r => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(${colourOf[r.m]});margin-right:8px"></i>${short(r.m)}</td>
       <td class="num">${r.n}</td><td class="num">${r.surv} of ${r.n}</td><td class="num"><b>${fmtR(r.medR)}</b></td><td class="num">${fmtR(r.best)}</td>
-      <td class="num">${fmtR(r.worst)}</td><td class="num">${r.beat} of ${r.n}</td><td class="num">${r.usd.toFixed(2)}</td><td class="num">${r.min.toFixed(0)}</td></tr>`).join("")}
+      <td class="num">${fmtR(r.worst)}</td><td class="num"><b>${Math.round(r.rel * 100)}%</b></td><td class="num">${r.beat} of ${r.n}</td><td class="num">${r.usd.toFixed(2)}</td><td class="num">${r.min.toFixed(0)}</td></tr>`).join("")}
       <tr style="color:var(--ink-2)"><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--s1);margin-right:8px"></i>${refRow.m}</td>
       <td class="num">${refRow.n}</td><td class="num">${refRow.surv} of ${refRow.n}</td><td class="num"><b>${fmtR(refRow.medR)}</b></td>
-      <td class="num">${fmtR(refRow.best)}</td><td class="num">${fmtR(refRow.worst)}</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr></tbody>`;
+      <td class="num">${fmtR(refRow.best)}</td><td class="num">${fmtR(refRow.worst)}</td><td class="num">100%</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr></tbody>`;
 })();

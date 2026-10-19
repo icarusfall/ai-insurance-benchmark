@@ -35,7 +35,7 @@
 <main>
 
 <section class="chapter" id="chart">
-  <p class="hint">These games were played under environment <b><span id="batch-env-3"></span></b>. The <a href="index.html">explainer</a> describes the current rules (<span data-p="ENV_VERSION"></span>), which add a graded capital ladder and regulated dividends; results are only compared within one version, and the current rules will be re-run.</p>
+  <p class="hint" id="version-note">These games were played under environment <b><span id="batch-env-3"></span></b>. The <a href="index.html">explainer</a> describes the current rules (<span data-p="ENV_VERSION"></span>), which add a graded capital ladder and regulated dividends; results are only compared within one version, and the current rules will be re-run.</p>
   <figure class="chart">
     <figcaption>
       <div class="title">Shareholder wealth against the hurdle, median across seeds</div>
@@ -61,7 +61,18 @@
   <p class="kicker">Summary</p>
   <h2>The numbers</h2>
   <div class="table-wrap"><table id="summary"></table></div>
-  <p style="font-size:15px;color:var(--ink-2)">"Beat the reference" counts seeds where the model's final R exceeded the reference actuary's on the same world. Cost is the API bill per game; minutes are wall-clock time per 40-quarter game.</p>
+  <p style="font-size:15px;color:var(--ink-2)">Models are ranked by "share of the reference's R": each game's R divided by the reference actuary's R on the same world, median across games. This is fairer than median R alone, because models played different numbers of seeds and some worlds are kinder than others. "Beat the reference" counts seeds where the model's final R exceeded the reference actuary's on the same world. Cost is the API bill per game; minutes are wall-clock time per 40-quarter game.</p>
+</section>
+
+<section class="chapter" id="pilots">
+  <p class="kicker">Pilots</p>
+  <h2>Two models we only tried once</h2>
+  <p>Before committing seeds, every larger model played one pilot game to measure what a full game really costs. Two were dropped from the main run, for reasons list prices would not have predicted:</p>
+  <div class="grid">
+    <div class="card"><span class="tag">Too expensive</span><h4>Gemini 3.5 Flash</h4><p>Played well: R 2.16 on its pilot world. But it took 477 model calls to finish one game (Opus took 104), many small steps each re-reading the whole conversation, so a game cost $7.29, more than Opus. Cheap per token is not cheap per game.</p></div>
+    <div class="card"><span class="tag">Too slow</span><h4>Kimi K2.6</h4><p>At its default setting it reasoned until it ran out of output allowance, twice, without ever acting. With reasoning effort set to medium (the one exception to identical settings for every model) it scored R 1.74, but one game took 3 hours 13 minutes and cost $4.95.</p></div>
+  </div>
+  <p class="hint">One game says little about rank: these two are not in the chart or the table above. Both pilots were played on seed 0, a generous world on which the reference scored 3.62.</p>
 </section>
 
 <section class="chapter" id="caveats">
@@ -69,7 +80,8 @@
   <h2>Read this before quoting anything</h2>
   <ul>
     <li><b>Small samples.</b> A handful of seeds per model. Outcomes vary a great deal between seeds and between runs of the same model on the same seed. Treat this as a first look, not a ranking.</li>
-    <li><b>Cheap models only.</b> This wave tested inexpensive models on purpose. Larger models have not been run yet.</li>
+    <li><b>Few games per model.</b> Ten seeds for most models and five for Opus, so only the larger gaps are reliable; a model's own randomness also varies from run to run.</li>
+    <li><b>Not every model was run in full.</b> Gemini 3.5 Flash and Kimi K2.6 played one pilot game each (below); Gemini 3.1 Flash-Lite, DeepSeek V4 Flash, GPT-5.6 Luna and Claude Haiku 5.5 are the inexpensive tier.</li>
     <li><b>Unequal information.</b> The reference and rivals have a near-correct risk model; the language models do not. Beating the reference is hard by design.</li>
     <li><b>One environment version.</b> Results are only comparable within one version; these were played under <span id="batch-env-2"></span>.</li>
   </ul>

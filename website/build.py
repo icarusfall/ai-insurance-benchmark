@@ -24,6 +24,7 @@ from runner.benchmark_mode import NPCS, SUBJECT
 OUT = os.path.join(os.path.dirname(__file__), "public", "data.js")
 SEEDS = range(10)
 SAMPLE_SEED = 7
+BATCH = "wave4"          # the LLM wave shown on the Results page and in the transcripts
 GALLERY = ["actuary", "null", "reckless", "cycle", "random", "deny_all", "no_reins", "timid"]
 
 
@@ -197,7 +198,7 @@ def llm_turns() -> list:
     """One real quarter per model from the current wave: every tool call, its input and the game's reply."""
     out = []
     best = {}
-    for p in glob.glob(os.path.join("runs", "wave2", "*", "s*", "game.jsonl")):
+    for p in glob.glob(os.path.join("runs", BATCH, "*", "s*", "game.jsonl")):
         with open(os.path.join(os.path.dirname(p), "manifest.json"), encoding="utf-8") as f:
             man = json.load(f)
         model, seed, env = man["model"], man["seed"], man.get("env_version")
@@ -243,7 +244,8 @@ def _per_quarter(cum_at_start: dict, total: float) -> list:
     return [round(cum[t] - (cum[t - 1] if t else 0.0), 6) for t in range(P.Q)]
 
 
-def results(batch: str = "wave2") -> dict:
+def results(batch: str = None) -> dict:
+    batch = batch or BATCH
     """Every complete LLM game in a batch, as wealth paths, plus the reference actuary on the same seeds."""
     models, versions = {}, set()
     for p in sorted(glob.glob(os.path.join("runs", batch, "*", "s*", "result.json"))):
@@ -295,7 +297,7 @@ def main():
     data["gallery"] = gallery()
     data["llm"] = llm_excerpts() or _existing_llm()
     data["turns"] = llm_turns() or _existing_part("turns")
-    data["results"] = results() if os.path.isdir(os.path.join("runs", "wave2")) else _existing_part("results")
+    data["results"] = results() if os.path.isdir(os.path.join("runs", BATCH)) else _existing_part("results")
     _write(data)
 
 

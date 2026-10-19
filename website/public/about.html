@@ -37,8 +37,8 @@
 <section class="chapter">
   <h2>What I wanted to find out</h2>
   <div class="grid">
-    <div class="card"><span class="tag">Question 1</span><h4>Can a benchmark avoid saturating?</h4><p>Many benchmarks are solved within a year of release. A long-horizon task with hidden information, delayed feedback and competitors should have no ceiling to bump against: a better model should simply make more money. Whether that holds as stronger models are tested is still to be checked.</p></div>
-    <div class="card"><span class="tag">Question 2</span><h4>Do models differ in interesting ways?</h4><p>Early answer: yes. On the same simulated worlds, cheap models range from comfortably beating shareholders' required return to going bust four times out of five, and they fail in recognisably different ways. The samples are still small; see <a href="results.html">Results</a>.</p></div>
+    <div class="card"><span class="tag">Question 1</span><h4>Can a benchmark avoid saturating?</h4><p>Many benchmarks are solved within a year of release. A long-horizon task with hidden information, delayed feedback and competitors should have no ceiling to bump against: a better model should simply make more money. So far it holds: no model tested, flagships included, beats the scripted reference on average. A proper test needs newer models as they arrive.</p></div>
+    <div class="card"><span class="tag">Question 2</span><h4>Do models differ in interesting ways?</h4><p>Yes. On the same simulated worlds the best model so far is an inexpensive open-weight one (DeepSeek V4 Flash), larger models are not reliably better than smaller ones from the same family, and Claude Haiku went bust nine times in ten. The samples are still small; see <a href="results.html">Results</a>.</p></div>
     <div class="card"><span class="tag">Question 3, later</span><h4>Does anything misaligned show up?</h4><p>The planned tournament mode puts several AI insurers in one market. If they drift into tacit price-fixing, or learn that denying valid claims pays under weaker rules, that would be worth knowing. Nothing like this has been tested yet.</p></div>
   </div>
   <p>One more thread interests me. Each insurer in the game assesses its own reserves, a regulator audits them against a floor, and only the simulation knows the truth. The gap between <b>reported</b>, <b>audited</b> and <b>true</b> equity, and what happens to firms nobody checks closely enough, is <a href="failures.html#optimist">one of the ways insurers die</a> here. It is a small, concrete version of a bigger question: how much weight should rest on safety claims that an organisation assesses against its own standards?</p>
@@ -48,7 +48,7 @@
   <h2>Where it stands</h2>
   <ul>
     <li><b>Built:</b> the simulation, scripted rival insurers, a model-agnostic agent layer (Anthropic, OpenAI, Google and open-weight models), batch runs with cost tracking, a calibration harness that checks no shortcut strategy beats the reference, and this site.</li>
-    <li><b>Run so far:</b> several waves of small, inexpensive models, under $30 of API spend so far. Larger models are next, on a budget of around £100.</li>
+    <li><b>Run so far:</b> four waves, ending with seven models on the current rules (four inexpensive ones, Claude Sonnet, GPT-5.6 Terra and five games of Claude Opus), plus pilot games of two more. About $120 of API spend in total.</li>
     <li><b>Not yet built:</b> the tournament mode with several AI insurers competing; formal tests of whether the benchmark saturates; most of the statistics a published benchmark would need.</li>
     <li><b>Reviewed along the way:</b> an early version had serious flaws (doing nothing scored almost as well as the reference, and denying every claim beat it). They were found with deliberately degenerate test strategies and fixed. The record is in the repository's calibration log.</li>
   </ul>
