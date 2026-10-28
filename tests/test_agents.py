@@ -107,3 +107,17 @@ def test_looping_model_is_scored_not_aborted(tmp_path):
     lineup.update(bots.make(NPCS))
     res = Market(1, lineup).run(5)
     assert len(res["insurers"]["subject"]["history"]) == 5 and bot.unended == 5
+
+
+def test_loop_breaker_ends_the_quarter(tmp_path):
+    from agents.adapters import ScriptedAdapter
+    from agents.llm_bot import LOOP_LIMIT
+    same = ScriptedAdapter(lambda s, m, t: [("set_ibnr", {"amount": 1.0})])
+    bot = LLMBot("subject", same, "claude-sonnet-5-5", MODELS, None, RunLog(str(tmp_path), "loopb", {}))
+    lineup = {"subject": bot}
+    lineup.update(bots.make(NPCS))
+    Market(1, lineup).run(1)
+    game = [json.loads(l) for l in open(str(tmp_path) + "/loopb/game.jsonl")]
+    tools = [t["tool"] for t in game[0]["tools"]]
+    assert tools.count("set_ibnr") == LOOP_LIMIT and tools[-1] == "_loop_break"
+    assert bot.totals["calls"] == LOOP_LIMIT               # stopped calling the model at the limit

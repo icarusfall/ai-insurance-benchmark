@@ -54,7 +54,9 @@ def run_job(model: str, seed: int, out: str, models: dict, per_game_cap: float, 
     if os.path.exists(path):
         with open(path) as f:
             return same_version(json.load(f), path)
+    from agents.llm_bot import HARNESS_VERSION
     log = RunLog(root, f"s{seed}", dict(model=model, seed=seed, mode="benchmark", env_version=P.ENV_VERSION,
+                                        harness_version=HARNESS_VERSION,
                                         npcs=NPCS, prices=models[model]))
     budget = Budget(per_game_cap, parent=total)
     bot = LLMBot(SUBJECT, make_adapter(model, models[model]), model, models, budget, log)

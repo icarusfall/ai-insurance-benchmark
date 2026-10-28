@@ -1,4 +1,5 @@
 """LLMBot: a Bot whose act() runs a tool-use loop against a model adapter, within a budget."""
+import json
 import time
 
 from bots.base import Bot
@@ -9,6 +10,8 @@ from .pricing import Budget, call_cost, prices_for
 from .tools import TOOLS, ToolBox
 
 MAX_ROUNDS = 25
+LOOP_LIMIT = 5              # identical tool calls in a row that end the quarter (stops a looping model burning tokens)
+HARNESS_VERSION = "0.3.1"   # 0.3.1: loop breaker. Recorded in each run's manifest; the game rules are ENV_VERSION
 
 
 class LLMBot(Bot):
@@ -40,6 +43,7 @@ class LLMBot(Bot):
         messages = [{"role": "user", "content": pr.build_briefing(view, self.state)}]
         nudged = False
         tool_log, refusal = [], False
+        last_call, repeats, looped = None, 0, False
         for rnd in range(MAX_ROUNDS):
             try:
                 turn = self.adapter.complete(self.system, messages, TOOLS, self.max_tokens)
@@ -67,8 +71,14 @@ class LLMBot(Bot):
                 out = box.execute(name, inp)
                 tool_log.append(dict(tool=name, input=inp, output=out if len(out) < 600 else out[:600] + "..."))
                 results.append({"type": "tool_result", "tool_use_id": cid, "content": out})
+                key = (name, json.dumps(inp, sort_keys=True, default=str))
+                repeats = repeats + 1 if key == last_call else 1
+                last_call = key
+                if repeats >= LOOP_LIMIT and not looped:
+                    looped = True
+                    tool_log.append(dict(tool="_loop_break", input={"tool": name, "repeats": repeats}, output=""))
             messages.append({"role": "user", "content": results})
-            if box.done:
+            if box.done or looped:          # a loop ends the quarter; decisions made so far still apply
                 break
         if not box.done:
             self.unended += 1

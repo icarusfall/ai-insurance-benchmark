@@ -98,3 +98,51 @@ models:
     # Exception to "no special settings": at default effort Kimi spent its whole 16k output budget on hidden
     # reasoning and never called a tool (pilot preflight, 2026-10-18). Medium effort makes it playable.
     effort: medium
+
+  # ---- Added 2026-10-28 (newer generation). OpenAI and Gemini prices are reference figures from
+  # OpenRouter's listing on that date; cache-read prices assumed at 0.1x input. Ids checked against each provider.
+  gpt-6-luna:
+    provider: openai
+    input: 0.10
+    output: 0.50
+    cache_read: 0.01
+  gpt-6.1-terra:
+    provider: openai
+    input: 1.00
+    output: 5.00
+    cache_read: 0.10
+  gpt-6.1-sol:
+    provider: openai
+    input: 2.00
+    output: 10.00
+    cache_read: 0.20
+  gemini-3.8-flash:
+    provider: gemini
+    input: 0.83
+    output: 4.12
+    cache_read: 0.083
+  gemini-4-argon:
+    provider: gemini
+    input: 2.00
+    output: 10.00
+    cache_read: 0.20
+  deepseek/deepseek-v4.1-flash:
+    provider: openrouter
+    input: 0.14
+    output: 0.42
+  minimax/minimax-m3.1-flash:
+    provider: openrouter
+    input: 0.15
+    output: 0.60
+  z-ai/glm-5.3-flashx:
+    provider: openrouter
+    input: 0.37
+    output: 1.25
+  x-ai/grok-4.7:
+    provider: openrouter
+    input: 2.00
+    output: 6.00
+  mistralai/mistral-large-4-0:
+    provider: openrouter
+    input: 1.36
+    output: 4.18
