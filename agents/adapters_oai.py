@@ -28,7 +28,10 @@ def to_messages(system: str, messages: list) -> list:
                     out.append({"role": "tool", "tool_call_id": b["tool_use_id"], "content": b["content"]})
         else:
             nat = [b for b in c if isinstance(b, dict) and b.get("type") == "_openai_message"]
-            out.append(nat[0]["message"] if nat else {"role": "assistant", "content": ""})
+            msg = dict(nat[0]["message"]) if nat else {"role": "assistant", "content": ""}
+            if msg.get("content") is None:      # a reasoning-only reply; strict providers reject null content
+                msg["content"] = ""
+            out.append(msg)
     return out
 
 

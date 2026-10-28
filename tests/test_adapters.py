@@ -132,3 +132,13 @@ def test_anthropic_cache_marker_on_newest_message_only():
     first = with_cache_marker(msgs[:1])
     assert first[0]["content"] == [{"type": "text", "text": "briefing", "cache_control": {"type": "ephemeral"}}]
     assert msgs[0]["content"] == "briefing"
+
+
+def test_reasoning_only_reply_is_sent_back_with_empty_content():
+    from agents.adapters_oai import to_messages
+    native = {"role": "assistant", "content": None, "reasoning": "thinking..."}
+    msgs = [{"role": "user", "content": "briefing"},
+            {"role": "assistant", "content": [{"type": "_openai_message", "message": native}]}]
+    out = to_messages("sys", msgs)
+    assert out[-1]["content"] == "" and out[-1]["reasoning"] == "thinking..."
+    assert native["content"] is None                     # the stored reply is not modified
