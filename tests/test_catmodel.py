@@ -73,3 +73,14 @@ def test_defaults_load_at_every_level():
     for level in ("optimistic", "central", "pessimistic"):
         s = load(level)
         assert len(s.perils) == 3 and s.members == 5
+
+
+def test_bio_insurability_report_keeps_hand_written_text(tmp_path, monkeypatch):
+    from catmodel import insurability as ins
+    s = ins.bio_only()
+    assert ins.limit_for_liability_share(s, 0.25) < ins.limit_for_liability_share(s, 0.5)
+    path = tmp_path / "bio.md"
+    path.write_text(f"# notes\n{ins.START}\nold\n{ins.END}\ntail\n", encoding="utf-8")
+    ins.markdown = lambda: f"{ins.START}\nnew\n{ins.END}"
+    ins.write(str(path))
+    assert path.read_text(encoding="utf-8") == f"# notes\n{ins.START}\nnew\n{ins.END}\ntail\n"
