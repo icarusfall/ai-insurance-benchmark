@@ -93,9 +93,42 @@
     The coefficients are on p. 273 and the data in Table 2. The fit is to natural catastrophe bonds in a single year,
     a quarter of a century ago, and prices have moved a long way since (see cat_bond_multiples_by_year). The model
     used to put PFL and CEL in percent, which scales every Lane spread up by 100^(a+b−1), about 1.3–1.4×. The model's
-    Lane spreads are now about a quarter lower than before. Re-fitting to recent bonds, cyber bonds included, is
-    still to do.
-  mapping: LANE and lane_spread in catmodel/pricing.py; LANE in mutual_site/public/model.js.
+    Lane spreads are now about a quarter lower than before. See catbond_refit_2023_26 for
+    a re-fit to recent bonds.
+  mapping: >-
+    LANE_2000 in catmodel/pricing.py. Kept for reference and tested against his Table 2; the model now prices with
+    the re-fit in catbond_refit_2023_26.
   checks:
     - {constant: "LANE γ, a, b", model: "0.55, 0.49, 0.57", source: "0.55, 0.495, 0.574 (p. 273)", result: confirmed}
     - {constant: Lane units, model: "PFL and CEL in percent", source: "decimals of par (Table 2)", result: corrected}
+
+- id: catbond_refit_2023_26
+  peril: all
+  informs: [price_multiple]
+  lens: market
+  claim: >-
+    Our re-fit of Lane's equation to 58 natural catastrophe bonds priced in 2025-26 and 9 cyber tranches from 2023-26
+    gives EER = 0.49 × PFL^0.59 × CEL^0.02 (adjusted R² 0.67), with cyber priced at 2.1 times the natural catastrophe
+    curve. Frequency still drives price. Severity given a loss has stopped mattering, because modern tranches have CEL
+    in a narrow band (0.54–0.89 for the middle 80%). Fitted bond by bond, the Wang transform's shift has a median of 0.47 for natural
+    catastrophe and 0.89 for cyber. Median spreads are 2.9 times expected loss for natural catastrophe and 6.9 times for cyber.
+  values:
+    lane: {gamma: 0.490, a_pfl: 0.591, b_cel: 0.017, cyber_loading: 2.14, se_a: 0.059, se_b: 0.199, se_ln_cyber: 0.106, adj_r2: 0.67, n: 67}
+    wang_lambda: {natcat_median: 0.47, natcat_range: [0.17, 0.90], cyber_median: 0.89, cyber_range: [0.77, 1.11]}
+    median_multiple_of_el: {natcat: 2.95, cyber: 6.87}
+  source: {title: "Catastrophe bond deal directory (deal pages for each tranche)", publisher: Artemis, date: 2026-10, url: "https://www.artemis.bm/deal-directory/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    The data are in catmodel/sources/catbond_prices.csv, one link per tranche; the fit is our own (python -m
+    catmodel.catbond_fit). Natural catastrophe covers only single-tranche deals with a final price, about a quarter of
+    2025-26 issuance. Five of the nine cyber spreads are Artemis's last reported guidance rather than final prices. The
+    Wang fit assumes a log-linear loss curve inside each layer, because the pages give only attachment probability and
+    expected loss. Nine cyber tranches from three sponsors is a small sample. Spreads fell over the period, which the
+    fit ignores.
+  mapping: >-
+    LANE in catmodel/pricing.py and mutual_site/public/model.js (the site's Lane tile uses the cyber loading);
+    wang_lambda in catmodel/defaults.yaml (low = natural catastrophe median, central = cyber median, high = cyber maximum).
+  checks:
+    - {constant: LANE (in use), model: "Lane 2000: 0.55, 0.495, 0.574", source: "0.49, 0.591, 0.017; cyber × 2.14", result: re-fitted}
+    - {constant: wang_lambda, model: "0.5 (placeholder)", source: "0.47 nat cat; 0.89 cyber (median)", result: re-fitted}

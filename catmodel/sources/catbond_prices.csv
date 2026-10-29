@@ -1,0 +1,74 @@
+# Catastrophe bond tranches for re-fitting Lane (2000) and the Wang transform: python -m catmodel.catbond_fit
+# Source: Artemis deal directory pages, read 2026-10-29 (status: secondary, a specialist outlet quoting deal terms).
+# Natural catastrophe: every 2025-26 deal whose page gives one attachment probability, one expected loss and a final
+# "priced to pay" spread (single-tranche deals only, so no pairing errors). Cyber: every tranche from 2023-26 whose page gives
+# all three numbers. price = priced (final) or guidance (the last guidance Artemis reported, the mid-point if a range, where no final price was given).
+# pfl_pct = initial attachment probability, el_pct = initial expected loss, spread_pct = risk interest spread; all % a year.
+name,date,peril,pfl_pct,el_pct,spread_pct,price,url
+Acorn Re Ltd. (Series 2026-1),Oct 2026,natcat,0.96,0.78,2,priced,https://www.artemis.bm/deal-directory/acorn-re-ltd-series-2026-1/
+Harbor Crest Re Ltd. (Series 2026-1),Jul 2026,natcat,2.42,1.97,4.5,priced,https://www.artemis.bm/deal-directory/harbor-crest-re-ltd-series-2026-1/
+Arthur Re Ltd. – Tranquil Re 2026-1,Jul 2026,natcat,10.23,7.19,12,priced,https://www.artemis.bm/deal-directory/arthur-re-ltd-tranquil-re-2026-1/
+Arthur Re Ltd. – Woody Re 2026-1,Jun 2026,natcat,7.13,3.88,8.25,priced,https://www.artemis.bm/deal-directory/arthur-re-ltd-woody-re-2026-1/
+Luca Re Ltd. (Series 2026-1),Jun 2026,natcat,1.23,1.09,5.25,priced,https://www.artemis.bm/deal-directory/luca-re-ltd-series-2026-1/
+Windmill III Re DAC (2026-1),Jun 2026,natcat,2.95,2.58,3.75,priced,https://www.artemis.bm/deal-directory/windmill-iii-re-dac-2026-1/
+Ramble Re Ltd. (Series 2026-1),Jun 2026,natcat,4.14,3.17,5,priced,https://www.artemis.bm/deal-directory/ramble-re-ltd-series-2026-1/
+Commonwealth Re Ltd. (Series 2026-1),Jun 2026,natcat,1.3,1.18,3,priced,https://www.artemis.bm/deal-directory/commonwealth-re-ltd-series-2026-1/
+Arthur Re Ltd. – Quercian Re 2026-1,Jun 2026,natcat,4.6,3.29,7,priced,https://www.artemis.bm/deal-directory/arthur-re-ltd-quercian-re-2026-1/
+Sanders Re III Ltd. (Series 2026-2),May 2026,natcat,1.4,1.07,4,priced,https://www.artemis.bm/deal-directory/sanders-re-iii-ltd-series-2026-2/
+Atlas Capital DAC (Series 2026-1),May 2026,natcat,3.44,3.13,6,priced,https://www.artemis.bm/deal-directory/atlas-capital-dac-series-2026-1/
+Long Point Re IV Ltd. (Series 2026-1),May 2026,natcat,1.68,1.38,3.5,priced,https://www.artemis.bm/deal-directory/long-point-re-iv-ltd-series-2026-1/
+GWS Re Limited (Series 2026-1),May 2026,natcat,2.52,1.88,6.375,priced,https://www.artemis.bm/deal-directory/gws-re-limited-series-2026-1/
+Mountain Re Ltd. (Series 2026-1),May 2026,natcat,4.54,2.46,7.25,priced,https://www.artemis.bm/deal-directory/mountain-re-ltd-series-2026-1/
+Recoletos Re DAC (Series 2026-1),May 2026,natcat,2.57,1.836,4.25,priced,https://www.artemis.bm/deal-directory/recoletos-re-dac-series-2026-1/
+Hypatia Ltd. (Series 2026-1),May 2026,natcat,2.87,2.26,5,priced,https://www.artemis.bm/deal-directory/hypatia-ltd-series-2026-1/
+Bayou Re Ltd. (Series 2026-1),May 2026,natcat,3.58,2.5,6.5,priced,https://www.artemis.bm/deal-directory/bayou-re-ltd-series-2026-1/
+One Shield Re Ltd. (Series 2026-1),Apr 2026,natcat,4.55,2.45,8,priced,https://www.artemis.bm/deal-directory/one-shield-re-ltd-series-2026-1/
+Palm Re Ltd. (Series 2026-1),Apr 2026,natcat,1.57,1.37,5,priced,https://www.artemis.bm/deal-directory/palm-re-ltd-series-2026-1/
+Turicum Re Ltd. (Series 2026-1),Apr 2026,natcat,9.22,7.88,15.75,priced,https://www.artemis.bm/deal-directory/turicum-re-ltd-series-2026-1/
+Baltic PCC Limited (Series 2026-1),Mar 2026,natcat,2.73,2.52,5.5,priced,https://www.artemis.bm/deal-directory/baltic-pcc-limited-series-2026-1/
+Purple Re Ltd. (Series 2026-1),Feb 2026,natcat,1.69,1.51,6.5,priced,https://www.artemis.bm/deal-directory/purple-re-ltd-series-2026-1/
+Golden Bear Re Ltd. (Series 2026-2),Feb 2026,natcat,3.07,2.65,9.5,priced,https://www.artemis.bm/deal-directory/golden-bear-re-ltd-series-2026-2/
+Herbie Re Ltd. (Series 2026-1),Jan 2026,natcat,3.32,2.37,4.25,priced,https://www.artemis.bm/deal-directory/herbie-re-ltd-series-2026-1/
+MMIFS Re Ltd. (Series 2026-1),Jan 2026,natcat,4.43,1.96,6.75,priced,https://www.artemis.bm/deal-directory/mmifs-re-ltd-series-2026-1/
+Skyline Re II Ltd. (Series 2025-1),Dec 2025,natcat,2.19,1.27,3.5,priced,https://www.artemis.bm/deal-directory/skyline-re-ii-ltd-series-2025-1/
+Bridge Street Re Ltd. (Series 2025-2),Dec 2025,natcat,4.5,3.33,7.75,priced,https://www.artemis.bm/deal-directory/bridge-street-re-ltd-series-2025-2/
+Handshake Re Ltd. (Series 2025-1),Dec 2025,natcat,4.23,2.11,4.5,priced,https://www.artemis.bm/deal-directory/handshake-re-ltd-series-2025-1/
+Quercus II Re DAC,Dec 2025,natcat,4.76,1.82,11,priced,https://www.artemis.bm/deal-directory/quercus-ii-re-dac/
+London Bridge 2 PCC Limited (Fuchsia 3 – 2025-1),Dec 2025,natcat,1.37,0.93,3.25,priced,https://www.artemis.bm/deal-directory/london-bridge-2-pcc-limited-fuchsia-3-2025-1/
+Golden Bear Re Ltd. (Series 2026-1),Dec 2025,natcat,2.58,2.24,9.75,priced,https://www.artemis.bm/deal-directory/golden-bear-re-ltd-series-2026-1/
+Foundation Re IV Ltd. (Series 2026-1),Dec 2025,natcat,1.35,1.18,3.5,priced,https://www.artemis.bm/deal-directory/foundation-re-iv-ltd-series-2026-1/
+Turris Re Ltd. (Series 2025-1),Dec 2025,natcat,0.51,0.27,2.4,priced,https://www.artemis.bm/deal-directory/turris-re-ltd-series-2025-1/
+Recoletos Re DAC (Series 2025-1),Nov 2025,natcat,2.67,2.31,3.5,priced,https://www.artemis.bm/deal-directory/recoletos-re-dac-series-2025-1/
+Hypatia Ltd. (Series 2025-1),Jun 2025,natcat,5.47,4.48,8.5,priced,https://www.artemis.bm/deal-directory/hypatia-ltd-series-2025-1/
+Baldwin Re Ltd. (Series 2025-1),Jun 2025,natcat,1.453,1.1,3.75,priced,https://www.artemis.bm/deal-directory/baldwin-re-ltd-series-2025-1/
+Solis Re Ltd. (Series 2025-1),Jun 2025,natcat,0.96,0.68,3.5,priced,https://www.artemis.bm/deal-directory/solis-re-ltd-series-2025-1/
+Commonwealth Re Ltd. (Series 2025-1),Jun 2025,natcat,1.13,1.02,3.75,priced,https://www.artemis.bm/deal-directory/commonwealth-re-ltd-series-2025-1/
+Finca Re Ltd. (Series 2025-1),Jun 2025,natcat,2.61,1.85,5.25,priced,https://www.artemis.bm/deal-directory/finca-re-ltd-series-2025-1/
+Mayflower Re Ltd. (Series 2025-1),Jun 2025,natcat,1.052,0.901,3.5,priced,https://www.artemis.bm/deal-directory/mayflower-re-ltd-series-2025-1/
+Herbie Re Ltd. (Series 2025-1),May 2025,natcat,14.58,8.79,31,priced,https://www.artemis.bm/deal-directory/herbie-re-ltd-series-2025-1/
+Sanders Re II Ltd. (Series 2025-2),May 2025,natcat,2.77,1.74,7,priced,https://www.artemis.bm/deal-directory/sanders-re-ii-ltd-series-2025-2/
+Bluebonnet Re Ltd. (Series 2025-2),May 2025,natcat,6.44,4.07,12,priced,https://www.artemis.bm/deal-directory/bluebonnet-re-ltd-series-2025-2/
+Oceanside Re Ltd. (Series 2025-1),May 2025,natcat,4.9,3.102,6,priced,https://www.artemis.bm/deal-directory/oceanside-re-ltd-series-2025-1/
+Black Kite Re Limited (Series 2025-1),Apr 2025,natcat,5.5,3.78,8,priced,https://www.artemis.bm/deal-directory/black-kite-re-limited-series-2025-1/
+Atlas Capital DAC (Series 2025-1),Apr 2025,natcat,4.08,3.29,7.25,priced,https://www.artemis.bm/deal-directory/atlas-capital-dac-series-2025-1/
+Palm Re Ltd. (Series 2025-1),Apr 2025,natcat,2.08,1.8,7.75,priced,https://www.artemis.bm/deal-directory/palm-re-ltd-series-2025-1/
+Nature Coast Re Ltd. (Series 2025-2),Apr 2025,natcat,2.98,1.58,9.75,priced,https://www.artemis.bm/deal-directory/nature-coast-re-ltd-series-2025-2/
+Gateway Re Ltd. (Series 2025-2),Apr 2025,natcat,3.11,1.86,7,priced,https://www.artemis.bm/deal-directory/gateway-re-ltd-series-2025-2/
+Greengrove Re Ltd. (Series 2025-1),Mar 2025,natcat,2.1,1.44,7.75,priced,https://www.artemis.bm/deal-directory/greengrove-re-ltd-series-2025-1/
+Sakura Re Ltd. (Series 2025-1),Mar 2025,natcat,1.88,1.58,2.75,priced,https://www.artemis.bm/deal-directory/sakura-re-ltd-series-2025-1/
+London Bridge 2 PCC Limited (Lapis 2025-1),Mar 2025,natcat,4.2,3.58,7.5,priced,https://www.artemis.bm/deal-directory/london-bridge-2-pcc-limited-lapis-2025-1/
+Yosemite Re Ltd. (Series 2025-1),Mar 2025,natcat,2.54,1.8,7.25,priced,https://www.artemis.bm/deal-directory/yosemite-re-ltd-series-2025-1/
+Northshore Re II Ltd. (Series 2025-1),Mar 2025,natcat,2.67,2.1,5,priced,https://www.artemis.bm/deal-directory/northshore-re-ii-ltd-series-2025-1/
+Cape Lookout Re Ltd. (Series 2025-1),Mar 2025,natcat,2.6,2.24,6.9,priced,https://www.artemis.bm/deal-directory/cape-lookout-re-ltd-series-2025-1/
+MMIFS Re Ltd. (Series 2025-1),Jan 2025,natcat,0.45,0.42,2.9,priced,https://www.artemis.bm/deal-directory/mmifs-re-ltd-series-2025-1/
+Nature Coast Re Ltd. (Series 2025-1),Jan 2025,natcat,3.94,2.92,9.75,priced,https://www.artemis.bm/deal-directory/nature-coast-re-ltd-series-2025-1/
+Bridge Street Re Ltd. (Series 2025-1),Jan 2025,natcat,2.03,1.29,4,priced,https://www.artemis.bm/deal-directory/bridge-street-re-ltd-series-2025-1/
+Matterhorn Re Ltd. (Series 2023-1) Class CYB-A,Dec 2023,cyber,2.228,1.721,12,guidance,https://www.artemis.bm/deal-directory/matterhorn-re-ltd-series-2023-1/
+East Lane Re VII Ltd. (Series 2024-1) Class A,Dec 2023,cyber,2.142,1.387,9.25,guidance,https://www.artemis.bm/deal-directory/east-lane-re-vii-ltd-series-2024-1/
+PoleStar Re Ltd. (Series 2024-1),Dec 2023,cyber,1.71,1.26,13,priced,https://www.artemis.bm/deal-directory/polestar-re-ltd-series-2024-1/
+Long Walk Reinsurance Ltd. (Series 2024-1) Class A,Nov 2023,cyber,2.46,1.97,9.75,guidance,https://www.artemis.bm/deal-directory/long-walk-reinsurance-ltd-series-2024-1/
+PoleStar Re Ltd. (Series 2024-3),Sep 2024,cyber,1.2,0.93,10.5,guidance,https://www.artemis.bm/deal-directory/polestar-re-ltd-series-2024-3/
+East Lane Re VII Ltd. (Series 2026-1) Class A,Dec 2025,cyber,1.48,1.24,7,guidance,https://www.artemis.bm/deal-directory/east-lane-re-vii-ltd-series-2026-1/
+East Lane Re VII Ltd. (Series 2026-1) Class B,Dec 2025,cyber,1.86,1.57,8.875,guidance,https://www.artemis.bm/deal-directory/east-lane-re-vii-ltd-series-2026-1/
+PoleStar Re Ltd. (Series 2026-1) Class A,Dec 2025,cyber,0.98,0.82,7,priced,https://www.artemis.bm/deal-directory/polestar-re-ltd-series-2026-1/
+PoleStar Re Ltd. (Series 2026-1) Class B,Dec 2025,cyber,1.81,1.31,9,priced,https://www.artemis.bm/deal-directory/polestar-re-ltd-series-2026-1/

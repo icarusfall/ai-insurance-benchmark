@@ -283,7 +283,7 @@
       tile("Chance it is wiped out", pct(b.prob_exhaust), `exhausts at ${money(x)}`) +
       tile("Expected loss", pct(b.expected_loss), "of principal, per year") +
       tile(`Spread at ${S.catbond_multiple}× expected loss`, pct(b.spread_multiple), "the reinsurance price lever") +
-      tile("Lane (2000) spread", pct(b.spread_lane), "from attach and conditional loss") +
+      tile("Lane spread, priced like cyber", pct(b.spread_lane), `re-fit to 2023–26 bonds; ${pct(b.spread_lane_natcat)} if priced like nat cat`) +
       tile("Wang transform spread", pct(b.spread_wang), `λ = ${S.wang_lambda}`);
   }
   $("#bond-attach").addEventListener("input", renderBond);

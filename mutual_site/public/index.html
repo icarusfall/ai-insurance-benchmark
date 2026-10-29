@@ -73,7 +73,7 @@
     <label>Exhausts at ($bn)<input type="number" id="bond-exhaust" value="4" min="0" step="0.5"></label>
   </div>
   <div class="tiles" id="bond-tiles"></div>
-  <p class="hint">Spreads three ways: a multiple of expected loss (the lever above), the Lane (2000) model, and a Wang transform with λ = 0.5. Lane's coefficients are checked against his paper, but were fitted to natural catastrophe bonds from 1999; the Wang λ is still to be fitted to market spreads.</p>
+  <p class="hint">Spreads three ways: a multiple of expected loss (the lever above), Lane's (2000) power law, and a Wang transform. Both of the last two are re-fitted to 58 natural catastrophe and 9 cyber bonds from 2023–26 (see <a href="#src-catbond_refit_2023_26">the re-fit</a>). Cyber bonds price at about twice the natural catastrophe curve; we price an AI bond like cyber, which is a judgement and arguably generous.</p>
 </section>
 
 <section class="chapter" id="bio">
@@ -99,7 +99,7 @@
   <h2>Where the numbers come from</h2>
   <p>Every parameter traces to an entry here, from one of four viewpoints: built up from first principles, a parallel from another fat-tailed industry, a market price or forecast, or an expert elicitation. Each says how far it has been checked.</p>
   <h3 id="checks">The model's own constants</h3>
-  <p>Besides the levers, the model hard-codes a few numbers taken from regulation and the pricing literature. Each was checked against the text it came from. Two needed correcting: Lane's pricing formula had been fed percentages where his paper uses decimals, which overstated its spreads by about a third, and the Solvency II own-funds rule carried a cap that the regulation doesn't have.</p>
+  <p>Besides the levers, the model hard-codes a few numbers taken from regulation and the pricing literature. Each was checked against the text it came from. Two needed correcting: Lane's pricing formula had been fed percentages where his paper uses decimals, which overstated its spreads by about a third, and the Solvency II own-funds rule carried a cap that the regulation doesn't have. The two cat bond pricing constants have since been re-fitted to 2023–26 bonds.</p>
   <div class="table-wrap"><table id="checks-table"></table></div>
   <h3>The parameter registry</h3>
   <div class="filters"><div class="tabs" id="lens-tabs" role="tablist"></div></div>

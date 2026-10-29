@@ -229,14 +229,14 @@
   }
 
   // ---- cat bond on a layer of annual losses (catmodel/pricing.py catbond)
-  const LANE = { gamma: 0.55, a: 0.495, b: 0.574 };   // Lane (2000) p. 273; all inputs are decimals of par
+  const LANE = { gamma: 0.490, a: 0.591, b: 0.017, cyber: 2.14 };   // 2023-26 re-fit (catmodel/catbond_fit.py); decimals of par
   function catbond(xs, attach, exhaust, multiple, wangLambda) {   // xs sorted ascending
     const limit = exhaust - attach, n = xs.length;
     const above = v => { let lo = 0, hi = n; while (lo < hi) { const mid = (lo + hi) >> 1; if (xs[mid] <= v) lo = mid + 1; else hi = mid; } return (n - lo) / n; };
     const pa = above(attach), pe = above(exhaust);
     let tot = 0; for (let i = 0; i < n; i++) tot += layer(xs[i], attach, limit);
     const el = tot / n / limit, cel = pa > 0 ? el / pa : 0;
-    const lane = pa > 0 && cel > 0 ? LANE.gamma * Math.pow(pa, LANE.a) * Math.pow(cel, LANE.b) : 0;
+    const laneNatcat = pa > 0 && cel > 0 ? LANE.gamma * Math.pow(pa, LANE.a) * Math.pow(cel, LANE.b) : 0, lane = LANE.cyber * laneNatcat;
     let wang = 0, prev = null;
     for (let i = 0; i <= 400; i++) {
       const x = attach + limit * i / 400, sfv = above(x);
@@ -245,7 +245,7 @@
       prev = g;
     }
     return { attach, exhaust, prob_attach: pa, prob_exhaust: pe, expected_loss: el, spread_multiple: multiple * el,
-             spread_lane: lane, spread_wang: wang / limit };
+             spread_lane: lane, spread_lane_natcat: laneNatcat, spread_wang: wang / limit };
   }
 
   // ---- everything the page shows, from settings and simulated years

@@ -17,7 +17,7 @@ Every number the catastrophe model or the site uses comes from an entry here. On
 | `status` | `verified`: read at the primary source or a specialist outlet quoting it. `secondary`: from news or summaries, primary not read. `unverified`: a search snippet or memory; do not use on the site until upgraded |
 | `caveats` | Anything that limits the number's use |
 | `mapping` | How the number becomes a model parameter (to be filled as the model takes shape) |
-| `checks` | For a constant hard-coded in the model: `constant`, the `model` value, the `source` value and the `result` (`confirmed` or `corrected`). The site lists these. |
+| `checks` | For a constant hard-coded in the model: `constant`, the `model` value, the `source` value and the `result` (`confirmed`, `corrected` or `re-fitted`). The site lists these. |
 
 Rules: paraphrase, never paste; one short quote at most per entry; a figure only goes on the site at `verified` or `secondary` status, labelled as such.
 
@@ -45,7 +45,6 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - NAIC RBC factors, including the R5 catastrophe charge.
   - Solvency II standard-formula man-made liability catastrophe factors.
   - The Solvency II text as amended by the 2025 review: whether the Annex II and XIX rows changed.
-  - A re-fit of Lane's equation to recent cat bonds, cyber included.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.
 - **Severity anchors:**
   - 9/11 insured loss.

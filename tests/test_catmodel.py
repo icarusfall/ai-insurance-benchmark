@@ -7,7 +7,8 @@ import pytest
 
 from catmodel.dist import TruncatedPareto
 from catmodel.model import Peril, Settings, load, simulate
-from catmodel.pricing import catbond, lane_spread
+from catmodel import catbond_fit
+from catmodel.pricing import LANE, LANE_2000, catbond, lane_spread
 from catmodel.report import run
 
 
@@ -70,9 +71,24 @@ LANE_1999 = [(.0364, .0115, .3652), (.0552, .0525, .5410), (.0393, .0084, .7500)
 
 
 def test_lane_spread_reproduces_the_paper_fit():
-    log_resid = [math.log(lane_spread(pfl, cel) / eer) for eer, pfl, cel in LANE_1999]
+    log_resid = [math.log(lane_spread(pfl, cel, LANE_2000) / eer) for eer, pfl, cel in LANE_1999]
     assert abs(sum(log_resid) / len(log_resid)) < 0.05      # a log-linear fit with intercept: residuals average ~0
     assert max(abs(r) for r in log_resid) < 0.6             # single deals scatter (adjusted R² 0.84)
+
+
+
+def test_lane_and_wang_constants_match_the_refit():
+    s = catbond_fit.summary()
+    f = s["lane_pooled"]
+    assert (round(f["gamma"], 3), round(f["a"], 3), round(f["b"], 3), round(f["cyber_loading"], 2)) ==         (LANE["gamma"], LANE["a"], LANE["b"], LANE["cyber"])
+    w = load().wang_lambda
+    assert round(s["wang"]["cyber"]["median"], 2) == w
+
+
+def test_wang_fit_inverts_the_price():
+    lam = catbond_fit.fit_wang(0.02, 0.7, 0.06)
+    assert abs(catbond_fit.wang_price(0.02, 0.7, lam) - 0.06) < 1e-6
+    assert abs(catbond_fit.wang_price(0.02, 0.7, 0.0) - 0.02 * 0.7) < 1e-3     # no shift: the expected loss
 
 
 def test_catbond_metrics_are_ordered():

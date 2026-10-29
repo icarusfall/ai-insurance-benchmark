@@ -14,13 +14,17 @@ from .model import Settings, Years
 
 _N = NormalDist()
 
-# Lane (2000), p. 273: EER = 0.55 PFL^0.495 CEL^0.574, fitted to 16 cat bond tranches from 1999. EER (spread over
-# LIBOR), PFL (annual probability of first loss) and CEL (expected loss given a loss) are all decimals of par.
-LANE = dict(gamma=0.55, a=0.495, b=0.574)
+# Lane's equation EER = gamma PFL^a CEL^b: spread, probability of first loss and expected loss given a loss, all decimals
+# of par. LANE_2000 is his fit to 16 tranches from 1999 (p. 273). LANE is our re-fit to 58 natural catastrophe and 9
+# cyber tranches from 2023-26 (python -m catmodel.catbond_fit): the same slopes for both, cyber priced at `cyber` times.
+LANE_2000 = dict(gamma=0.55, a=0.495, b=0.574, cyber=1.0)
+LANE = dict(gamma=0.490, a=0.591, b=0.017, cyber=2.14)
 
 
-def lane_spread(pfl: float, cel: float) -> float:
-    return LANE["gamma"] * pfl ** LANE["a"] * cel ** LANE["b"] if pfl > 0 and cel > 0 else 0.0
+def lane_spread(pfl: float, cel: float, coef: dict = LANE, cyber: bool = False) -> float:
+    if pfl <= 0 or cel <= 0:
+        return 0.0
+    return coef["gamma"] * (coef["cyber"] if cyber else 1.0) * pfl ** coef["a"] * cel ** coef["b"]
 
 
 def layer(x, attach: float, limit: float):
@@ -74,11 +78,11 @@ def catbond(x: np.ndarray, attach: float, exhaust: float, multiple: float, wang_
     pa, pe = float((x > attach).mean()), float((x > exhaust).mean())
     el = float(layer(x, attach, limit).mean()) / limit
     cel = el / pa if pa > 0 else 0.0
-    lane = lane_spread(pa, cel)
+    lane, lane_natcat = lane_spread(pa, cel, cyber=True), lane_spread(pa, cel)
     grid = np.linspace(attach, exhaust, 401)
     xs = np.sort(x)
     sf = 1 - np.searchsorted(xs, grid, side="right") / len(xs)
     distorted = np.array([_N.cdf(_N.inv_cdf(u) + wang_lambda) if 0 < u < 1 else float(u) for u in sf])
     wang = float(np.trapezoid(distorted, grid)) / limit
     return dict(attach=attach, exhaust=exhaust, prob_attach=pa, prob_exhaust=pe, expected_loss=el,
-                spread_multiple=multiple * el, spread_lane=lane, spread_wang=wang)
+                spread_multiple=multiple * el, spread_lane=lane, spread_lane_natcat=lane_natcat, spread_wang=wang)

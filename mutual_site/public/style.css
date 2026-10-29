@@ -127,6 +127,7 @@ tr:last-child td { border-bottom: none; }
 .badge.unverified { background: var(--blush); color: var(--critical-text); }
 .badge.confirmed { background: var(--mint); color: var(--good-text); }
 .badge.corrected { background: var(--butter); color: var(--warning-text); }
+.badge.re-fitted { background: var(--sky); color: #1f5aa6; }
 .badge.lens { background: var(--lavender); color: #4b3aa8; font-weight: 500; }
 #sources h3 { margin: 22px 0 8px; }
 details.more > summary { cursor: pointer; color: var(--accent); margin: 10px 0; }

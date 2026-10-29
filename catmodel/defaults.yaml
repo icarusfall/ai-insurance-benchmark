@@ -103,7 +103,15 @@ pricing:
   expense_ratio: {central: 0.10, basis: "Judgement."}
   cost_of_capital: {low: 0.06, central: 0.10, high: 0.15, basis: "Return required on capital held. Judgement."}
   catbond_multiple: {low: 3.0, central: 10.0, high: 15.0, basis: "Spread as a multiple of expected loss: about 3x for natural catastrophe, about 10x for the first cyber bonds.", sources: [cat_bond_multiples_by_year, cyber_cat_bond_polestar]}
-  wang_lambda: {central: 0.5, basis: "Wang transform risk parameter; to be fitted to cat bond spreads."}
+  wang_lambda:
+    low: 0.47
+    central: 0.89
+    high: 1.11
+    basis: >-
+      Wang transform shift fitted to each bond's spread: median 0.47 for 58 natural catastrophe bonds (2025-26), median
+      0.89 and at most 1.11 for 9 cyber tranches (2023-26). An AI bond is priced like cyber, a new and poorly modelled peril;
+      that is a judgement.
+    sources: [catbond_refit_2023_26]
 
 capital:
   s2_coc: {central: 0.0475, basis: "Solvency II risk margin cost of capital from 2027.", sources: [solvency2_cost_of_capital]}
