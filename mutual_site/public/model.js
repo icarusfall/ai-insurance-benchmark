@@ -202,7 +202,7 @@
     }
     return { statutory: undisc, best_estimate: disc, duration: undisc ? lagW / undisc : 0 };
   }
-  const MCR_ALPHA_BE = 0.103, MCR_BETA_PREMIUM = 0.131, RESERVE_SIGMA = 0.11;
+  const MCR_ALPHA_BE = 0.103, MCR_BETA_PREMIUM = 0.131, RESERVE_SIGMA = 0.11;   // Annex XIX and Annex II, general liability
   function solvency2(s, st, res) {
     const req = st.scr;
     const runoff = 3 * RESERVE_SIGMA * res.best_estimate;
@@ -210,7 +210,7 @@
     const linear = MCR_ALPHA_BE * res.best_estimate + MCR_BETA_PREMIUM * st.premium;
     const mcr = Math.min(Math.max(linear, 0.25 * req), 0.45 * req);
     const tier1 = s.paid_in_capital, tier2 = s.members * s.callable_per_member;
-    const eligible = tier1 + Math.min(tier2, 0.5 * req, tier1);
+    const eligible = tier1 + Math.min(tier2, 0.5 * req);
     return { scr: req, mcr, best_estimate: res.best_estimate, risk_margin: rm, technical_provisions: res.best_estimate + rm,
              tier1, tier2_ancillary: tier2, eligible_own_funds_scr: eligible, eligible_own_funds_mcr: tier1,
              solvency_ratio: req ? eligible / req : Infinity, mcr_ratio: mcr ? tier1 / mcr : Infinity, tier1_covers_half_scr: tier1 >= 0.5 * req };
@@ -229,14 +229,14 @@
   }
 
   // ---- cat bond on a layer of annual losses (catmodel/pricing.py catbond)
-  const LANE = { gamma: 0.55, a: 0.49, b: 0.57 };
+  const LANE = { gamma: 0.55, a: 0.495, b: 0.574 };   // Lane (2000) p. 273; all inputs are decimals of par
   function catbond(xs, attach, exhaust, multiple, wangLambda) {   // xs sorted ascending
     const limit = exhaust - attach, n = xs.length;
     const above = v => { let lo = 0, hi = n; while (lo < hi) { const mid = (lo + hi) >> 1; if (xs[mid] <= v) lo = mid + 1; else hi = mid; } return (n - lo) / n; };
     const pa = above(attach), pe = above(exhaust);
     let tot = 0; for (let i = 0; i < n; i++) tot += layer(xs[i], attach, limit);
     const el = tot / n / limit, cel = pa > 0 ? el / pa : 0;
-    const lane = pa > 0 ? LANE.gamma * Math.pow(100 * pa, LANE.a) * Math.pow(100 * cel, LANE.b) / 100 : 0;
+    const lane = pa > 0 && cel > 0 ? LANE.gamma * Math.pow(pa, LANE.a) * Math.pow(cel, LANE.b) : 0;
     let wang = 0, prev = null;
     for (let i = 0; i <= 400; i++) {
       const x = attach + limit * i / 400, sfv = above(x);

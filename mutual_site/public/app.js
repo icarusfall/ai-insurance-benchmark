@@ -301,6 +301,15 @@
         <td class="num">${money(g.var995)}</td><td class="num">${money(g.tvar995)}</td></tr>`).join("") + "</tbody>";
   }
 
+  // ---- constants checked against their sources (registry entries with `checks`)
+  function renderChecks() {
+    const rows = D.sources.flatMap(s => (s.checks || []).map(c => ({ ...c, src: s })));
+    $("#checks-table").innerHTML = `<thead><tr><th>Constant</th><th>The model had</th><th>The source says</th><th>Result</th><th>Source</th></tr></thead><tbody>` +
+      rows.map(c => `<tr><td><b>${esc(c.constant)}</b></td><td>${esc(c.model)}</td><td>${esc(c.source)}</td>
+        <td><span class="badge ${esc(c.result)}">${esc(c.result)}</span></td>
+        <td><a href="#src-${esc(c.src.id)}">${esc((c.src.source || {}).title || c.src.id)}</a></td></tr>`).join("") + "</tbody>";
+  }
+
   // ---- sources
   const LENSES = [["all", "All"], ["scratch", "First principles"], ["parallel", "Parallels"], ["market", "Markets"], ["expert", "Experts"]];
   function renderSources(lens = "all") {
@@ -322,6 +331,7 @@
   $("#built").textContent = D.built;
   buildLevers();
   renderBio();
+  renderChecks();
   renderSources();
   recompute();
   window.addEventListener("resize", () => { if (last) { renderEP(last); renderFunnel(last); } });

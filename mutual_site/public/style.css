@@ -125,7 +125,10 @@ tr:last-child td { border-bottom: none; }
 .badge.verified { background: var(--mint); color: var(--good-text); }
 .badge.secondary { background: var(--sky); color: #1f5aa6; }
 .badge.unverified { background: var(--blush); color: var(--critical-text); }
+.badge.confirmed { background: var(--mint); color: var(--good-text); }
+.badge.corrected { background: var(--butter); color: var(--warning-text); }
 .badge.lens { background: var(--lavender); color: #4b3aa8; font-weight: 500; }
+#sources h3 { margin: 22px 0 8px; }
 details.more > summary { cursor: pointer; color: var(--accent); margin: 10px 0; }
 
 footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 20px 0 40px; font-size: 13px; color: var(--ink-2); }

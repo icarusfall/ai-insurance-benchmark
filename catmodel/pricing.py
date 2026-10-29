@@ -14,8 +14,13 @@ from .model import Settings, Years
 
 _N = NormalDist()
 
-# Lane (2000) cat bond pricing: spread = GAMMA * PFL^A * CEL^B, all in percent. Coefficients to verify against the paper.
-LANE = dict(gamma=0.55, a=0.49, b=0.57)
+# Lane (2000), p. 273: EER = 0.55 PFL^0.495 CEL^0.574, fitted to 16 cat bond tranches from 1999. EER (spread over
+# LIBOR), PFL (annual probability of first loss) and CEL (expected loss given a loss) are all decimals of par.
+LANE = dict(gamma=0.55, a=0.495, b=0.574)
+
+
+def lane_spread(pfl: float, cel: float) -> float:
+    return LANE["gamma"] * pfl ** LANE["a"] * cel ** LANE["b"] if pfl > 0 and cel > 0 else 0.0
 
 
 def layer(x, attach: float, limit: float):
@@ -69,7 +74,7 @@ def catbond(x: np.ndarray, attach: float, exhaust: float, multiple: float, wang_
     pa, pe = float((x > attach).mean()), float((x > exhaust).mean())
     el = float(layer(x, attach, limit).mean()) / limit
     cel = el / pa if pa > 0 else 0.0
-    lane = LANE["gamma"] * (100 * pa) ** LANE["a"] * (100 * cel) ** LANE["b"] / 100 if pa > 0 else 0.0
+    lane = lane_spread(pa, cel)
     grid = np.linspace(attach, exhaust, 401)
     xs = np.sort(x)
     sf = 1 - np.searchsorted(xs, grid, side="right") / len(xs)

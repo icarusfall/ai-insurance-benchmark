@@ -65,4 +65,87 @@
   source: {title: "Solvency II review: proposed amendments to the Delegated Regulation", publisher: Milliman, date: 2025-08, url: "https://us.milliman.com/en/insight/solvency-ii-review-proposed-amendments-delegated-regulation"}
   accessed: 2026-10-29
   status: secondary
-  caveats: Legal text not read.
+  caveats: >-
+    The old 6% is confirmed in Delegated Regulation Art. 39 as it stood at the end of 2020
+    (https://www.legislation.gov.uk/eur/2015/35/article/39/2020-12-31, read 2026-10-29). The amended 4.75% rate and
+    its legal text have not been read.
+
+- id: solvency2_premium_reserve_sigma
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    The standard formula charges non-life premium and reserve risk as 3 × σ × volume (Delegated Regulation Art. 115),
+    the factor of 3 standing in for a 99.5% lognormal shock. For general liability (Annex II, segment 5) σ is 14% for
+    gross premium risk and 11% for reserve risk. Non-proportional casualty reinsurance (segment 10) uses 17% and 20%.
+  values:
+    multiplier: 3
+    general_liability: {premium_sigma: 0.14, reserve_sigma: 0.11}
+    nonprop_casualty_re: {premium_sigma: 0.17, reserve_sigma: 0.20}
+  source: {title: "Commission Delegated Regulation (EU) 2015/35, Annex II and Article 115", publisher: "EU, via legislation.gov.uk and the EIOPA Single Rulebook", date: 2020-12-31, url: "https://www.legislation.gov.uk/eur/2015/35/annex/II/2020-12-31"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Read in the UK National Archives copy of the EU text as it stood on 31 December 2020, which includes Delegated
+    Regulation 2019/981. That amendment changed the credit, legal expenses and assistance rows; the general liability
+    row is the same as in the 2014 text. Article 115 was read in EIOPA's rulebook
+    (https://www.eiopa.europa.eu/rulebook/solvency-ii-single-rulebook/article-2552_en). EU changes after 2020 were
+    not checked, because EUR-Lex would not display the 45 MB consolidated text. The model uses only the reserve σ, for the
+    run-off risk in the risk margin.
+  mapping: RESERVE_SIGMA in catmodel/capital_s2.py and mutual_site/public/model.js.
+  checks:
+    - {constant: RESERVE_SIGMA, model: "11%", source: "11% (Annex II, general liability)", result: confirmed}
+    - {constant: "Run-off shock", model: "3 × σ × best estimate", source: "3 × σ × volume (Art. 115)", result: confirmed}
+
+- id: solvency2_mcr_linear
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    The non-life MCR's linear formula sums, by segment, a factor α on net technical provisions and a factor β on net
+    written premium (Delegated Regulation Art. 250, Annex XIX). For general liability (segment 8), α is 10.3% and
+    β is 13.1%; for non-proportional casualty reinsurance (segment 13), 18.6% and 15.9%. The Directive holds the
+    result between 25% and 45% of the SCR, subject to an absolute euro floor (Art. 129).
+  values:
+    general_liability: {alpha_tp: 0.103, beta_premium: 0.131}
+    nonprop_casualty_re: {alpha_tp: 0.186, beta_premium: 0.159}
+    corridor_of_scr: {floor: 0.25, cap: 0.45}
+  source: {title: "Commission Delegated Regulation (EU) 2015/35, Annex XIX", publisher: "EU, via legislation.gov.uk", date: 2020-12-31, url: "https://www.legislation.gov.uk/eur/2015/35/annex/XIX/2020-12-31"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Same caveat as Annex II about which version of the text was read. The corridor was read in Directive 2009/138/EC Art. 129(3)
+    in EIOPA's rulebook (https://www.eiopa.europa.eu/rulebook/solvency-ii-single-rulebook/article-2216_en). The
+    model ignores the absolute floor (a few million euros). A mutual writing only for AI labs could be classed as direct
+    general liability; if it were structured as reinsurance of the labs' captives, the non-proportional rows
+    would apply instead, which are higher.
+  mapping: MCR_ALPHA_BE and MCR_BETA_PREMIUM in catmodel/capital_s2.py and mutual_site/public/model.js.
+  checks:
+    - {constant: MCR_ALPHA_BE, model: "10.3%", source: "10.3% (Annex XIX, general liability)", result: confirmed}
+    - {constant: MCR_BETA_PREMIUM, model: "13.1%", source: "13.1% (Annex XIX, general liability)", result: confirmed}
+    - {constant: MCR corridor, model: "25%–45% of SCR", source: "25%–45% of SCR (Directive Art. 129(3))", result: confirmed}
+
+- id: solvency2_own_fund_tiers
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    Unpaid and uncalled members' contributions of a mutual, callable on demand, can be ancillary Tier 2 own funds
+    (Delegated Regulation Art. 74(b)). For the SCR, Tier 1 must be at least half the requirement, and Tier 2 and 3
+    together may cover at most half (Art. 82(1)). The MCR must be covered by basic own funds (Directive Art. 98(4)),
+    so ancillary items do not count towards it.
+  values: {tier1_min_share_scr: 0.5, tier2_3_max_share_scr: 0.5, tier3_max_share_scr: 0.15, tier1_min_share_mcr: 0.8}
+  source: {title: "Commission Delegated Regulation (EU) 2015/35, Articles 74 and 82", publisher: "EU, via legislation.gov.uk and the EIOPA Single Rulebook", date: 2020-12-31, url: "https://www.legislation.gov.uk/eur/2015/35/article/82/2020-12-31"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Article 74 was read in EIOPA's rulebook (https://www.eiopa.europa.eu/rulebook/solvency-ii-single-rulebook/article-2504_en).
+    The basic-own-funds rule for the MCR is taken from the Directive's Art. 166(2), which refers to Art. 98(4);
+    Art. 98 itself was not read. Ancillary own funds also need supervisory approval case by case.
+  mapping: >-
+    Eligible own funds for the SCR = Tier 1 + min(calls, half the SCR). The model used to cap Tier 2 at the Tier 1
+    amount as well. That cap is not in Art. 82, and it only changed the ratio where Tier 1 was already below half
+    the SCR, so it has been removed.
+  checks:
+    - {constant: Tier 2 cap, model: "min(calls, ½ SCR, Tier 1)", source: "½ SCR (Art. 82(1)(c))", result: corrected}
+    - {constant: MCR own funds, model: "Tier 1 only", source: "basic own funds only (Art. 98(4))", result: confirmed}

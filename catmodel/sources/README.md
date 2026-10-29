@@ -17,6 +17,7 @@ Every number the catastrophe model or the site uses comes from an entry here. On
 | `status` | `verified`: read at the primary source or a specialist outlet quoting it. `secondary`: from news or summaries, primary not read. `unverified`: a search snippet or memory; do not use on the site until upgraded |
 | `caveats` | Anything that limits the number's use |
 | `mapping` | How the number becomes a model parameter (to be filled as the model takes shape) |
+| `checks` | For a constant hard-coded in the model: `constant`, the `model` value, the `source` value and the `result` (`confirmed` or `corrected`). The site lists these. |
 
 Rules: paraphrase, never paste; one short quote at most per entry; a figure only goes on the site at `verified` or `secondary` status, labelled as such.
 
@@ -42,12 +43,10 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - P&I International Group: pool retention, general excess-of-loss reinsurance and overspill.
   - Liability Risk Retention Act and Risk Retention Group capital rules.
   - NAIC RBC factors, including the R5 catastrophe charge.
-  - Solvency II standard-formula man-made liability catastrophe factors, and the rules for ancillary own funds.
+  - Solvency II standard-formula man-made liability catastrophe factors.
+  - The Solvency II text as amended by the 2025 review: whether the Annex II and XIX rows changed.
+  - A re-fit of Lane's equation to recent cat bonds, cyber included.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.
-- **Model constants to verify:**
-  - Lane (2000) cat bond pricing coefficients (0.55, 0.49, 0.57).
-  - Solvency II MCR linear factors for general liability (10.3% of best estimate, 13.1% of premium).
-  - Standard-formula reserve risk volatility for general liability (11%).
 - **Severity anchors:**
   - 9/11 insured loss.
   - Fukushima total cost.

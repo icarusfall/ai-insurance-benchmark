@@ -1,4 +1,5 @@
 """The toy catastrophe model: closed forms agree with simulation, and the stack and capital rules behave."""
+import math
 from dataclasses import replace
 
 import numpy as np
@@ -6,7 +7,7 @@ import pytest
 
 from catmodel.dist import TruncatedPareto
 from catmodel.model import Peril, Settings, load, simulate
-from catmodel.pricing import catbond
+from catmodel.pricing import catbond, lane_spread
 from catmodel.report import run
 
 
@@ -59,6 +60,19 @@ def test_ancillary_own_funds_capped_at_half_scr_and_excluded_from_mcr():
     assert s2["eligible_own_funds_scr"] <= s2["tier1"] + 0.5 * s2["scr"] + 1e-12
     assert s2["eligible_own_funds_mcr"] == s2["tier1"]
     assert 0.25 * s2["scr"] - 1e-12 <= s2["mcr"] <= 0.45 * s2["scr"] + 1e-12
+
+
+# Lane (2000) Table 2: the sixteen 1999 tranches his equation was fitted to, as (EER, PFL, CEL) in decimals of par.
+LANE_1999 = [(.0364, .0115, .3652), (.0552, .0525, .5410), (.0393, .0084, .7500), (.0324, .0058, .8621),
+             (.0272, .0064, .6563), (.0381, .0060, .7500), (.0327, .0076, .5789), (.0652, .1210, .3678),
+             (.0452, .0156, .1923), (.0282, .0017, 1.0000), (.0485, .0078, .8077), (.0381, .0100, .7500),
+             (.0263, .0019, .5789), (.0352, .0029, .7931), (.1095, .0547, .5923), (.0383, .0113, .6460)]
+
+
+def test_lane_spread_reproduces_the_paper_fit():
+    log_resid = [math.log(lane_spread(pfl, cel) / eer) for eer, pfl, cel in LANE_1999]
+    assert abs(sum(log_resid) / len(log_resid)) < 0.05      # a log-linear fit with intercept: residuals average ~0
+    assert max(abs(r) for r in log_resid) < 0.6             # single deals scatter (adjusted R² 0.84)
 
 
 def test_catbond_metrics_are_ordered():

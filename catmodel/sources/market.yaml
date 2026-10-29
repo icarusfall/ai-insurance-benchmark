@@ -76,3 +76,26 @@
   caveats: >-
     Horizon reported inconsistently (by 2100 in most coverage); check the FRI report. Mostly outside scope (loss of
     control), but the size of the disagreement is itself an input to the model-uncertainty lever.
+
+- id: lane_2000_pricing
+  peril: all
+  informs: [price_multiple]
+  lens: market
+  claim: >-
+    Fitted to the sixteen catastrophe bond tranches issued in 1999, Lane's power law gives the expected excess return
+    (the spread over LIBOR) as EER = 0.55 × PFL^0.495 × CEL^0.574. Here PFL is the annual probability of first
+    loss and CEL the expected loss given that a loss happens, all as decimals of par. The adjusted R² is 84%.
+  values: {gamma: 0.55, a_pfl: 0.495, b_cel: 0.574, adj_r2: 0.84, tranches: 16, year: 1999}
+  source: {title: "Pricing Risk Transfer Transactions", author: Morton N. Lane, publisher: "ASTIN Bulletin 30(2), 259–293", date: 2000, url: "https://www.cambridge.org/core/journals/astin-bulletin-journal-of-the-iaa/article/pricing-risk-transfer-transactions1/E7CF6889A18CE5B8C065AB1B55CB11B4"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    The coefficients are on p. 273 and the data in Table 2. The fit is to natural catastrophe bonds in a single year,
+    a quarter of a century ago, and prices have moved a long way since (see cat_bond_multiples_by_year). The model
+    used to put PFL and CEL in percent, which scales every Lane spread up by 100^(a+b−1), about 1.3–1.4×. The model's
+    Lane spreads are now about a quarter lower than before. Re-fitting to recent bonds, cyber bonds included, is
+    still to do.
+  mapping: LANE and lane_spread in catmodel/pricing.py; LANE in mutual_site/public/model.js.
+  checks:
+    - {constant: "LANE γ, a, b", model: "0.55, 0.49, 0.57", source: "0.55, 0.495, 0.574 (p. 273)", result: confirmed}
+    - {constant: Lane units, model: "PFL and CEL in percent", source: "decimals of par (Table 2)", result: corrected}

@@ -61,7 +61,7 @@
   <h2>What a regulator would ask for</h2>
   <p>The same simulated losses, read the American way and the European way. The biggest difference for a mutual: under Solvency II, members' promises to pay more later can count as capital (up to half the requirement); under US statutory accounting, they don't.</p>
   <div class="cards" id="capital-cards"></div>
-  <p class="hint">Simplified on purpose: one catastrophe-and-premium risk module, a run-off risk margin, placeholder RBC factors, and Solvency II factors still to verify. See the model's notes in <code>catmodel/capital_s2.py</code> and <code>capital_us.py</code>.</p>
+  <p class="hint">Simplified on purpose: one catastrophe-and-premium risk module, a run-off risk margin, and placeholder RBC factors. The Solvency II factors themselves are checked against the regulation (see <a href="#checks">the model's own constants</a>). See the model's notes in <code>catmodel/capital_s2.py</code> and <code>capital_us.py</code>.</p>
 </section>
 
 <section class="chapter" id="bond">
@@ -73,7 +73,7 @@
     <label>Exhausts at ($bn)<input type="number" id="bond-exhaust" value="4" min="0" step="0.5"></label>
   </div>
   <div class="tiles" id="bond-tiles"></div>
-  <p class="hint">Spreads three ways: a multiple of expected loss (the lever above), the Lane (2000) model, and a Wang transform with λ = 0.5. Lane's coefficients and the Wang λ are still to be checked against market data.</p>
+  <p class="hint">Spreads three ways: a multiple of expected loss (the lever above), the Lane (2000) model, and a Wang transform with λ = 0.5. Lane's coefficients are checked against his paper, but were fitted to natural catastrophe bonds from 1999; the Wang λ is still to be fitted to market spreads.</p>
 </section>
 
 <section class="chapter" id="bio">
@@ -98,6 +98,10 @@
   <p class="kicker">Provenance</p>
   <h2>Where the numbers come from</h2>
   <p>Every parameter traces to an entry here, from one of four viewpoints: built up from first principles, a parallel from another fat-tailed industry, a market price or forecast, or an expert elicitation. Each says how far it has been checked.</p>
+  <h3 id="checks">The model's own constants</h3>
+  <p>Besides the levers, the model hard-codes a few numbers taken from regulation and the pricing literature. Each was checked against the text it came from. Two needed correcting: Lane's pricing formula had been fed percentages where his paper uses decimals, which overstated its spreads by about a third, and the Solvency II own-funds rule carried a cap that the regulation doesn't have.</p>
+  <div class="table-wrap"><table id="checks-table"></table></div>
+  <h3>The parameter registry</h3>
   <div class="filters"><div class="tabs" id="lens-tabs" role="tablist"></div></div>
   <div id="source-list"></div>
 </section>
