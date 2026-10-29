@@ -1,0 +1,112 @@
+# Starter-for-ten parameters. Money in $bn, rates per year. Each value has low/central/high; the model uses
+# `central` unless told otherwise; the pessimistic level takes `high`, or `low` where `worse: low` says a smaller
+# value is the bad direction. `sources` are ids in catmodel/sources/*.yaml; `basis` says how we got there.
+# Values marked "judgement" have no source yet and are placeholders to argue with.
+
+perils:
+  bio_misuse:
+    label: AI-assisted engineered epidemic
+    rate:
+      low: 0.001
+      central: 0.005
+      high: 0.012
+      basis: >-
+        Events with harm of at least $1tn per year that a frontier model materially helped cause. FRI experts put
+        the annual chance of a human-caused epidemic of that size at 0.3% today, 1.25–1.5% with AI uplift, 0.4% with
+        safeguards; the AI-attributable increment runs from about 0.1% (safeguards) to 1.2% (none).
+      sources: [fri_llm_biorisk_2025]
+    xm: {central: 1000, basis: "Event threshold of $1tn, matching FRI's damage threshold."}
+    alpha:
+      low: 0.6
+      central: 0.7
+      high: 1.4
+      worse: low
+      basis: >-
+        Epidemic tails fitted with a shape above 1 (Marani 0.71, Cirillo and Taleb 0.62); 1.4 is the conventional
+        terrorism tail, a stand-in for the lognormal-is-fine reading (Corral).
+      sources: [marani_2021_epidemic_intensity, cirillo_taleb_2020_pandemic_tail, corral_2020_lognormal_alternative, terrorism_power_law]
+    cap: {central: 100000, basis: "About world GDP; harm cannot exceed everything. Judgement."}
+    attribution:
+      low: 0.005
+      central: 0.02
+      high: 0.2
+      basis: >-
+        Share of the harm a court would put on the lab. Deliberate criminal misuse is a classic superseding cause,
+        so small under negligence; the high end is a strict-liability statute. Judgement, legal sourcing pending.
+    insurable: {low: 0.3, central: 0.5, high: 0.8, basis: "Compensatory share after fines, punitive damages and exclusions. Judgement."}
+    common_mode: {low: 0.0, central: 0.1, high: 0.5, basis: "Chance an event is caused jointly by every member's models (a shared jailbreak), splitting liability. Judgement."}
+    rate_cv: {central: 1.0, basis: "Uncertainty in the rate itself (gamma-mixed Poisson); 1.0 means we barely know it."}
+    payout_lag_years: {central: 5, basis: "Mean time from event to payment, mass-tort litigation. Judgement."}
+
+  cyber_misuse:
+    label: AI-enabled cyber catastrophe
+    rate:
+      low: 0.01
+      central: 0.05
+      high: 0.15
+      basis: >-
+        Cyber events costing at least $10bn happen roughly every one to two years (NotPetya, CrowdStrike,
+        Change Healthcare's wider costs); the share materially enabled by frontier models is put at 10% today
+        (2%–30%), given GTG-1002 shows AI-run intrusion campaigns already exist.
+      sources: [notpetya_insured_loss, crowdstrike_2024_outage, change_healthcare_2024, anthropic_gtg1002_espionage]
+    xm: {central: 10, basis: "Event threshold of $10bn, where GovAI says grid attacks become qualitatively easier than $100bn ones."}
+    alpha:
+      low: 0.8
+      central: 1.1
+      high: 1.7
+      worse: low
+      basis: >-
+        Cyber loss data often show Hill estimates below 1; Lloyd's payment-system scenario points (1-in-30 at $2.2tn,
+        1-in-1,000 at $16tn) imply about 1.7 in the far tail.
+      sources: [cyber_losses_infinite_mean_type, lloyds_systemic_payment_scenario]
+    cap: {central: 20000, basis: "Above Lloyd's $16tn extreme scenario. Judgement."}
+    attribution: {low: 0.01, central: 0.05, high: 0.3, basis: "Misuse by a third party; same superseding-cause logic as bio, weaker for agentic attacks. Judgement."}
+    insurable: {low: 0.4, central: 0.7, high: 0.9, basis: "War and state-actor exclusions bite (Merck). Judgement."}
+    common_mode: {low: 0.0, central: 0.2, high: 0.6, basis: "Attackers can switch models; a technique that works on one often works on all. Judgement."}
+    rate_cv: {central: 0.5, basis: "Better observed than bio."}
+    payout_lag_years: {central: 2, basis: "Judgement."}
+
+  agent_runaway:
+    label: A lab's own agents cause harm
+    rate:
+      low: 0.1
+      central: 0.5
+      high: 2.0
+      basis: >-
+        Incidents with at least $10m of third-party harm caused by a lab's own agents, without a human attacker.
+        One public case (OpenAI's agents breaching Hugging Face, July 2026) in roughly two years of agentic RL at scale.
+      sources: [openai_huggingface_2026]
+    xm: {central: 0.01, basis: "Event threshold of $10m."}
+    alpha: {low: 0.8, central: 1.0, high: 1.5, worse: low, basis: "Cyber-like tail. Judgement."}
+    cap: {central: 1000, basis: "Judgement."}
+    attribution: {low: 0.5, central: 0.9, high: 1.0, basis: "No intervening criminal act: the lab is the cause."}
+    insurable: {low: 0.6, central: 0.8, high: 0.9, basis: "Judgement."}
+    common_mode: {central: 0.0, basis: "One lab's agents."}
+    rate_cv: {central: 0.5, basis: "Judgement."}
+    payout_lag_years: {central: 1, basis: "Judgement."}
+
+members:
+  count: {central: 5, basis: "Frontier labs in the mutual. Judgement."}
+  revenue: {low: 2, central: 10, high: 50, worse: low, basis: "Annual revenue per member, $bn. Placeholder until lab revenues are sourced."}
+
+structure:
+  per_event_limit: {central: 1.0, basis: "AIUC's suggested minimum cover per member.", sources: [aiuc_mutual_proposal]}
+  annual_aggregate: {central: 2.0, basis: "Per member, all perils. Judgement."}
+  paid_in_capital: {central: 5.0, basis: "AIUC expects 'billions'.", sources: [aiuc_mutual_proposal]}
+  callable_per_member: {central: 1.0, basis: "Retrospective assessment per member per year, as in Price-Anderson's second layer.", sources: [price_anderson]}
+  reinsurance_attach: {central: 0.0, basis: "Off by default (limit 0)."}
+  reinsurance_limit: {central: 0.0, basis: "Off by default."}
+  government_attach: {central: 0.0, basis: "Off by default (share 0). TRIA is the template.", sources: [tria]}
+  government_share: {central: 0.0, basis: "Off by default."}
+
+pricing:
+  expense_ratio: {central: 0.10, basis: "Judgement."}
+  cost_of_capital: {low: 0.06, central: 0.10, high: 0.15, basis: "Return required on capital held. Judgement."}
+  catbond_multiple: {low: 3.0, central: 10.0, high: 15.0, basis: "Spread as a multiple of expected loss: about 3x for natural catastrophe, about 10x for the first cyber bonds.", sources: [cat_bond_multiples_by_year, cyber_cat_bond_polestar]}
+  wang_lambda: {central: 0.5, basis: "Wang transform risk parameter; to be fitted to cat bond spreads."}
+
+capital:
+  s2_coc: {central: 0.0475, basis: "Solvency II risk margin cost of capital from 2027.", sources: [solvency2_cost_of_capital]}
+  discount_rate: {central: 0.04, basis: "Judgement."}
+  us_premium_factor: {central: 0.3, basis: "Toy RBC premium-risk factor. Placeholder until NAIC factors are sourced."}
+  us_reserve_factor: {central: 0.3, basis: "Toy RBC reserve-risk factor. Placeholder."}

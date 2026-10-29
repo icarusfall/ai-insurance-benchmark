@@ -55,14 +55,18 @@ A monorepo. The catastrophe model is a package of its own, imported by both site
 
 ```
 catmodel/            plain Python, no LLM dependencies
-  dist.py            lognormal body + Pareto tail; closed-form layer expectations; sampling
-  scenarios.py       peril definitions: frequency, severity, attribution, insurable share, correlation, reporting lag
-  portfolio.py       members, limits, layers (mutual, reinsurance or cat bond, government backstop), Monte Carlo
-  pricing.py         expected loss, expenses, capital load; cat bond pricing (multiple of EL, Wang transform)
-  capital_us.py      statutory reserves (case, IBNR, LAE, UPR), RBC-style ratio and action levels, rating-agency VaR
-  capital_s2.py      best estimate, risk margin (cost of capital), SCR (99.5% 1-year VaR), MCR, own funds tiers
+  dist.py            truncated Pareto severity above an event threshold; closed-form layer expectations; sampling
+  model.py           perils, settings, loading defaults.yaml; Monte Carlo of years (gamma-mixed rates, common-mode
+                     events, per-event limits and annual aggregates per member)
+  defaults.yaml      starter-for-ten parameters with optimistic/central/pessimistic values, basis and source ids
+  pricing.py         the layer stack (reinsurance or cat bond, government share, premium, paid-in capital, calls),
+                     premium, cat bond pricing (multiple of EL, Lane, Wang transform)
+  reserves.py        year-end reserves from payment lags: undiscounted (US) and best estimate (Solvency II)
+  capital_us.py      RBC-style ratio and action levels, rating-agency 99.6% test
+  capital_s2.py      SCR (99.5% 1-year VaR), MCR, risk margin, own funds tiers including ancillary member calls
+  report.py          `python -m catmodel.report [--level pessimistic] [--set name=value] [--bond 2,4]`
   sources/           parameter registry, YAML: every number with its range and provenance
-  tests/
+tests/test_catmodel.py, tests/test_sources.py
 mutual_site/         second static site: own Railway service, root dir mutual_site, Caddy like website/
   public/            pages, JS port of the model, data.js built from catmodel and sources/
   build.py           exports scenarios, registry and golden results for parity tests

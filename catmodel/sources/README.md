@@ -44,6 +44,10 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - NAIC RBC factors, including the R5 catastrophe charge.
   - Solvency II standard-formula man-made liability catastrophe factors, and the rules for ancillary own funds.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.
+- **Model constants to verify:**
+  - Lane (2000) cat bond pricing coefficients (0.55, 0.49, 0.57).
+  - Solvency II MCR linear factors for general liability (10.3% of best estimate, 13.1% of premium).
+  - Standard-formula reserve risk volatility for general liability (11%).
 - **Severity anchors:**
   - 9/11 insured loss.
   - Fukushima total cost.
