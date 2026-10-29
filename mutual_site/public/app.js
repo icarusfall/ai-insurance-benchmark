@@ -389,6 +389,43 @@
       `<span><i style="background:var(--ink);border-radius:50%"></i>best measured model, ${hours(C.anchor_hours)}</span>`;
   }
 
+  // ---- sensitivity (catmodel/sensitivity.py, central settings)
+  const TORNADO = [["premium_share", "Premium, share of revenue", v => pct(v)], ["share_paid", "Share of expected harm paid", v => pct(v)],
+                   ["solvency_ratio", "Solvency II ratio", v => pct(v, 0)]];
+  let tornadoMetric = "premium_share";
+  function renderTornadoTabs() {
+    const tabs = $("#tornado-tabs");
+    tabs.innerHTML = TORNADO.map(([k, l]) => `<button type="button" role="tab" data-m="${k}" aria-selected="${k === tornadoMetric}">${l}</button>`).join("");
+    tabs.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { tornadoMetric = b.dataset.m; renderTornadoTabs(); renderTornado(); }));
+  }
+  function renderTornado() {
+    const sv = D.sensitivity, [m, , fmt] = TORNADO.find(t => t[0] === tornadoMetric), base = sv.base[m];
+    const all = [...sv.rows].sort((a, b) => b.swing[m] - a.swing[m]);
+    const shown = all.filter(r => r.swing[m] > Math.abs(base) * 0.01).slice(0, 14), rest = all.filter(r => !shown.includes(r));
+    const box = $("#tornado-chart"), W = Math.max(box.clientWidth, 300), narrow = W < 640;
+    const lw = narrow ? 0 : Math.min(330, W * 0.42), rowH = narrow ? 42 : 26, mt = 8, H = mt + shown.length * rowH + 22;
+    const lo = Math.min(base, ...shown.flatMap(r => [r.low[m], r.high[m]])), hi = Math.max(base, ...shown.flatMap(r => [r.low[m], r.high[m]]));
+    const pad = (hi - lo) * 0.18 || Math.abs(base) * 0.1, x0 = lo - pad, x1 = hi + pad;
+    const X = v => lw + 8 + (W - lw - 16) * (v - x0) / (x1 - x0);
+    let svg = `<svg width="${W}" height="${H}" role="img" aria-label="tornado chart of parameter sensitivity">`;
+    shown.forEach((r, i) => {
+      const y = mt + i * rowH, by = narrow ? y + 16 : y + 3, bh = narrow ? 18 : 18;
+      svg += `<text x="${narrow ? 0 : lw}" y="${narrow ? y + 11 : y + 16}" ${narrow ? "" : 'text-anchor="end"'} style="fill:var(--ink)">${esc(r.label)}</text>`;
+      for (const [end, col] of [["low", "--s1"], ["high", "--s2"]]) {
+        const v = r[end][m], a = Math.min(X(v), X(base)), w = Math.max(Math.abs(X(v) - X(base)), 1);
+        svg += `<rect x="${a}" y="${by}" width="${w}" height="${bh}" rx="3" fill="var(${col})" opacity="0.85"><title>${esc(r.label)} at its ${end} end: ${fmt(v)}</title></rect>`;
+      }
+      const vals = [r.low[m], r.high[m]], left = Math.min(...vals), right = Math.max(...vals);
+      svg += `<text x="${X(left) - 4}" y="${by + 13}" text-anchor="end">${fmt(left)}</text><text x="${X(right) + 4}" y="${by + 13}">${fmt(right)}</text>`;
+    });
+    svg += `<line x1="${X(base)}" x2="${X(base)}" y1="${mt - 4}" y2="${H - 18}" stroke="var(--ink-2)" stroke-dasharray="4 3"/>` +
+           `<text x="${X(base)}" y="${H - 4}" text-anchor="middle">central ${fmt(base)}</text></svg>`;
+    box.innerHTML = svg;
+    $("#tornado-note").textContent = `Central settings, ${sv.n_years.toLocaleString("en")} simulated years per run, one year with no capability growth. ` +
+      (rest.length ? `Barely moves this: ${rest.map(r => r.label.replace(/ \(halved, doubled\)/, "")).join("; ")}.` : "") +
+      (m === "premium_share" ? " Paid-in capital doesn't move the premium because the capital charge is on the SCR, not on the capital held." : "");
+  }
+
   // ---- the market lens (catmodel/markets.py)
   function renderMarkets() {
     const mk = D.markets, rows = Object.fromEntries(mk.rows.map(r => [r.id, r]));
@@ -469,9 +506,11 @@
   buildTrajLevers();
   renderTrajTabs();
   renderBio();
+  renderTornadoTabs();
+  renderTornado();
   renderMarkets();
   renderChecks();
   renderSources();
   recompute();
-  window.addEventListener("resize", () => { if (last) { renderEP(last); renderFunnel(last); renderTrajChart(); } });
+  window.addEventListener("resize", () => { if (last) { renderEP(last); renderFunnel(last); renderTrajChart(); } renderTornado(); });
 })();

@@ -14,7 +14,7 @@
 <body>
 <header class="masthead"><div class="inner">
   <a class="brand" href="#">Mutually Assured <span>AI</span> Modelling</a>
-  <nav><a href="#levers">Levers</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
+  <nav><a href="#levers">Levers</a><a href="#tornado">What matters</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
 </div></header>
 
 <div class="wrap">
@@ -55,6 +55,18 @@
       <div class="table-wrap"><table id="peril-table"></table></div>
     </div>
   </div>
+</section>
+
+<section class="chapter" id="tornado">
+  <p class="kicker">Sensitivity</p>
+  <h2>Which levers move the answer</h2>
+  <p>Each bar swings one parameter from the low to the high end of its range, with everything else at the central settings. The cover and capital levers have no range, so they are halved and doubled. Every run uses the same simulated years, so the bars show each parameter's effect, not noise. The answer hangs on members' revenue, on how much cyber harm a court would pin on a lab, and on how often AI cyber catastrophes and agent accidents happen. Bio dominates the harm in the world but hardly moves the premium: limits and near-zero attribution keep it off the mutual's books.</p>
+  <div class="filters"><div class="tabs" id="tornado-tabs" role="tablist"></div></div>
+  <figure class="chart">
+    <div class="legend"><span><i style="background:var(--s1)"></i>parameter at its low end</span><span><i style="background:var(--s2)"></i>at its high end</span><span><i class="dash"></i>central</span></div>
+    <div id="tornado-chart"></div>
+  </figure>
+  <p class="hint" id="tornado-note"></p>
 </section>
 
 <section class="chapter" id="time">
