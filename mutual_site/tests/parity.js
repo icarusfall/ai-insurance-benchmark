@@ -39,6 +39,8 @@ process.stdin.on("end", () => {
   } else if (req.op === "preset") {
     const r = M.applyPreset(M.load(req.defaults, "central"), M.loadCapability(req.defaults, "central"), req.preset);
     out = { settings: r.s, capability: r.c };
+  } else if (req.op === "frequency") {
+    out = Object.fromEntries(M.METHODS.map(m => [m, M.methodRates(req.defaults, req.level, m)]));
   } else if (req.op === "load") {
     out = M.load(req.defaults, req.level);
   }

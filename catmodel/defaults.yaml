@@ -211,3 +211,134 @@ capability:
     bio_misuse: {central: 1.5, basis: "FRI's multiple-capabilities case over its single-capability case.", sources: [fri_llm_biorisk_2025]}
     cyber_misuse: {central: 5, basis: "Judgement."}
     agent_runaway: {central: 50, basis: "Judgement."}
+
+# How often each peril's events happen, three ways (catmodel/frequency.py). `expert` uses each peril's `rate` above;
+# `actuarial` uses only the observed record of AI-attributable events; `causal` multiplies the links of a chain of
+# events. Severity, attribution and everything downstream are the same under all three.
+frequency:
+  method: {central: expert, basis: "expert, actuarial or causal."}
+  actuarial:
+    bio_misuse:
+      events: 0
+      since: "2023-03-14"
+      basis: >-
+        No AI-assisted epidemic, of any size, since frontier models became useful to non-experts (GPT-4, March 2023).
+    cyber_misuse:
+      events: 0
+      since: "2023-03-14"
+      basis: >-
+        No $10bn+ cyber event has been attributed to AI help, though AI-run intrusion campaigns now exist (GTG-1002).
+      sources: [anthropic_gtg1002_espionage]
+    agent_runaway:
+      events: 1
+      since: "2024-10-22"
+      basis: >-
+        One public case of a lab's own agents doing $10m+ of third-party harm (OpenAI's agents at Hugging Face, July
+        2026) since agents with computer use reached the frontier in October 2024. Anthropic's model also broke into
+        three companies, with harm undisclosed, so it is not counted.
+      sources: [openai_huggingface_2026, techcrunch_ai_hack_liability_2026]
+  causal:
+    bio_misuse:
+      - key: attempts
+        label: Serious attempts at a mass-casualty biological attack, a year
+        unit: count
+        low: 0.1
+        central: 0.5
+        high: 2
+        basis: >-
+          Groups with the intent and some resources (Aum Shinrikyo in the 1990s, the 2001 anthrax letters) appear a few
+          times a decade in the public record; more may never surface. Judgement.
+      - key: uses_model
+        label: Share that use a frontier model for real help
+        low: 0.3
+        central: 0.6
+        high: 0.9
+        basis: Judgement.
+      - key: safeguards_fail
+        label: Share where the model's safeguards don't stop them
+        low: 0.1
+        central: 0.3
+        high: 0.6
+        basis: >-
+          FRI's experts thought closed weights, anti-jailbreak safeguards and DNA screening cut their risk estimate by
+          about two thirds (1.25% to 0.4%), so about a third gets through.
+        sources: [fri_llm_biorisk_2025]
+      - key: decisive
+        label: Chance the model's help is decisive
+        low: 0.05
+        central: 0.2
+        high: 0.5
+        basis: >-
+          RAND's 2024 red team found no measurable uplift from 2023 models; FRI reports o3 matching top virologists on
+          troubleshooting. Help with planning is not help at the bench.
+        sources: [rand_2024_red_team, fri_llm_biorisk_2025]
+      - key: produce_release
+        label: Chance they then make and release an agent that spreads
+        low: 0.05
+        central: 0.15
+        high: 0.4
+        basis: "The wet lab, not the information, has been the bottleneck. Judgement."
+      - key: reaches_threshold
+        label: Chance the outbreak costs $1tn or more
+        low: 0.1
+        central: 0.3
+        high: 0.6
+        basis: "COVID cost the US alone about $16tn, so the threshold is within reach of a successful release. Judgement."
+        sources: [covid_us_cost]
+    cyber_misuse:
+      - key: big_events
+        label: Cyber events costing $10bn or more, a year, from any cause
+        unit: count
+        low: 0.3
+        central: 0.7
+        high: 1.5
+        basis: "NotPetya, CrowdStrike and Change Healthcare's wider costs: roughly one every year or two."
+        sources: [notpetya_insured_loss, crowdstrike_2024_outage, change_healthcare_2024]
+      - key: attacker_uses_model
+        label: Share where the attacker uses frontier models in the operation
+        low: 0.2
+        central: 0.5
+        high: 0.9
+        basis: "GTG-1002 shows state-backed groups already run intrusion campaigns with AI agents. Judgement."
+        sources: [anthropic_gtg1002_espionage]
+      - key: decisive
+        label: Chance the model is what makes it a catastrophe
+        low: 0.02
+        central: 0.1
+        high: 0.3
+        basis: "Most $10bn events turn on a single bug or misconfiguration, not on the attacker's skill. Judgement."
+      - key: not_stopped
+        label: Share not stopped by the labs' safeguards and monitoring
+        low: 0.3
+        central: 0.6
+        high: 0.9
+        basis: "Judgement."
+    agent_runaway:
+      - key: campaigns
+        label: Agent runs a year, across the members, with real-world access
+        unit: count
+        low: 50
+        central: 200
+        high: 1000
+        basis: "Large evaluation and RL campaigns with internet or production access. Judgement."
+      - key: oversteps
+        label: Chance a run has agents act outside their permissions
+        low: 0.01
+        central: 0.03
+        high: 0.1
+        basis: "OpenAI and Anthropic both disclosed in 2026 that agents in testing had broken into other companies' systems."
+        sources: [openai_huggingface_2026, techcrunch_ai_hack_liability_2026]
+      - key: undetected
+        label: Chance it goes on long enough to do real damage
+        low: 0.2
+        central: 0.4
+        high: 0.8
+        basis: "Anthropic found its model's three break-ins only months later, after OpenAI's disclosure."
+        sources: [techcrunch_ai_hack_liability_2026]
+      - key: over_threshold
+        label: Chance third parties' harm passes $10m
+        low: 0.1
+        central: 0.2
+        high: 0.5
+        basis: "Hugging Face rebuilt about a third of its infrastructure. Judgement."
+        sources: [openai_huggingface_2026]

@@ -313,6 +313,32 @@
     return rows;
   }
 
+  // ---- how often, three ways (catmodel/frequency.py)
+  const METHODS = ["expert", "actuarial", "causal"];
+  function actuarialRate(defaults, peril) {
+    const a = defaults.frequency.actuarial[peril];
+    const years = (dayNum(String(defaults.capability.now.central)) - dayNum(String(a.since))) / 365.25;
+    return (a.events + 0.5) / years;
+  }
+  function chain(defaults, peril, level = "central", overrides = {}) {
+    let running = 1;
+    return defaults.frequency.causal[peril].map(link => {
+      const v = link.key in overrides ? overrides[link.key] : pick(link, level);
+      running *= v;
+      return { key: link.key, label: link.label, value: v, running };
+    });
+  }
+  function methodRates(defaults, level = "central", method = "expert", overrides = {}) {
+    const out = {};
+    for (const [peril, spec] of Object.entries(defaults.perils)) {
+      if (method === "expert") out[peril] = pick(spec.rate, level);
+      else if (method === "actuarial") out[peril] = actuarialRate(defaults, peril);
+      else if (method === "causal") { const c = chain(defaults, peril, level, overrides[peril] || {}); out[peril] = c[c.length - 1].running; }
+      else throw new Error(`unknown method ${method}`);
+    }
+    return out;
+  }
+
   // ---- the Markets preset: central settings with overrides built by catmodel/markets.py
   function applyPreset(s, c, preset) {
     s = { ...s, perils: s.perils.map(p => ({ ...p })) };
@@ -327,6 +353,6 @@
 
   const api = { TP, rng, ncdf, ninv, LEVELS, pick, load, expectedClaim, simulate, aggregate, stack, reserves, applyPreset,
                 solvency2, us, catbond, evaluate, qSorted, tvarSorted, sorted, mean, unpaidFraction,
-                TRAJECTORIES, loadCapability, horizon, multipliers, project };
+                TRAJECTORIES, loadCapability, horizon, multipliers, project, METHODS, actuarialRate, chain, methodRates };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.MaimModel = api;
 })(typeof window !== "undefined" ? window : globalThis);

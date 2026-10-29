@@ -141,3 +141,14 @@ def test_markets_preset_matches():
         else:
             assert close(got["settings"][k], v), k
     assert close(got["capability"]["stop_hours"], c.stop_hours)
+
+
+@pytest.mark.parametrize("level", LEVELS)
+def test_frequency_methods_match(level):
+    from catmodel import frequency
+    with open(DEFAULTS, encoding="utf-8") as f:
+        defaults = yaml.safe_load(f)
+    got = js(dict(op="frequency", defaults=defaults, level=level))
+    for m in frequency.METHODS:
+        for p, v in frequency.rates(level, m).items():
+            assert close(got[m][p], v), (level, m, p)

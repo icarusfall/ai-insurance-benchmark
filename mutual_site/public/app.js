@@ -27,7 +27,7 @@
     return `${(v * 100).toFixed(digits)}%`;
   };
   const num = v => v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
-  const ratePerYear = v => v >= 1 ? `${num(v)} a year` : `1 in ${Math.round(1 / v).toLocaleString("en")} years`;
+  const ratePerYear = v => v >= 1 || 1 / v < 1.5 ? `${num(v)} a year` : `1 in ${Math.round(1 / v).toLocaleString("en")} years`;
 
   // ---- lever definitions
   const PERIL_LEVERS = [
@@ -132,7 +132,10 @@
     level = name === "market" ? "central" : name;
     S = M.load(D.defaults, level);
     C = M.loadCapability(D.defaults, level);
-    if (name === "market") ({ s: S, c: C } = M.applyPreset(S, C, D.markets.preset));
+    chainOver = {};
+    if (name === "market") { method = "expert"; ({ s: S, c: C } = M.applyPreset(S, C, D.markets.preset)); }
+    else if (method !== "expert") applyMethod();
+    renderMethodTabs();
     document.querySelectorAll(".presets button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.level === name)));
     syncLevers();
     schedule(0);
@@ -149,7 +152,7 @@
     const r = M.evaluate(S, y);
     r.grossSorted = M.sorted(r.stack.claims);
     last = r;
-    renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory();
+    renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory(); renderFrequency();
     syncLevers();
   }
 
@@ -389,6 +392,54 @@
       `<span><i style="background:var(--ink);border-radius:50%"></i>best measured model, ${hours(C.anchor_hours)}</span>`;
   }
 
+  // ---- how often, three ways (catmodel/frequency.py)
+  const METHOD_LABELS = { expert: "Expert and parallels", actuarial: "Actuarial: history only", causal: "Causal chain" };
+  let method = "expert", chainOver = {};
+  function applyMethod() {
+    const r = M.methodRates(D.defaults, level, method, chainOver);
+    for (const p of S.perils) p.rate = r[p.name];
+  }
+  function renderMethodTabs() {
+    const tabs = $("#method-tabs");
+    tabs.innerHTML = M.METHODS.map(m => `<button type="button" role="tab" data-m="${m}" aria-selected="${m === method}">${METHOD_LABELS[m]}</button>`).join("");
+    tabs.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { method = b.dataset.m; applyMethod(); renderMethodTabs(); markCustom(); schedule(0); }));
+  }
+  function buildChainLevers() {
+    const panel = $("#chain-levers");
+    panel.innerHTML = "";
+    for (const p of S.perils) {
+      const links = D.defaults.frequency.causal[p.name];
+      if (!links) continue;
+      const fs = el("fieldset");
+      fs.innerHTML = `<legend><i style="background:var(${PERIL_COLOURS[p.name] || "--s7"})"></i>${esc(p.label)}</legend>`;
+      for (const link of links) {
+        const count = link.unit === "count";
+        const lv = { key: link.key, label: link.label, scale: "log", min: Math.max(link.low / 4, 1e-4), max: count ? link.high * 3 : Math.min(link.high * 2, 1),
+                     fmt: count ? num : v => pct(v) };
+        const over = () => (chainOver[p.name] = chainOver[p.name] || {});
+        addLever(fs, lv, () => link.key in over() ? over()[link.key] : M.pick(link, level),
+                 v => { over()[link.key] = v; if (method === "causal") applyMethod(); }, link);
+      }
+      fs.appendChild(el("div", { className: "chain-total", id: `chain-total-${p.name}` }));
+      panel.appendChild(fs);
+    }
+    syncLevers();
+  }
+  function renderFrequency() {
+    const r = Object.fromEntries(M.METHODS.map(m => [m, M.methodRates(D.defaults, level, m, chainOver)]));
+    $("#method-table").innerHTML = `<thead><tr><th>Peril, events a year at its threshold</th>${M.METHODS.map(m => `<th class="num">${METHOD_LABELS[m]}${m === method ? " (in use)" : ""}</th>`).join("")}</tr></thead><tbody>` +
+      S.perils.map(p => {
+        const a = D.frequency[p.name].actuarial, xm = D.defaults.perils[p.name].xm.central;
+        return `<tr><td>${esc(p.label)}, ${money(xm)}+</td><td class="num">${ratePerYear(r.expert[p.name])}</td>
+          <td class="num">${ratePerYear(r.actuarial[p.name])}<div class="hint">${a.events} event${a.events === 1 ? "" : "s"} in ${a.years.toFixed(1)} years; 90% between ${ratePerYear(a.low)} and ${ratePerYear(a.high)}</div></td>
+          <td class="num">${ratePerYear(r.causal[p.name])}</td></tr>`;
+      }).join("") + "</tbody>";
+    for (const p of S.perils) {
+      const box = document.getElementById(`chain-total-${p.name}`);
+      if (box) box.innerHTML = `Chain gives <b>${ratePerYear(r.causal[p.name])}</b>; the expert rate is ${ratePerYear(r.expert[p.name])}.`;
+    }
+  }
+
   // ---- sensitivity (catmodel/sensitivity.py, central settings)
   const TORNADO = [["premium_share", "Premium, share of revenue", v => pct(v)], ["share_paid", "Share of expected harm paid", v => pct(v)],
                    ["solvency_ratio", "Solvency II ratio", v => pct(v, 0)]];
@@ -503,6 +554,8 @@
 
   $("#built").textContent = D.built;
   buildLevers();
+  buildChainLevers();
+  renderMethodTabs();
   buildTrajLevers();
   renderTrajTabs();
   renderBio();

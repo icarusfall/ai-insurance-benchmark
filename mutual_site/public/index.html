@@ -14,7 +14,7 @@
 <body>
 <header class="masthead"><div class="inner">
   <a class="brand" href="#">Mutually Assured <span>AI</span> Modelling</a>
-  <nav><a href="#levers">Levers</a><a href="#tornado">What matters</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
+  <nav><a href="#levers">Levers</a><a href="#frequency">How often</a><a href="#tornado">What matters</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
 </div></header>
 
 <div class="wrap">
@@ -55,6 +55,17 @@
       <div class="table-wrap"><table id="peril-table"></table></div>
     </div>
   </div>
+</section>
+
+<section class="chapter" id="frequency">
+  <p class="kicker">How often</p>
+  <h2>Three ways to count</h2>
+  <p>The AIUC authors draw a line between two ways of pricing a catastrophe. An actuary works from the record: how often has this happened, and how bad was it? A catastrophe modeller maps the chain of events that leads to harm and puts a probability on each link. For AI the record is a handful of incidents, so the first method has little to work with. The second forces you to say what you believe about each step, which is useful in itself for deciding where safety work matters. The model can count either way, or use its default: rates set from expert forecasts and parallels with other industries. Severity, attribution and everything downstream stay the same; only how often events happen changes. The choice here drives the whole page.</p>
+  <div class="filters"><div class="tabs" id="method-tabs" role="tablist"></div></div>
+  <div class="table-wrap"><table id="method-table"></table></div>
+  <h3>The causal chains</h3>
+  <p class="hint">Each chain starts from a count a year and multiplies down by the chance of each next step. Move a link to see what it does to the rate. The sliders change the rate only when the causal method is chosen.</p>
+  <div class="levers chains" id="chain-levers"></div>
 </section>
 
 <section class="chapter" id="tornado">
