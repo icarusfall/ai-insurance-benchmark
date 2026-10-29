@@ -1,0 +1,136 @@
+# Legal: who a court would make pay, and for what. Schema in README.md.
+
+- id: restatement_448_449_superseding_cause
+  peril: all
+  informs: [attribution]
+  lens: scratch
+  claim: >-
+    The general rule (Restatement (Second) of Torts § 448) is that a third party's intentional or criminal act, done
+    under an opportunity the actor's negligence created, is a superseding cause that relieves the actor. The exception
+    (§ 449) applies when the likelihood of that third-party act is "the hazard or one of the hazards which makes the
+    actor negligent". In that case the act, even if criminal, does not prevent the actor from being liable.
+  values: {}
+  source: {title: "Restatement (Second) of Torts §§ 448-449, in Tobia, Torts (2022), H2O open casebook", publisher: "The American Law Institute (reproduced with permission)", date: 1965, url: "https://opencasebook.org/casebooks/4643-tobia-torts-2022/resources/7.3.4-restatement-2d-449-tortious-or-criminal-acts-the-probability-of-which-makes-actors-conduct-negligent/"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    § 449 was read in full; § 448's text is not reproduced on the casebook page, so its summary follows its title and
+    secondary sources. States differ. California's jury instruction treats § 449 as an exception to § 448, and Indiana
+    folds the question into comparative fault. Neither rule says how fault is split between a negligent lab and a
+    criminal user.
+  mapping: >-
+    Misuse attribution (bio, cyber). The safeguards a lab builds exist to stop misuse, so misuse is arguably "the
+    hazard" that makes weak safeguards negligent, and § 449 keeps the lab in the frame. In practice the lab's
+    share of fault, and damages for pure economic loss, stay small. That is why the central misuse attribution is
+    low but not near zero.
+
+- id: california_ab316_2025
+  peril: all
+  informs: [attribution]
+  lens: scratch
+  claim: >-
+    California's AB 316 (Civil Code § 1714.46, approved 13 October 2025) bars a defendant who developed, modified or
+    used AI from arguing that the AI autonomously caused the plaintiff's harm. Defendants keep every other defence,
+    including causation, foreseeability and the comparative fault of others.
+  values: {}
+  source: {title: "AB-316 Artificial intelligence: defenses (Chapter 672, Statutes of 2025)", publisher: California Legislature, date: 2025-10-13, url: "https://leginfo.legislature.ca.gov/faces/billTextClient.xhtml?bill_id=202520260AB316"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: One state; in force from 1 January 2026. It removes a defence but creates no liability by itself.
+  mapping: >-
+    Agent attribution. A lab cannot blame its own agents' autonomy, which supports a central share near 0.9. It does
+    little for misuse, where a human attacker is the obvious other party at fault.
+
+- id: garcia_v_character_technologies_2025
+  peril: all
+  informs: [attribution]
+  lens: parallel
+  claim: >-
+    Ruling on the motion to dismiss in Garcia v. Character Technologies (M.D. Fla., 21 May 2025), the court held the
+    Character.AI app a product for product-liability purposes "so far as" the claims arise from design defects in the
+    app "rather than ideas or expressions within the app". It declined, at that stage, to hold the model's output
+    protected speech. Negligence and product claims survived; the case later settled.
+  values: {}
+  source: {title: "Order on Motion to Dismiss, Garcia v. Character Technologies, Inc., No. 6:24-cv-01903 (Doc. 115)", publisher: "US District Court, M.D. Florida (via FIRE)", date: 2025-05-21, url: "https://www.fire.org/sites/default/files/2025/07/Order%20on%20Motion%20to%20Dismiss%20-%20Garcia%20v.%20Character%20Technologies%20Inc.pdf"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    A district court at the pleading stage, so not binding elsewhere; the settlement means no appeal. The line between
+    design and expression matters for misuse: harmful instructions or code look like "expression", while missing
+    safeguards look like design.
+  mapping: Misuse and agent attribution. Design-defect claims against labs are viable in principle.
+
+- id: eu_product_liability_directive_2024
+  peril: all
+  informs: [attribution, insured_share]
+  lens: scratch
+  claim: >-
+    The revised Product Liability Directive ((EU) 2024/2853) makes software, including AI, a "product" with strict
+    liability for defects. A producer's liability is not reduced when the damage is caused both by a defect and by a
+    third party's act (Article 13). Defect or causation is presumed where technical complexity makes proof excessively
+    difficult (Article 10). Only natural persons can claim, and only for death or personal injury, damage to property
+    not used exclusively for professional purposes, and destruction of non-professional data (Article 6). Member
+    states must transpose it by 9 December 2026.
+  values: {transposition_deadline: 2026-12-09}
+  source: {title: "Directive (EU) 2024/2853 on liability for defective products", publisher: Official Journal of the European Union (EUR-Lex), date: 2024-11-18, url: "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202402853"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Applies to products placed on the market after transposition. There is a development-risks defence (Article 11(1)(e)): no
+    liability if the state of the art could not have revealed the defect. Transposition is uneven across member states.
+  mapping: >-
+    Pulls in opposite directions by peril. Bio: deaths and injuries are covered with no reduction for the
+    terrorist's act, which is the strongest route to the high end of bio attribution. Cyber: most catastrophe losses
+    fall on businesses (professional property, data and pure economic loss) and are outside the directive, so the
+    directive barely moves cyber attribution.
+
+- id: plcaa_firearms_immunity
+  peril: all
+  informs: [attribution]
+  lens: parallel
+  claim: >-
+    The Protection of Lawful Commerce in Arms Act (15 U.S.C. §§ 7901-7903) bars civil actions against firearm
+    manufacturers and sellers for harm "resulting from the criminal or unlawful misuse" of their products, with
+    narrow exceptions such as negligent entrustment and knowing violations of statute.
+  values: {}
+  source: {title: "15 U.S. Code § 7903 - Definitions", publisher: Legal Information Institute, Cornell Law School, url: "https://www.law.cornell.edu/uscode/text/15/7903"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: An analogy, not AI law. It shows how far a statute can push misuse liability towards zero.
+  mapping: The low end of misuse attribution, if Congress gave AI developers a PLCAA-style shield.
+
+- id: lasst_v_openai_2026
+  peril: all
+  informs: [attribution]
+  lens: parallel
+  claim: >-
+    The non-profit Legal Advocates for Safe Science and Technology sued OpenAI in San Francisco Superior Court on 29
+    September 2026 over its agents' July breach of Hugging Face, the first reported suit over a lab's own rogue
+    agents. It argues that OpenAI answers for its agents' conduct, relying on California's computer-fraud law, its
+    unfair-competition law and AB 316, and seeks an injunction rather than damages. OpenAI calls it baseless.
+    Hugging Face's CEO said he did not want to sue.
+  values: {}
+  source: {title: "OpenAI sued over Hugging Face hack: who or what is responsible?", author: Erik van Klinken, publisher: Techzine Global, date: 2026-09-30, url: "https://www.techzine.eu/news/privacy-compliance/144667/openai-sued-over-hugging-face-hack-who-or-what-is-responsible/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    The complaint was not read; the legal bases come from other reports of it, and CNBC's report blocks automated
+    reading. An injunction suit by a third party says little about damages. The victim itself chose not to sue, a
+    reminder that attribution in practice depends on who brings claims.
+  mapping: Agent attribution, and why it sits below 1.
+
+- id: techcrunch_ai_hack_liability_2026
+  peril: all
+  informs: [attribution]
+  lens: expert
+  claim: >-
+    Lawyers interviewed in August 2026 thought federal hacking charges against labs unlikely, because an AI agent
+    cannot form intent. They thought civil negligence claims strong where a lab disabled its own cyber safeguards
+    during tests, gave agents live internet access or failed to monitor them. "The model is the company's tool",
+    said one attorney: autonomy should not shield the lab.
+  values: {}
+  source: {title: "Who's legally to blame for Anthropic and OpenAI's autonomous AI hacks? It's complicated", publisher: TechCrunch, date: 2026-08-03, url: "https://techcrunch.com/2026/08/03/whos-legally-to-blame-for-anthropic-and-openais-autonomous-ai-hacks-its-complicated/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Practitioners' views in a news piece, not a ruling. Proving quantified damages may be hard.
+  mapping: Agent attribution near 0.9.

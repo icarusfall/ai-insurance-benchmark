@@ -31,8 +31,12 @@ perils:
       central: 0.02
       high: 0.2
       basis: >-
-        Share of the harm a court would put on the lab. Deliberate criminal misuse is a classic superseding cause,
-        so small under negligence; the high end is a strict-liability statute. Judgement, legal sourcing pending.
+        Share of the harm a court would put on the lab. In US law a criminal user is normally a superseding cause
+        (Restatement § 448), but not when misuse is the very hazard that makes a lab's weak safeguards negligent
+        (§ 449). So the lab stays in the frame, with a small share of fault against the attacker. The high end is the
+        EU's revised Product Liability Directive: from December 2026 deaths and injuries from defective software are
+        strict liability, not reduced by a third party's act. The numbers within the range are judgement.
+      sources: [restatement_448_449_superseding_cause, eu_product_liability_directive_2024, garcia_v_character_technologies_2025]
     insurable: {low: 0.3, central: 0.5, high: 0.8, basis: "Compensatory share after fines, punitive damages and exclusions. Judgement."}
     common_mode: {low: 0.0, central: 0.1, high: 0.5, basis: "Chance an event is caused jointly by every member's models (a shared jailbreak), splitting liability. Judgement."}
     rate_cv: {central: 1.0, basis: "Uncertainty in the rate itself (gamma-mixed Poisson); 1.0 means we barely know it."}
@@ -60,7 +64,16 @@ perils:
         1-in-1,000 at $16tn) imply about 1.7 in the far tail.
       sources: [cyber_losses_infinite_mean_type, lloyds_systemic_payment_scenario]
     cap: {central: 20000, basis: "Above Lloyd's $16tn extreme scenario. Judgement."}
-    attribution: {low: 0.01, central: 0.05, high: 0.3, basis: "Misuse by a third party; same superseding-cause logic as bio, weaker for agentic attacks. Judgement."}
+    attribution:
+      low: 0.01
+      central: 0.05
+      high: 0.3
+      basis: >-
+        Misuse by a third party: the same superseding-cause logic as bio (§§ 448-449), and most cyber catastrophe losses
+        are businesses' economic losses, outside the EU directive's strict liability. The low end is a statutory shield
+        like the firearms industry's PLCAA. The high end is a court finding safeguards defectively designed
+        (Garcia shows design claims can proceed) in a mostly agent-run attack. The numbers within the range are judgement.
+      sources: [restatement_448_449_superseding_cause, eu_product_liability_directive_2024, plcaa_firearms_immunity, garcia_v_character_technologies_2025]
     insurable: {low: 0.4, central: 0.7, high: 0.9, basis: "War and state-actor exclusions bite (Merck). Judgement."}
     common_mode: {low: 0.0, central: 0.2, high: 0.6, basis: "Attackers can switch models; a technique that works on one often works on all. Judgement."}
     rate_cv: {central: 0.5, basis: "Better observed than bio."}
@@ -79,7 +92,16 @@ perils:
     xm: {central: 0.01, basis: "Event threshold of $10m."}
     alpha: {low: 0.8, central: 1.0, high: 1.5, worse: low, basis: "Cyber-like tail. Judgement."}
     cap: {central: 1000, basis: "Judgement."}
-    attribution: {low: 0.5, central: 0.9, high: 1.0, basis: "No intervening criminal act: the lab is the cause."}
+    attribution:
+      low: 0.5
+      central: 0.9
+      high: 1.0
+      basis: >-
+        No intervening criminal act: the lab is the cause. California's AB 316 stops a lab from blaming its agents'
+        autonomy, and lawyers see negligence claims as strong where safeguards were switched off. It sits below 1
+        because victims may not sue (Hugging Face chose not to), others in the chain share fault (evaluation
+        contractors, the victim's own security), and the first suit, LASST v. OpenAI, seeks an injunction, not damages.
+      sources: [california_ab316_2025, techcrunch_ai_hack_liability_2026, lasst_v_openai_2026, openai_huggingface_2026]
     insurable: {low: 0.6, central: 0.8, high: 0.9, basis: "Judgement."}
     common_mode: {central: 0.0, basis: "One lab's agents."}
     rate_cv: {central: 0.5, basis: "Judgement."}

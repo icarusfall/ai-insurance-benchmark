@@ -1,6 +1,6 @@
 # Parameter registry
 
-Every number the catastrophe model or the site uses comes from an entry here. `market_snapshot.yaml` is not registry entries but the prediction-market prices behind the Markets preset (`python -m catmodel.markets`). One file per area: `capability.yaml` (how fast AI improves), `cyber.yaml`, `bio.yaml`, `market.yaml` (prices, capacity, forecasts) and `structures.yaml` (precedent schemes, regulation, the AIUC proposal).
+Every number the catastrophe model or the site uses comes from an entry here. `market_snapshot.yaml` is not registry entries but the prediction-market prices behind the Markets preset (`python -m catmodel.markets`). One file per area: `capability.yaml` (how fast AI improves), `legal.yaml` (who a court would make pay), `cyber.yaml`, `bio.yaml`, `market.yaml` (prices, capacity, forecasts) and `structures.yaml` (precedent schemes, regulation, the AIUC proposal).
 
 ## Entry fields
 
@@ -29,7 +29,6 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - AI Incident Database and OECD AI Incidents Monitor: counts and growth.
   - Knight Capital (2012) and the 2010 flash crash, for agentic financial harm.
 - **Bio:**
-  - The legal treatment of deliberate criminal misuse as a superseding cause, and how strict liability would change it.
   - PREP Act and NVICP mechanics.
   - World Bank pandemic bonds (PEF): terms and payout history.
   - Anthropic ASL-3 and OpenAI "High" bio capability: dates and definitions.
@@ -46,6 +45,11 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - Solvency II standard-formula man-made liability catastrophe factors.
   - The Solvency II text as amended by the 2025 review: whether the Annex II and XIX rows changed.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.
+- **Legal:**
+  - The economic loss rule: how far negligence claims for pure economic loss (most cyber losses) are barred by state.
+  - How states split fault between a negligent party and an intentional one (Restatement (Third) Apportionment § 14).
+  - The AI LEAD Act (S.2937, introduced September 2025): text and status, from congress.gov.
+  - The LASST v. OpenAI complaint itself.
 - **Capability:**
   - Evidence for how each peril's rate scales with the time horizon. The elasticities and caps in `defaults.yaml` are judgement.
   - METR measurements beyond Mythos Preview, once its suite reaches past 16 hours.
