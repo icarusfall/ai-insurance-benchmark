@@ -1,0 +1,78 @@
+# Market: prices of risk, available capacity, forecasts and settlements. Schema in README.md.
+
+- id: cyber_cat_bond_polestar
+  peril: cyber
+  informs: [price_multiple]
+  lens: market
+  claim: >-
+    Beazley's first 144A cyber catastrophe bond (PoleStar Re 2024-1, December 2023) covered $140m of its losses
+    between $500m and $800m with an expected loss of 1.26% and priced at a 13% spread; the 2024-2 tranche (May
+    2024) priced at 13.25% for the same expected loss. That is a spread of about 10× expected loss.
+  values:
+    expected_loss: 0.0126
+    spread: {2024_1: 0.13, 2024_2: 0.1325}
+    multiple_of_el: {2024_1: 10.3, 2024_2: 10.5}
+    layer_usd_m: {attachment: 500, exhaustion: 800}
+  source: {title: "Beazley secures $140m of reinsurance with PoleStar Re cyber cat bond", publisher: Artemis, date: 2023-12, url: "https://www.artemis.bm/news/beazley-secures-140m-of-reinsurance-with-polestar-re-cyber-cat-bond/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Multiples are our arithmetic. Later deals (2024-3 at $210m, 2026-1 at $300m) still to be priced the same way.
+
+- id: cat_bond_multiples_by_year
+  peril: all
+  informs: [price_multiple]
+  lens: market
+  claim: >-
+    New catastrophe bonds (mostly natural catastrophe) priced at an average of 4.54× expected loss in 2023, 3.71× in
+    2024 and about 3.0–3.3× in 2025, and about 2.5× in the first half of 2026 (AM Best, weighted). Against these,
+    cyber bonds at about 10× show the premium investors charge for a new, poorly modelled peril.
+  values:
+    multiple_of_el: {2023: 4.54, 2024: 3.71, 2025: {low: 3.0, high: 3.26}, h1_2026: 2.5}
+  source: {title: "Catastrophe bond multiples by year", publisher: Artemis, url: "https://www.artemis.bm/dashboard/catastrophe-bond-multiples-by-year/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Straight and weighted averages differ; 2025 figures were year-to-date when quoted.
+
+- id: armilla_ai_liability_limit
+  peril: all
+  informs: [layer]
+  lens: market
+  claim: >-
+    Armilla, a Lloyd's coverholder dedicated to AI liability, raised its standalone AI liability limit to up to
+    $25m per insured (January 2026), while traditional insurers add AI exclusions to cyber, E&O and general liability.
+  values: {max_limit_usd_m: 25}
+  source: {title: "Armilla AI raises Lloyd's-backed coverage to $25M as traditional insurers retreat from AI risk", publisher: Armilla, date: 2026-01, url: "https://www.armilla.ai/resources/armilla-ai-raises-lloyds-backed-coverage-to-25m-as-traditional-insurers-retreat-from-ai-risk"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: The AIUC essay's $1bn minimum per member is 40 times this. A vendor press release.
+
+- id: bartz_anthropic_settlement
+  peril: ip
+  informs: [severity_anchor]
+  lens: parallel
+  claim: >-
+    The $1.5bn Bartz v. Anthropic copyright class settlement received final approval on 20 July 2026: about
+    $3,100 for each of more than 480,000 works downloaded from shadow libraries; fees were cut to about 6.8%.
+  values: {settlement_usd_bn: 1.5, works: 480000, per_work_usd: 3100}
+  source: {title: "Anthropic, authors' $1.5 billion deal earns final approval", publisher: Bloomberg Law, date: 2026-07, url: "https://news.bloomberglaw.com/ip-law/anthropic-authors-1-5-billion-deal-receives-final-approval"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Attritional mass-claim severity, not a catastrophe; IP is likely excluded from a catastrophe mutual.
+
+- id: xpt_2022_ai_catastrophe
+  peril: all
+  informs: [frequency]
+  lens: expert
+  claim: >-
+    In the Existential Risk Persuasion Tournament (June–October 2022, before ChatGPT), AI experts' median probability
+    of an AI-caused catastrophe killing at least 10% of humanity was 12% against superforecasters' 2.13%; for
+    AI-caused extinction, 3% against 0.38%. AI produced the largest expert–superforecaster gap of any risk.
+  values:
+    ai_catastrophe_10pct: {experts: 0.12, superforecasters: 0.0213}
+    ai_extinction: {experts: 0.03, superforecasters: 0.0038}
+  source: {title: "Will AI kill humanity by 2100? 'Superforecasters' and experts disagree on the odds", publisher: Freethink, url: "https://www.freethink.com/robots-ai/ai-predictions-superforecasters"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    Horizon reported inconsistently (by 2100 in most coverage); check the FRI report. Mostly outside scope (loss of
+    control), but the size of the disagreement is itself an input to the model-uncertainty lever.

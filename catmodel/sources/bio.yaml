@@ -1,0 +1,140 @@
+# Bio: tails, base rates, AI uplift, costs and insured shares. Schema in README.md.
+
+- id: marani_2021_epidemic_intensity
+  peril: bio
+  informs: [tail_alpha, frequency]
+  lens: parallel
+  claim: >-
+    Fitting a generalised Pareto distribution to epidemic intensity (deaths divided by world population and
+    duration) since 1600 gives shape ξ = 1.40, so the exceedance probability decays like intensity^-0.71: a tail
+    index below 1, which implies an infinite mean. A COVID-19-intensity event recurs about every 59 years
+    (95% CI 55–64), about 209 years if COVID had spread unconstrained.
+  values:
+    gpd_shape_xi: 1.40
+    tail_alpha: 0.71
+    covid_return_period_years: {central: 59, unconstrained: 209}
+    spanish_flu_return_period_years_today: {pmc_text: 400, pdf_version: 879}
+    spanish_flu_annual_prob_range_1600_present: {pmc_text: [0.0027, 0.019], pdf_version: [0.0011, 0.0089]}
+  source: {title: "Intensity and frequency of extreme novel epidemics", author: "Marani, Katul, Pan, Parolari", publisher: PNAS 118(35), date: 2021, url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8536331"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    The article was corrected (PNAS 2023, 120(12) e2302169120). The PMC text and a hosted PDF give different
+    Spanish-flu figures; read the correction before using either. The infinite-mean reading is ours, from ξ > 1.
+    Intensity is a rate, not total deaths, so α is not directly the tail of total harm.
+
+- id: cirillo_taleb_2020_pandemic_tail
+  peril: bio
+  informs: [tail_alpha]
+  lens: parallel
+  claim: >-
+    Seventy-two epidemics with more than 1,000 deaths since 429 BC, rescaled to today's population and mapped to a
+    "dual" distribution bounded by world population, give a GPD shape ξ = 1.62 (standard error 0.52) above about
+    200,000 deaths: α ≈ 0.62, which the authors treat as an apparently infinite mean. The shape stays above 1 across
+    10,000 perturbed versions of the data.
+  values: {gpd_shape_xi: 1.62, xi_standard_error: 0.52, tail_alpha: 0.62, threshold_deaths: 200000}
+  source: {title: "Tail risk of contagious diseases", author: "Cirillo, Taleb", publisher: Nature Physics 16, date: 2020, url: "https://arxiv.org/html/2004.08658v1"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Corral (arXiv 2007.06876) reanalysed the data and found a power law compatible but not conclusive: a lognormal
+    fits as well. The site should show both readings, because they lead to opposite insurability conclusions.
+
+- id: corral_2020_lognormal_alternative
+  peril: bio
+  informs: [tail_alpha]
+  lens: parallel
+  claim: >-
+    A comment on Cirillo and Taleb finds simulated lognormal data statistically indistinguishable from the
+    epidemic data, so the fat-tailed fit is not conclusive.
+  values: {}
+  source: {title: "Scientific comment on 'Tail risk of contagious diseases'", author: Corral, publisher: arXiv 2007.06876, date: 2020, url: "https://arxiv.org/abs/2007.06876"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Read via abstract and summary only.
+
+- id: fri_llm_biorisk_2025
+  peril: bio
+  informs: [frequency]
+  lens: expert
+  claim: >-
+    46 biosecurity and wet-lab experts and 22 superforecasters (surveyed December 2024 to February 2025) forecast the
+    probability that a human-caused pathogen release in 2028 leads to at least 100,000 excess deaths or $1tn of
+    damage within three years. Median baselines were 0.3% (experts) and 0.38% (superforecasters). If AI matched the
+    top team of expert virologists on the Virology Capabilities Test, experts' median rose to 1.5% (superforecasters
+    0.7%); if AI let half of non-experts synthesise influenza, 1.25% (1.5%). A package of closed weights, strict
+    anti-jailbreak safeguards and mandatory DNA synthesis screening brought the experts' 1.25% back to 0.4%. The
+    paper reports that OpenAI's o3 already performs comparably to the top virologist team on that test.
+  values:
+    annual_prob_baseline: {experts: 0.003, superforecasters: 0.0038}
+    annual_prob_ai_matches_virologists: {experts: 0.015, superforecasters: 0.007}
+    annual_prob_ai_enables_novice_flu_synthesis: {experts: 0.0125, superforecasters: 0.015}
+    annual_prob_multiple_capabilities: {experts: 0.023}
+    annual_prob_with_safeguards: {experts: 0.004}
+    threshold: {deaths: 100000, damage_usd_tn: 1}
+  source: {title: "Forecasting LLM-enabled biorisk and the efficacy of safeguards", author: "Williams, Righetti, Rosenberg et al.", publisher: Forecasting Research Institute, date: 2025-07-01, url: "https://forecastingresearch.org/ai-enabled-biorisk"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Page revised 30 April 2026; figures may differ from the July 2025 version. Expert response rate about 3%;
+    expert interquartile range 0.01–2%. This is the best direct anchor for AI-attributable bio frequency, and for the
+    "risk reduction" lever (safeguards cut the conditional risk by about two thirds).
+
+- id: rand_2024_red_team
+  peril: bio
+  informs: [frequency, attribution]
+  lens: scratch
+  claim: >-
+    RAND's red-team study (January 2024) had 15 three-person teams plan biological attacks with or without an LLM;
+    current LLMs did not measurably change the operational risk of the plans. Critics note it tested planning only,
+    and that an LLM-experienced "black cell" scored almost double the other teams.
+  values: {teams: 15}
+  source: {title: "The operational risks of AI in large-scale biological attacks: results of a red-team study", author: "Mouton, Lucas, Guest", publisher: RAND, date: 2024-01-25, url: "https://www.rand.org/pubs/research_reports/RRA2977-2.html"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Predates the capability jumps reported in fri_llm_biorisk_2025.
+
+- id: terrorism_power_law
+  peril: bio
+  informs: [tail_alpha]
+  lens: parallel
+  claim: >-
+    Deaths per terrorist attack follow a power law: exponent close to 2 for 1968–2004 data (Clauset, Young and
+    Gleditsch), and 2.4 ± 0.2 in later worldwide estimates (Clauset and Wiegel 2009), robust to weapon type and
+    country development. In survival-function terms, α is about 1 to 1.4.
+  values: {density_exponent: {low: 2.0, central: 2.4, high: 2.6}, survival_tail_alpha: {low: 1.0, central: 1.4, high: 1.6}}
+  source: {title: "On the frequency of severe terrorist events", author: "Clauset, Young, Gleditsch", publisher: Journal of Conflict Resolution 51(1), date: 2007, url: "https://arxiv.org/abs/physics/0606007"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    Density exponent, so survival α = exponent − 1. Conventional attacks; an engineered pathogen is the case where
+    this tail stops applying and the pandemic tails above take over.
+
+- id: covid_us_cost
+  peril: bio
+  informs: [severity_anchor]
+  lens: parallel
+  claim: >-
+    Cutler and Summers estimated the US cost of COVID-19 at about $16tn (around 90% of a year's GDP), counting lost
+    output and monetised deaths and illness; a 2022 Institute for Progress update kept about $16tn (range $10–22tn).
+  values: {us_cost_usd_tn: {low: 10, central: 16, high: 22}}
+  source: {title: "The COVID-19 pandemic and the $16 trillion virus", author: "Cutler, Summers", publisher: JAMA 324(15), date: 2020-10, url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7604733"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: US only, and includes monetised health losses that no liability claim would capture.
+
+- id: covid_insured_and_investment_losses
+  peril: bio
+  informs: [insured_share, correlation]
+  lens: parallel
+  claim: >-
+    Lloyd's (May 2020) estimated 2020 underwriting losses to the global re/insurance industry from COVID-19 at about
+    $107bn, plus about $96bn of falls in investment portfolios: $203bn in all. Reinsurers had recognised about $40bn
+    by 2021 (AM Best).
+  values: {underwriting_loss_usd_bn: 107, investment_loss_usd_bn: 96, reinsurers_recognised_2021_usd_bn: 40}
+  source: {title: "Lloyd's estimates Covid's cost to the industry and its own market", publisher: Canadian Underwriter, date: 2020-05-15, url: "https://canadianunderwriter.ca/2020/05/15/lloyds-estimates-covids-cost-to-the-industry-and-its-own-market/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    Early projection. Two uses: insured underwriting loss was well under 1% of the harm (against $16tn for the US
+    alone), and nearly half the industry's hit came from its own assets falling in the same event: wrong-way risk.

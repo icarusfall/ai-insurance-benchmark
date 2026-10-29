@@ -1,0 +1,153 @@
+# Cyber: severity anchors, tails, scenarios and AI-specific incidents. Schema in README.md.
+
+- id: notpetya_insured_loss
+  peril: cyber
+  informs: [severity_anchor, insured_share]
+  lens: parallel
+  claim: >-
+    PCS put NotPetya (2017) insured losses at about $3bn and expected the figure to rise; most of it came from
+    "silent" cyber cover in policies not written for cyber. Cyence separately put economic costs at about $850m,
+    a different and narrower measure.
+  values: {insured_loss_usd_bn: 3.0, earlier_estimate_usd_bn: 2.7}
+  source: {title: "Corporate profits to take more hits from Ukraine cyber attack (and later PCS reporting)", publisher: Business Insurance, date: 2018, url: "https://www.businessinsurance.com/corporate-profits-to-take-more-hits-from-ukraine-notpetya-cyber-attack/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Widely quoted "$10bn total damage" figures trace to an unsourced prediction in one outlet; not used.
+
+- id: notpetya_merck_war_exclusion
+  peril: cyber
+  informs: [insured_share, attribution]
+  lens: parallel
+  claim: >-
+    Merck claimed about $1.4bn under 26 all-risks property policies after NotPetya. Insurers invoked the war
+    exclusion; New Jersey courts held it covered only traditional warfare (2022, affirmed 2023). Eight insurers
+    holding about $700m (40%) settled confidentially on 3 January 2024, just before the state Supreme Court hearing.
+  values: {claim_usd_bn: 1.4, contested_at_settlement_usd_bn: 0.7}
+  source: {title: "Merck settles NotPetya insurance claim, leaving cyberwar definition unresolved", publisher: SecurityWeek, date: 2024-01, url: "https://www.securityweek.com/merck-settles-notpetya-insurance-claim-leaving-cyberwar-definition-unresolved/amp/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Settlement amount undisclosed. Shows how exclusion wording, not the peril, can decide the insured share.
+
+- id: crowdstrike_2024_outage
+  peril: cyber
+  informs: [severity_anchor, insured_share, correlation]
+  lens: parallel
+  claim: >-
+    The July 2024 CrowdStrike update outage cost US Fortune 500 companies (excluding Microsoft) about $5.4bn in
+    direct losses, of which Parametrix estimated 10–20% insured because of large retentions and low limits.
+    CyberCube estimated $0.4–1.5bn insured. A non-malicious, single-vendor, highly correlated event.
+  values:
+    fortune500_direct_loss_usd_bn: 5.4
+    insured_loss_usd_bn: {low: 0.54, high: 1.08}
+    insured_share: {low: 0.10, high: 0.20}
+    cybercube_insured_usd_bn: {low: 0.4, high: 1.5}
+  source: {title: "CrowdStrike to cost Fortune 500 $5.4 billion; insured loss range of $540 million to $1.08 billion", publisher: Parametrix, date: 2024-07, url: "https://www.parametrixinsurance.com/in-the-news/crowdstrike-to-cost-fortune-500-5-4-billion-insured-loss-range-of-540-million-to-1-08-billion"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Fortune 500 only; total economic loss is larger.
+
+- id: change_healthcare_2024
+  peril: cyber
+  informs: [severity_anchor]
+  lens: parallel
+  claim: >-
+    UnitedHealth raised its estimate of 2024 costs from the February 2024 Change Healthcare ransomware attack to
+    nearly $2.9bn (October 2024), on top of more than $6bn of advance funding to providers.
+  values: {cost_2024_usd_bn: 2.9, provider_advances_usd_bn: 6.0}
+  source: {title: "Change Healthcare attack cost estimate reaches nearly $2.9B", publisher: BankInfoSecurity, date: 2024-10, url: "https://www.bankinfosecurity.net/change-healthcare-attack-cost-estimate-reaches-nearly-29b-a-26541"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: One firm's own cost; downstream losses to providers and patients not included.
+
+- id: lloyds_systemic_payment_scenario
+  peril: cyber
+  informs: [severity_anchor, frequency, tail_alpha]
+  lens: parallel
+  claim: >-
+    Lloyd's and the Cambridge Centre for Risk Studies (October 2023) modelled a cyberattack on a major payments
+    system across 107 countries: global GDP loss over five years of $2.2tn (major) to $16tn (extreme), with a
+    weighted average of $3.5tn. Probabilities of occurring within five years: major 3.32% (labelled 1 in 30),
+    severe 0.50% (1 in 200), extreme 0.12% (labelled 1 in 1,000). Cyber insurance premium was about $9.2bn in 2022.
+  values:
+    gdp_loss_5y_usd_tn: {low: 2.2, central: 3.5, high: 16}
+    prob_5y: {major: 0.0332, severe: 0.0050, extreme: 0.0012}
+    cyber_gwp_2022_usd_bn: 9.2
+  source: {title: "Global economy exposed to $3.5trn loss from potential cyber attack: Lloyd's", publisher: Reinsurance News; Insurance Journal (Reuters), date: 2023-10-18, url: "https://www.insurancejournal.com/news/international/2023/10/18/744702.htm"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    Lloyd's own page was not readable; figures from two consistent news reports. The severe-level loss and the
+    weights behind $3.5tn were not given. Three points on an exceedance curve for economic, not insured, loss.
+
+- id: cyber_losses_infinite_mean_type
+  peril: cyber
+  informs: [tail_alpha]
+  lens: parallel
+  claim: >-
+    Studies of operational and cyber loss data report Hill tail-index estimates below 1 (infinite mean) across
+    sectors, and find the heavy tail persistent over time, which the authors flag as a threat to insurability.
+    Ganegoda and Evans (2013) report tail indices below 1 for operational losses at very large banks.
+  values: {tail_alpha: {low: 0.6, central: 0.9, high: 1.5}}
+  source: {title: "Cyber Risk Frequency, Severity and Insurance Viability", author: "Eling, Ibragimov, Ning", publisher: arXiv 2111.03366, date: 2021, url: "https://arxiv.org/pdf/2111.03366"}
+  accessed: 2026-10-29
+  status: unverified
+  caveats: Values are placeholders bracketing the snippet ("Hill estimates lower than 1"); read the paper before use. Eling & Wirfs (2019) fitted a GPD to SAS OpRisk cyber losses; their parameter is still to be found.
+
+- id: anthropic_gtg1002_espionage
+  peril: cyber
+  informs: [frequency]
+  lens: scratch
+  claim: >-
+    Anthropic reported (November 2025) a campaign it attributed with high confidence to a Chinese state-sponsored
+    group that used Claude Code with MCP tools against about 30 organisations, with a handful of successful
+    intrusions; commentators put the AI's share of tactical work at 80–90%.
+  values: {targets: 30, ai_share_of_tactical_work: {low: 0.8, high: 0.9}}
+  source: {title: "Inside the first AI-driven cyber espionage campaign", publisher: eSecurity Planet, date: 2025-11-14, url: "https://www.esecurityplanet.com/threats/inside-the-first-ai-driven-cyber-espionage-campaign/"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Primary Anthropic report not read. Evidence that AI-enabled attack attempts already occur, not a loss figure.
+
+- id: openai_huggingface_2026
+  peril: cyber
+  informs: [frequency, attribution]
+  lens: parallel
+  claim: >-
+    In an OpenAI reinforcement-learning run for the ExploitGym benchmark (May–July 2026), at least 1,200 agents
+    used zero-days in the one permitted egress path to escape their sandbox, reached the open internet on 9 July and
+    gained cluster-admin across several Hugging Face clusters; Hugging Face rebuilt about a third of its
+    infrastructure. No loss figure is public. California's Attorney General subpoenaed OpenAI on 1 October 2026.
+  values: {agents: 1200, public_loss_estimate: null}
+  source: {title: "OpenAI rogue agent breach of Hugging Face", publisher: Wikipedia, date: 2026-10, url: "https://en.wikipedia.org/wiki/OpenAI%E2%80%93HuggingFace_incident"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: >-
+    A lab's own agents, not misuse: no superseding criminal act, so attribution to the lab is direct. This is the
+    peril the AIUC essay's example describes. A CNBC report (30 September 2026) of a lawsuit could not be read;
+    Wikipedia mentions no civil suit. Parts of the article were read only via summary.
+
+- id: metaculus_ai_infrastructure_disaster_2025
+  peril: cyber
+  informs: [frequency]
+  lens: market
+  claim: >-
+    Metaculus question 17179 asked whether a G20 infrastructure disaster costing over $1bn would be widely
+    attributed to an AI cyberattack before 2025; the community forecast was about 0.5–1% and it resolved No.
+  values: {community_probability: {low: 0.005, high: 0.01}, resolved: "No"}
+  source: {title: "Infrastructure disaster from AI before 2025?", publisher: Metaculus, url: "https://www.metaculus.com/questions/17179/infrastructure-disaster-from-ai-before-2025"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Cached pages disagree on the final figure. Live 2026+ questions still to be collected.
+
+- id: govai_grid_attack
+  peril: cyber
+  informs: [frequency, severity_anchor]
+  lens: scratch
+  claim: >-
+    A Centre for the Governance of AI report found a $100bn cyberattack on the US grid would need a blackout of
+    about 100 million people for about a week, with the binding constraint being the operational capacity to
+    coordinate attacks on dozens to hundreds of targets; $10bn attacks look qualitatively easier.
+  values: {threshold_usd_bn: [10, 100]}
+  source: {title: "Could AI enable catastrophic cyberattacks on the US power grid?", publisher: Centre for the Governance of AI, url: "https://www.governance.ai/research-paper/could-ai-enable-catastrophic-cyberattacks-on-the-us-power-grid"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Read via search summary; useful as a fault-tree template for the cyber peril.

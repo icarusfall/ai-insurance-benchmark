@@ -1,0 +1,68 @@
+# Structures: the AIUC proposal, precedent schemes and regulation. Schema in README.md.
+
+- id: aiuc_mutual_proposal
+  peril: structure
+  informs: [layer, capital]
+  lens: scratch
+  claim: >-
+    Trout, Kvist and Dattani propose a frontier AI mutual owned by the labs it covers, with capital "billions, we
+    expect" (excess returned if incidents are few), about $1bn of cover per member as the minimum that justifies
+    serious technical underwriting, three products (third-party liability including CBRN and critical
+    infrastructure; first-party AI cyber; business interruption on forced rollbacks), and notice of incidents within
+    24–72 hours. They argue premiums matter mainly for their information value. They cite 1970s nuclear insurers
+    estimating core melts at about 1 in 400 reactor-years, within an order of magnitude of experience, against a
+    government estimate of 1 in 20,000.
+  values:
+    min_cover_per_member_usd_bn: 1
+    nuclear_core_melt_freq: {insurers_1970s: 0.0025, government_estimate: 0.00005}
+  source: {title: "Bootstrapping frontier AI governance by mutualizing risk", author: "Trout, Kvist, Dattani", publisher: Lawfare, date: 2026-09-22, url: "https://www.lawfaremedia.org/article/bootstrapping-frontier-ai-governance-by-mutualizing-risk"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: No capital adequacy analysis, correlation, reinsurance or government layer; that is the gap this project fills.
+
+- id: price_anderson
+  peril: structure
+  informs: [layer, capital]
+  lens: parallel
+  claim: >-
+    US nuclear liability: a primary layer of $500m per site from the industry insurer (ANI), then a secondary layer
+    of retrospective premiums of up to $158.026m per reactor per incident (inflation-adjusted October 2023), payable
+    in annual instalments; with 95 covered reactors the two layers give about $15.5bn per incident.
+  values:
+    primary_per_site_usd_m: 500
+    retro_premium_per_reactor_usd_m: 158.026
+    annual_instalment_per_reactor_usd_m: 24.7
+    total_per_incident_usd_bn: 15.5
+  source: {title: "Nuclear energy: Price-Anderson Act (CRS In Focus IF10821)", publisher: Congressional Research Service, date: 2025-02-28, url: "https://www.everycrsreport.com/files/2025-02-28_IF10821_469962ee0d0e9a2a5e699cf9d825945a742b0152.pdf"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: The $24.7m annual instalment predates the 2023 adjustment. The closest precedent for callable capital.
+
+- id: tria
+  peril: structure
+  informs: [layer]
+  lens: parallel
+  claim: >-
+    The US Terrorism Risk Insurance Program pays only once industry insured losses exceed $200m in a year; each
+    insurer retains a deductible of 20% of its prior-year direct earned premium in covered lines, the federal share
+    above that is 80%, and the program is capped at $100bn. It expires at the end of 2027; H.R. 7128 (advanced in
+    committee January 2026) would extend it to 2034.
+  values: {program_trigger_usd_m: 200, insurer_deductible_pct_premium: 0.20, federal_share: 0.80, cap_usd_bn: 100}
+  source: {title: "The Terrorism Risk Insurance Act (TRIA) (CRS In Focus IF11090)", publisher: Congressional Research Service, date: 2026-10-09, url: "https://www.everycrsreport.com/files/2026-10-09_IF11090_e7f5396261f7ee52a76d4fc47d8fc39ccade3d70.html"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: The template for a government layer above an industry retention.
+
+- id: solvency2_cost_of_capital
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    The amended Solvency II Directive cuts the cost-of-capital rate in the risk margin from 6% to 4.75%, with a
+    further decay factor for long-tailed business in the draft Delegated Regulation (July 2025); the revised regime
+    applies from 30 January 2027.
+  values: {coc_rate: {old: 0.06, new: 0.0475}, applies_from: 2027-01-30}
+  source: {title: "Solvency II review: proposed amendments to the Delegated Regulation", publisher: Milliman, date: 2025-08, url: "https://us.milliman.com/en/insight/solvency-ii-review-proposed-amendments-delegated-regulation"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: Legal text not read.
