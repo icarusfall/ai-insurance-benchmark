@@ -1,6 +1,6 @@
 # Parameter registry
 
-Every number the catastrophe model or the site uses comes from an entry here. One file per area: `cyber.yaml`, `bio.yaml`, `market.yaml` (prices, capacity, forecasts) and `structures.yaml` (precedent schemes, regulation, the AIUC proposal).
+Every number the catastrophe model or the site uses comes from an entry here. One file per area: `capability.yaml` (how fast AI improves), `cyber.yaml`, `bio.yaml`, `market.yaml` (prices, capacity, forecasts) and `structures.yaml` (precedent schemes, regulation, the AIUC proposal).
 
 ## Entry fields
 
@@ -8,7 +8,7 @@ Every number the catastrophe model or the site uses comes from an entry here. On
 |---|---|
 | `id` | Unique snake_case key |
 | `peril` | `cyber`, `bio`, `ip`, `all`, or `structure` |
-| `informs` | The model parameters it bears on, e.g. `tail_alpha`, `frequency`, `severity_anchor`, `insured_share`, `attribution`, `price_multiple`, `layer`, `capital` |
+| `informs` | The model parameters it bears on, e.g. `tail_alpha`, `frequency`, `severity_anchor`, `insured_share`, `attribution`, `price_multiple`, `layer`, `capital`, `trajectory` |
 | `lens` | `scratch` (built up from first principles), `parallel` (another fat-tailed industry or past event), `market` (prices, markets, forecasting platforms), `expert` (surveys and elicitations) |
 | `claim` | The finding in one or two sentences, paraphrased |
 | `values` | Numbers with units; use `low`/`central`/`high` where the source gives a range |
@@ -46,6 +46,9 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - Solvency II standard-formula man-made liability catastrophe factors.
   - The Solvency II text as amended by the 2025 review: whether the Annex II and XIX rows changed.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.
+- **Capability:**
+  - Evidence for how each peril's rate scales with the time horizon. The elasticities and caps in `defaults.yaml` are judgement.
+  - METR measurements beyond Mythos Preview, once its suite reaches past 16 hours.
 - **Severity anchors:**
   - 9/11 insured loss.
   - Fukushima total cost.

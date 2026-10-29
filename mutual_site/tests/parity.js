@@ -31,6 +31,11 @@ process.stdin.on("end", () => {
     const y = M.simulate(s, req.n_years, req.seed);
     out = { claims: M.mean(y.claims), harm: M.mean(y.harm), liable: M.mean(y.liable),
             by_peril: Object.fromEntries(Object.entries(y.byPeril).map(([k, v]) => [k, M.mean(v)])) };
+  } else if (req.op === "trajectory") {
+    const c = M.loadCapability(req.defaults, req.level);
+    out = { capability: c, paths: Object.fromEntries(M.TRAJECTORIES.map(t => [t, {
+      horizons: req.dates.map(d => M.horizon(c, t, d)),
+      years: Array.from({ length: c.last_year - c.first_year + 1 }, (_, i) => M.multipliers(c, t, c.first_year + i)) }])) };
   } else if (req.op === "load") {
     out = M.load(req.defaults, req.level);
   }

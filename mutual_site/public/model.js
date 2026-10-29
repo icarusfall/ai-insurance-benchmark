@@ -261,7 +261,60 @@
              p_calls: pCalls / y.n, p_unpaid: pUnpaid / y.n, mean_unpaid: pUnpaid ? unpaidSum / pUnpaid : 0 };
   }
 
+  // ---- capability trajectories (catmodel/trajectory.py)
+  const TRAJECTORIES = ["ai2027", "metr_2023", "metr_long_run", "plateau"];
+  const dayNum = iso => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000;
+  function loadCapability(defaults, level = "central") {
+    const c = {}, src = defaults.capability;
+    for (const [k, v] of Object.entries(src))
+      if (k !== "elasticity" && k !== "cap_multiple") c[k] = pick(v, level);
+    c.anchor_date = String(c.anchor_date); c.now = String(c.now);
+    c.elasticity = Object.fromEntries(Object.entries(src.elasticity).map(([p, v]) => [p, pick(v, level)]));
+    c.cap_multiple = Object.fromEntries(Object.entries(src.cap_multiple).map(([p, v]) => [p, pick(v, level)]));
+    return c;
+  }
+  function horizon(c, traj, iso) {
+    const t = dayNum(iso) - dayNum(c.anchor_date), h0 = c.anchor_hours;
+    if (traj === "metr_2023") return h0 * Math.pow(2, t / c.metr_2023_doubling_days);
+    if (traj === "metr_long_run") return h0 * Math.pow(2, t / c.metr_long_run_doubling_days);
+    if (traj === "ai2027") {
+      const d = c.ai2027_doubling_days / c.ai2027_pace, s = c.ai2027_shrink, x = 1 - t * (1 - s) / d;
+      return x <= 0 ? Infinity : h0 * Math.pow(2, Math.log(x) / Math.log(s));
+    }
+    if (traj === "plateau") {
+      const gap = Math.log2(c.plateau_ceiling_hours / h0);
+      if (gap <= 0) return h0;
+      return Math.pow(2, Math.log2(c.plateau_ceiling_hours) - gap * Math.exp(-t / (c.metr_2023_doubling_days * gap)));
+    }
+    throw new Error(`unknown trajectory ${traj}`);
+  }
+  function multipliers(c, traj, year) {
+    const mid = `${year}-07-01`, hNow = horizon(c, traj, c.now), h = horizon(c, traj, mid), ratio = h / hNow;
+    const rates = Object.fromEntries(Object.entries(c.elasticity).map(([p, k]) => [p, Math.min(c.cap_multiple[p], Math.pow(ratio, k))]));
+    return { year, horizon: h, stopped: h >= c.stop_hours, rates,
+             revenue: Math.pow(c.revenue_growth, (dayNum(mid) - dayNum(c.now)) / 365.25) };
+  }
+  function yearSettings(s, m) {
+    return { ...s, perils: s.perils.map(p => ({ ...p, rate: p.rate * (m.rates[p.name] ?? 1) })), revenue: s.revenue * m.revenue };
+  }
+  function project(s, c, traj = c.trajectory, nYears = 20000, seed = 1) {
+    const rows = [];
+    for (let year = c.first_year; year <= c.last_year; year++) {
+      const m = multipliers(c, traj, year), row = { ...m };
+      if (!m.stopped && !(rows.length && rows[rows.length - 1].stopped)) {
+        const sy = yearSettings(s, m), r = evaluate(sy, simulate(sy, nYears, seed + year));
+        const harm = sy.perils.reduce((t, p) => t + p.rate * severity(p).mean(), 0);
+        Object.assign(row, { expected_harm: harm, expected_claims: r.gross, share_paid: harm ? r.gross / harm : 0,
+                             premium: r.stack.premium, premium_share: r.stack.premium / sy.members / sy.revenue,
+                             scr: r.s2.scr, solvency_ratio: r.s2.solvency_ratio, p_unpaid: r.p_unpaid });
+      } else row.stopped = true;
+      rows.push(row);
+    }
+    return rows;
+  }
+
   const api = { TP, rng, ncdf, ninv, LEVELS, pick, load, expectedClaim, simulate, aggregate, stack, reserves,
-                solvency2, us, catbond, evaluate, qSorted, tvarSorted, sorted, mean, unpaidFraction };
+                solvency2, us, catbond, evaluate, qSorted, tvarSorted, sorted, mean, unpaidFraction,
+                TRAJECTORIES, loadCapability, horizon, multipliers, project };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.MaimModel = api;
 })(typeof window !== "undefined" ? window : globalThis);

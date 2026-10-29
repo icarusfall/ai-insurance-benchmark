@@ -118,3 +118,65 @@ capital:
   discount_rate: {central: 0.04, basis: "Judgement."}
   us_premium_factor: {central: 0.3, basis: "Toy RBC premium-risk factor. Placeholder until NAIC factors are sourced."}
   us_reserve_factor: {central: 0.3, basis: "Toy RBC reserve-risk factor. Placeholder."}
+
+# How fast capability grows, and how the perils' rates respond (catmodel/trajectory.py). Capability is METR's 50% time
+# horizon in hours. Each year's rates are today's times min(cap, (horizon that year / horizon now) ^ elasticity).
+capability:
+  anchor_date: {central: "2026-04-07", basis: "Release of the best model METR has measured, an early Claude Mythos Preview.", sources: [metr_time_horizon_2026]}
+  anchor_hours: {central: 17.4, basis: "Its 50% time horizon (95% CI 8.5 to 55 hours; unreliable above 16).", sources: [metr_time_horizon_2026]}
+  now: {central: "2026-10-29", basis: "The date the perils' rates describe."}
+  first_year: {central: 2027}
+  last_year: {central: 2035}
+  trajectory: {central: metr_2023, basis: "Which path the horizon takes: ai2027, metr_2023, metr_long_run or plateau."}
+  metr_2023_doubling_days: {central: 128.7, basis: "METR's fitted doubling time for models since 2023.", sources: [metr_time_horizon_2026]}
+  metr_long_run_doubling_days: {central: 187.8, basis: "METR's fitted doubling time for all models since 2019.", sources: [metr_time_horizon_2026]}
+  ai2027_doubling_days:
+    central: 88.8
+    basis: >-
+      AI 2027's next doubling at full pace: 4.5 months in March 2025, 10% shorter for each of the 4.1 doublings since.
+    sources: [ai2027_timelines_forecast]
+  ai2027_shrink: {central: 0.9, basis: "Each successive doubling takes 10% less time.", sources: [ai2027_timelines_forecast]}
+  ai2027_pace:
+    low: 0.6
+    central: 0.75
+    high: 1.0
+    basis: "Reality ran at 70-90% of AI 2027's pace by August 2026; 60% is the authors' own slower case."
+    sources: [aifutures_q25_2026_update]
+  plateau_ceiling_hours:
+    low: 40
+    central: 167
+    high: 1000
+    basis: >-
+      The plateau starts at METR's recent slope and flattens towards this ceiling: one work-week, one work-month, six
+      work-months. METR's data show no flattening yet, so this is an assumption to argue with.
+    sources: [whitfill_2025_compute_slowdown, metr_time_horizon_2026]
+  stop_hours:
+    central: 1000
+    basis: >-
+      Past this horizon (about six work-months, AI 2027's median for a superhuman coder) the model stops: AGI follows
+      within a year or so in the AI 2027 authors' forecasts, and loss of control is out of scope. Judgement.
+    sources: [ai2027_timelines_forecast, aifutures_q25_2026_update]
+  revenue_growth:
+    low: 1.0
+    central: 2.0
+    high: 4.0
+    worse: low
+    basis: >-
+      Members' revenue multiplies by this each year. The AI 2027 authors assume 5-7x a year for the leading lab in
+      the near term; a sustained average across five labs is surely lower. Judgement.
+    sources: [aifutures_q25_2026_update]
+  elasticity:
+    bio_misuse:
+      low: 0.05
+      central: 0.15
+      high: 0.3
+      basis: >-
+        Most of the uplift has already happened: FRI's forecasters treat o3 as matching top virologists, and their
+        multiple-capabilities case (2.3%) is only about 1.5x the single-capability one (1.5%). Judgement.
+      sources: [fri_llm_biorisk_2025]
+    cyber_misuse: {low: 0.1, central: 0.3, high: 0.6, basis: "Longer horizons let agents run whole intrusion campaigns (GTG-1002). Judgement.", sources: [anthropic_gtg1002_espionage]}
+    agent_runaway: {low: 0.5, central: 1.0, high: 1.2, basis: "Harm scales with how long agents run unsupervised, so roughly with the horizon. Judgement."}
+  cap_multiple:
+    bio_misuse: {central: 1.5, basis: "FRI's multiple-capabilities case over its single-capability case.", sources: [fri_llm_biorisk_2025]}
+    cyber_misuse: {central: 5, basis: "Judgement."}
+    agent_runaway: {central: 50, basis: "Judgement."}

@@ -127,6 +127,7 @@
   document.querySelectorAll(".presets button").forEach(b => b.addEventListener("click", () => {
     level = b.dataset.level;
     S = M.load(D.defaults, level);
+    C = M.loadCapability(D.defaults, level);
     document.querySelectorAll(".presets button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
     syncLevers();
     schedule(0);
@@ -143,7 +144,7 @@
     const r = M.evaluate(S, y);
     r.grossSorted = M.sorted(r.stack.claims);
     last = r;
-    renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond();
+    renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory();
     syncLevers();
   }
 
@@ -289,6 +290,100 @@
   $("#bond-attach").addEventListener("input", renderBond);
   $("#bond-exhaust").addEventListener("input", renderBond);
 
+  // ---- capability over time (catmodel/trajectory.py)
+  const TRAJ_LABELS = { ai2027: "AI 2027", metr_2023: "METR trend since 2023", metr_long_run: "METR long-run trend", plateau: "Plateau" };
+  const TRAJ_COLOURS = { ai2027: "--s2", metr_2023: "--s1", metr_long_run: "--s3", plateau: "--s4" };
+  const TRAJ_YEARS = 20000;
+  const PERIL_SHORT = { bio_misuse: "Bio", cyber_misuse: "Cyber", agent_runaway: "Agents" };
+  const hours = v => !isFinite(v) ? "∞" : v < 100 ? `${num(v)} hours` : v < 2000 ? `${Math.round(v).toLocaleString("en")} hours` : `${(v / 2000).toLocaleString("en", { maximumFractionDigits: v < 20000 ? 1 : 0 })} work-years`;
+  const hoursShort = v => !isFinite(v) ? "∞" : v < 1000 ? `${num(v)}h` : v < 1e6 ? `${(v / 1000).toFixed(v < 1e4 ? 1 : 0)}k h` : "> 1m h";
+  const CAP_LEVERS = [
+    { key: "ai2027_pace", label: "AI 2027: pace of reality", scale: "lin", min: 0.3, max: 1.2, step: 0.05, fmt: v => `${Math.round(v * 100)}% of AI 2027` },
+    { key: "plateau_ceiling_hours", label: "Plateau: ceiling", scale: "log", min: 20, max: 10000, fmt: hours },
+    { key: "stop_hours", label: "Stop the model at a horizon of", scale: "log", min: 50, max: 100000, fmt: hours },
+    { key: "revenue_growth", label: "Members' revenue growth", scale: "lin", min: 1, max: 7, step: 0.25, fmt: v => `${v}× a year` },
+  ];
+  let C = M.loadCapability(D.defaults, level), traj = C.trajectory;
+
+  function buildTrajLevers() {
+    const panel = $("#traj-levers");
+    panel.innerHTML = "";
+    const fs = el("fieldset");
+    fs.innerHTML = "<legend>The path</legend>";
+    for (const lv of CAP_LEVERS) addLever(fs, lv, () => C[lv.key], v => { C[lv.key] = v; }, D.defaults.capability[lv.key]);
+    panel.appendChild(fs);
+    const fe = el("fieldset");
+    fe.innerHTML = "<legend>How each peril responds</legend>";
+    for (const p of S.perils) {
+      const lv = { key: p.name, label: `${p.label}: elasticity`, scale: "lin", min: 0, max: 1.5, step: 0.05,
+                   fmt: v => `${v.toFixed(2)}, capped at ${C.cap_multiple[p.name]}×` };
+      addLever(fe, lv, () => C.elasticity[p.name], v => { C.elasticity[p.name] = v; }, D.defaults.capability.elasticity[p.name]);
+    }
+    panel.appendChild(fe);
+    syncLevers();
+  }
+  function renderTrajTabs() {
+    const tabs = $("#traj-tabs");
+    tabs.innerHTML = M.TRAJECTORIES.map(t => `<button type="button" role="tab" data-traj="${t}" aria-selected="${t === traj}">${TRAJ_LABELS[t]}</button>`).join("");
+    tabs.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { traj = b.dataset.traj; renderTrajTabs(); renderTrajectory(); }));
+  }
+
+  const span = (a, b, f, sep = " → ") => a === b || f(a) === f(b) ? f(a) : `${f(a)}${sep}${f(b)}`;
+  function renderTrajectory() {
+    const rows = M.project(S, C, traj, TRAJ_YEARS, SEED);
+    const live = rows.filter(r => !r.stopped), first = live[0], lastLive = live[live.length - 1];
+    const stopRow = rows.find(r => r.stopped);
+    const minRatio = live.length ? Math.min(...live.map(r => r.solvency_ratio)) : NaN;
+    $("#traj-tiles").innerHTML =
+      tile("Years before the stop", String(live.length), live.length ? span(first.year, lastLive.year, String, "–") : `the horizon passes ${hours(C.stop_hours)} by mid-${C.first_year}`,
+           live.length >= 5 ? ["good", "a run of years"] : live.length >= 2 ? ["warn", "a short window"] : ["bad", live.length ? "one year" : "none"]) +
+      (live.length ? tile("Premium, share of revenue", span(first.premium_share, lastLive.premium_share, pct), span(first.year, lastLive.year, String, " to ")) +
+        tile("Share of expected harm paid", span(first.share_paid, lastLive.share_paid, pct), `harm ${span(first.expected_harm, lastLive.expected_harm, money)} a year`) +
+        tile("Lowest Solvency II ratio", pct(minRatio, 0), "over the insurable years", minRatio >= 1.5 ? ["good", "comfortable"] : minRatio >= 1 ? ["warn", "thin"] : ["bad", "below the SCR"]) : "") +
+      tile("Where it stops", stopRow ? String(stopRow.year) : "never", stopRow ? `mid-year horizon ${hours(stopRow.horizon)}` : `stays under ${hours(C.stop_hours)} to ${C.last_year}`);
+    renderTrajChart();
+    $("#traj-table").innerHTML = `<thead><tr><th>Year</th><th class="num">Horizon</th>${S.perils.map(p => `<th class="num">${esc(PERIL_SHORT[p.name] || p.name)} rate</th>`).join("")}
+      <th class="num">Harm in the world</th><th class="num">Mutual pays</th><th class="num">Premium per member</th><th class="num">Share of revenue</th><th class="num">SII ratio</th></tr></thead><tbody>` +
+      rows.map(r => r.stopped
+        ? `<tr class="muted"><td>${r.year}</td><td class="num">${hoursShort(r.horizon)}</td><td colspan="${S.perils.length + 5}">past the stop</td></tr>`
+        : `<tr><td>${r.year}</td><td class="num">${hoursShort(r.horizon)}</td>${S.perils.map(p => `<td class="num">${num(r.rates[p.name] ?? 1)}×</td>`).join("")}
+           <td class="num">${money(r.expected_harm)}</td><td class="num">${money(r.expected_claims)}</td><td class="num">${money(r.premium / S.members)}</td>
+           <td class="num">${pct(r.premium_share)}</td><td class="num">${pct(r.solvency_ratio, 0)}</td></tr>`).join("") + "</tbody>";
+  }
+
+  function renderTrajChart() {
+    const box = $("#traj-chart"), W = Math.max(box.clientWidth, 280), H = 250, ml = 56, mr = 12, mt = 10, mb = 28;
+    const x0 = Date.UTC(2025, 0, 1), x1 = Date.UTC(C.last_year, 11, 31), yLo = 1, yHi = 1e6;
+    const X = t => ml + (W - ml - mr) * (t - x0) / (x1 - x0);
+    const Y = h => mt + (H - mt - mb) * (1 - Math.log10(Math.min(Math.max(h, yLo), yHi) / yLo) / Math.log10(yHi / yLo));
+    const iso = t => new Date(t).toISOString().slice(0, 10);
+    let svg = `<svg width="${W}" height="${H}" role="img" aria-label="time horizon by year on each path">`;
+    for (const h of [1, 10, 100, 1000, 1e4, 1e5, 1e6])
+      svg += `<line x1="${ml}" x2="${W - mr}" y1="${Y(h)}" y2="${Y(h)}" stroke="var(--grid)"/><text x="${ml - 6}" y="${Y(h) + 4}" text-anchor="end">${hoursShort(h)}</text>`;
+    const step = W < 520 ? 2 : 1;
+    for (let yr = 2025; yr <= C.last_year; yr += step)
+      svg += `<text x="${X(Date.UTC(yr, 6, 1))}" y="${H - 8}" text-anchor="middle">${yr}</text>`;
+    const anchorT = Date.UTC(+C.anchor_date.slice(0, 4), +C.anchor_date.slice(5, 7) - 1, +C.anchor_date.slice(8, 10));
+    for (const t of M.TRAJECTORIES) {
+      let d = "";
+      for (let ms = anchorT; ms <= x1; ms += 15 * 86400000) {
+        const h = M.horizon(C, t, iso(ms));
+        d += `${d ? "L" : "M"}${X(ms).toFixed(1)},${Y(h).toFixed(1)}`;
+        if (!(h < yHi)) break;
+      }
+      const on = t === traj;
+      svg += `<path d="${d}" fill="none" stroke="var(${TRAJ_COLOURS[t]})" stroke-width="${on ? 3 : 1.5}" opacity="${on ? 1 : 0.45}"/>`;
+    }
+    const now = Date.UTC(+C.now.slice(0, 4), +C.now.slice(5, 7) - 1, +C.now.slice(8, 10));
+    svg += `<line x1="${X(now)}" x2="${X(now)}" y1="${mt}" y2="${H - mb}" stroke="var(--axis)" stroke-dasharray="2 3"/><text class="halo" x="${X(now) + 4}" y="${mt + 12}">now</text>`;
+    svg += `<line x1="${ml}" x2="${W - mr}" y1="${Y(C.stop_hours)}" y2="${Y(C.stop_hours)}" stroke="var(--ink-2)" stroke-dasharray="5 3" stroke-width="1.2"/>` +
+           `<text class="halo" x="${W - mr - 4}" y="${Y(C.stop_hours) - 5}" text-anchor="end">stop: ${hours(C.stop_hours)}</text>`;
+    svg += `<circle cx="${X(anchorT)}" cy="${Y(C.anchor_hours)}" r="4" fill="var(--ink)"/>`;
+    box.innerHTML = svg + "</svg>";
+    $("#traj-legend").innerHTML = M.TRAJECTORIES.map(t => `<span><i style="background:var(${TRAJ_COLOURS[t]})"></i>${TRAJ_LABELS[t]}</span>`).join("") +
+      `<span><i style="background:var(--ink);border-radius:50%"></i>best measured model, ${hours(C.anchor_hours)}</span>`;
+  }
+
   // ---- bio insurability tables (computed in Python by catmodel.insurability)
   function renderBio() {
     $("#bio-table").innerHTML = `<thead><tr><th>Criterion</th><th>Test</th><th>Result</th><th>Verdict</th><th>What would make it pass</th></tr></thead><tbody>` +
@@ -330,9 +425,11 @@
 
   $("#built").textContent = D.built;
   buildLevers();
+  buildTrajLevers();
+  renderTrajTabs();
   renderBio();
   renderChecks();
   renderSources();
   recompute();
-  window.addEventListener("resize", () => { if (last) { renderEP(last); renderFunnel(last); } });
+  window.addEventListener("resize", () => { if (last) { renderEP(last); renderFunnel(last); renderTrajChart(); } });
 })();

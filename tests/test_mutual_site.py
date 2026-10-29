@@ -17,6 +17,7 @@ from catmodel.dist import TruncatedPareto
 from catmodel.model import DEFAULTS, LEVELS, load, simulate
 from catmodel.pricing import build_stack, catbond
 from catmodel.reserves import reserves
+from catmodel import trajectory as tr
 
 HARNESS = os.path.join(os.path.dirname(__file__), "..", "mutual_site", "tests", "parity.js")
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
@@ -104,3 +105,21 @@ def test_simulation_matches_statistically():
     assert got["claims"] == pytest.approx(float(py.claims.mean()), rel=0.06)
     for k, v in py.by_peril.items():
         assert got["by_peril"][k] == pytest.approx(float(v.mean()), rel=0.1), k
+
+
+@pytest.mark.parametrize("level", LEVELS)
+def test_trajectories_match(level):
+    with open(DEFAULTS, encoding="utf-8") as f:
+        defaults = yaml.safe_load(f)
+    c = tr.load_capability(level)
+    dates = ["2026-04-07", "2026-10-29", "2027-07-01", "2028-03-15", "2029-07-01", "2035-07-01"]
+    got = js(dict(op="trajectory", defaults=defaults, level=level, dates=dates))
+    for t in tr.TRAJECTORIES:
+        want = [tr.horizon(c, t, __import__("datetime").date.fromisoformat(d)) for d in dates]
+        for g, w in zip(got["paths"][t]["horizons"], want):
+            assert close(g, w, rel=1e-9), (t, g, w)
+        for g, year in zip(got["paths"][t]["years"], range(c.first_year, c.last_year + 1)):
+            w = tr.multipliers(c, t, year)
+            assert g["stopped"] == w["stopped"] and close(g["revenue"], w["revenue"]), (t, year)
+            for p, v in w["rates"].items():
+                assert close(g["rates"][p], v), (t, year, p)

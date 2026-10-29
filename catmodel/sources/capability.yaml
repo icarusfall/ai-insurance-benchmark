@@ -1,0 +1,118 @@
+# Capability: how fast frontier AI is improving, and forecasts of where it goes. Schema in README.md.
+
+- id: metr_time_horizon_2026
+  peril: all
+  informs: [trajectory]
+  lens: scratch
+  claim: >-
+    METR's time horizon is the length of software task, timed by how long it takes a human, that an AI agent finishes with
+    50% reliability. The best measured model is an early Claude Mythos Preview (released 7 April 2026), at about 17
+    hours (95% CI 8.5 to 55 hours). METR fits a doubling time of 188 days across all models since 2019 and 129 days
+    (CI 104 to 158) for models since 2023. METR found an exponential fits the data much better than linear or
+    hyperbolic trends.
+  values:
+    best_model: {name: claude_mythos_preview_early, release: 2026-04-07, p50_minutes: 1044.8, ci_minutes: [509, 3304]}
+    doubling_days: {all_time: 187.8, since_2023: 128.7, since_2023_ci: [104.4, 158.0]}
+    reliable_up_to_hours: 16
+  source: {title: "Task-Completion Time Horizons of Frontier AI Models (benchmark_results_1_1.yaml)", publisher: METR, date: 2026, url: "https://metr.org/time-horizons/"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    METR says measurements above 16 hours are unreliable with its current task suite, so the anchor itself is
+    uncertain. A 50% horizon on METR's low-context software tasks is not the same as doing a professional's job; the
+    80% horizon is several times shorter. The doubling times exclude points above 16 hours.
+  mapping: >-
+    The anchor (17.4 hours on 7 April 2026) and the two exponential trajectories (129-day and 188-day doubling) in
+    catmodel/trajectory.py.
+
+- id: ai2027_timelines_forecast
+  peril: all
+  informs: [trajectory]
+  lens: expert
+  claim: >-
+    AI 2027's timelines forecast put the time horizon's doubling time at 4.5 months (80% CI 2.5 to 9) as of March 2025.
+    Its authors gave 40-45% weight to superexponential growth, in which each successive doubling takes 10% less time,
+    and 10% to subexponential growth. Their median for the time horizon a superhuman coder needs, on the real
+    distribution of tasks, is about six work-months (80% CI one week to 12 years).
+  values:
+    doubling_months_mar_2025: {central: 4.5, ci80: [2.5, 9]}
+    p_superexponential: {eli: 0.45, nikola: 0.4}
+    p_subexponential: 0.1
+    successive_doubling_factor: 0.9
+    sc_horizon_work_months: {central: 6, ci80: ["1 week", "12 years"]}
+  source: {title: "Timelines Forecast", author: "Eli Lifland and Nikola Jurkovic", publisher: AI 2027, date: 2025-04, url: "https://ai-2027.com/research/timelines-forecast"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    The page was edited in December 2025, including a fix to how the progress multiplier is interpolated. Taken
+    literally, a doubling time that shrinks by 10% each time reaches an infinite horizon in finite time. That is how the
+    authors model the run-up to a superhuman coder, not a claim about the metric.
+  mapping: >-
+    The ai2027 trajectory: from the April 2026 anchor, the next doubling takes 4.5 months × 0.9^4.1 (reality had done
+    about 4.1 doublings since Claude 3.7 Sonnet in February 2025), about 89 days at full pace, divided by the pace lever;
+    each doubling after that is 10% shorter. The stop lever defaults to about six work-months (1,000 hours).
+
+- id: aifutures_q25_2026_update
+  peril: all
+  informs: [trajectory]
+  lens: expert
+  claim: >-
+    In August 2026 the AI 2027 authors judged reality to be running at 70-90% of AI 2027's pace (89% on coding time
+    horizon, median of capability indicators 0.89, of all indicators 0.61). At 75% of the pace an automated coder
+    arrives in mid-2027. Their medians for AGI (TED-AI: as good as top experts at virtually all cognitive tasks) are
+    2028 (Kokotajlo) and 2032 (Lifland); for a superhuman coder, 2028 and 2031. They give 23% and 9% to AGI by the end
+    of 2027. They assume leading-lab revenue grows 5-7× a year for now.
+  values:
+    pace_vs_ai2027: {low: 0.7, high: 0.9, coding_time_horizon: 0.89, capability_median: 0.89, all_median: 0.61}
+    agi_median_year: {kokotajlo: 2028, lifland: 2032}
+    superhuman_coder_median_year: {kokotajlo: 2028, lifland: 2031}
+    superintelligence_median_year: {kokotajlo: 2029, lifland: 2033}
+    p_agi_by_end_2027: {kokotajlo: 0.23, lifland: 0.09}
+    revenue_growth_per_year: {kokotajlo: 5, lifland: 5, halstead: 7}
+  source: {title: "Q2.5 2026 Timelines Update: Uplift and Revenue", author: "Eli Lifland, Daniel Kokotajlo and Brendan Halstead", publisher: AI Futures Project, date: 2026-08-16, url: "https://blog.aifutures.org/p/q25-2026-timelines-update-uplift"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    The forecasts assume development goes as fast as is technically feasible, with no government-imposed slowdown. The
+    numbers come from the post's text and its Datawrapper tables. The 5-7× revenue growth is for the leading company
+    in the near term, not a sustained average across labs.
+  mapping: >-
+    The default pace lever (75%) and its range (60%-100%); the ai2027 trajectory's stop date is checked against these
+    medians. The revenue-growth lever's top end.
+
+- id: whitfill_2025_compute_slowdown
+  peril: all
+  informs: [trajectory]
+  lens: scratch
+  claim: >-
+    If time-horizon growth is driven by compute and the algorithmic progress compute investment buys, then horizon
+    growth must be proportional to compute growth. Under OpenAI's compute projection, a slowdown in compute would
+    delay capability. For example, a one-month horizon at 80% reliability arrives seven years later than simple trend
+    extrapolation suggests.
+  values: {delay_years_one_month_80pct_horizon: 7}
+  source: {title: "Forecasting AI Time Horizon Under Compute Slowdowns", author: "Parker Whitfill, Ben Snodin and Joel Becker", publisher: arXiv 2511.19492, date: 2025-11-23, url: "https://arxiv.org/abs/2511.19492"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Read at the abstract only. The model rules out a software-only intelligence explosion by construction. This is the
+    best published case for a slowdown; it is a slower exponential, not a ceiling.
+  mapping: The plateau trajectory's rationale, and the long-run (188-day) trajectory as a milder slowdown.
+
+- id: fogelson_2026_bounded_metrics
+  peril: all
+  informs: [attribution]
+  lens: scratch
+  claim: >-
+    Whether frontier models keep their lead over cheap ones depends on whether the capability is bounded. Bounded
+    performance metrics always favour small "meek" models catching up; unbounded ones let the frontier lead grow for
+    ever. If a capability such as synthetic biology is bounded, it spreads to many actors through small models; if it
+    is unbounded, it stays concentrated in a few labs.
+  values: {}
+  source: {title: "Two AI Metrics Diverged: Will it Make All the Difference?", author: "Alex Fogelson, Zachary A. Brown, Hans Gundlach, Jayson Lynch and Neil Thompson", publisher: arXiv 2607.00913, date: 2026-07-01, url: "https://arxiv.org/abs/2607.00913"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Read at the abstract only. The model does not use this directly. It is why a plateau is not necessarily good news
+    for the mutual: if capability saturates, misuse moves to non-members' models, which lowers members' attribution and
+    leaves more harm uninsured.
+  mapping: Context for the plateau trajectory; no parameter.
