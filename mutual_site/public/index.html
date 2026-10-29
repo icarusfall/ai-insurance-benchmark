@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mutually Assured AI Modelling</title>
+<meta name="description" content="A toy catastrophe model for a frontier AI mutual insurer: premium, capital in US and Solvency II terms, cat bonds, and whether bio risk is insurable.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='3' y='25' font-size='24' font-family='Georgia'%3E%E2%88%9E%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="brand" href="#">Mutually Assured <span>AI</span> Modelling</a>
+  <nav><a href="#levers">Levers</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
+</div></header>
+
+<div class="wrap">
+<div class="hero">
+  <p class="kicker">A toy catastrophe model</p>
+  <h1>Could a frontier AI mutual afford the tail?</h1>
+  <p class="dek">The AI Underwriting Company has proposed that frontier labs <a href="https://www.lawfaremedia.org/article/bootstrapping-frontier-ai-governance-by-mutualizing-risk">insure each other through a mutual</a>: pooled capital, shared safety standards, audits with teeth. They sketch the structure; this page puts rough numbers on it. Move the levers and watch the premium, the capital a regulator would ask for, and how much of the harm the mutual would actually pay.</p>
+  <div class="toy"><b>This is a toy model to take the idea out for a walk, not to definitively price catastrophe.</b> Every number is a starting point with its source shown; many are judgement calls labelled as such. The interesting output is which levers matter, not any one figure.</div>
+</div>
+
+<section class="chapter" id="levers">
+  <p class="kicker">The model</p>
+  <h2>Pull the levers</h2>
+  <p>Three perils: an engineered epidemic a frontier model helped cause, a cyber catastrophe it enabled, and a lab's own agents running amok, as OpenAI's did at Hugging Face in July 2026. Each has a rate, a fat-tailed severity, and the share of the harm a court would pin on the lab. The mutual covers each member up to a limit per event and per year, backed by premium, paid-in capital and calls on members. 100,000 simulated years per setting.</p>
+  <div class="presets" role="group" aria-label="Parameter presets">
+    <span class="hint">Start from:</span>
+    <button type="button" data-level="optimistic">Optimistic</button>
+    <button type="button" data-level="central" aria-pressed="true">Central</button>
+    <button type="button" data-level="pessimistic">Pessimistic</button>
+  </div>
+  <div class="board">
+    <div class="levers" id="levers-panel"></div>
+    <div class="results">
+      <div class="tiles" id="tiles"></div>
+      <figure class="chart">
+        <div class="title">How bad a bad year gets</div>
+        <div class="sub">The mutual's claims in a year that bad or worse, by how rarely it happens. Dashed lines show what pays for it.</div>
+        <div class="legend" id="ep-legend"></div>
+        <div id="ep-chart"></div>
+        <div class="tooltip" id="ep-tip"></div>
+      </figure>
+      <figure class="chart">
+        <div class="title">Where the expected harm goes</div>
+        <div class="sub">Expected harm per year, $bn, from the world down to what the mutual pays. Log scale: each step is a fall of orders of magnitude.</div>
+        <div id="funnel"></div>
+      </figure>
+      <div class="table-wrap"><table id="peril-table"></table></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="capital">
+  <p class="kicker">Capital in two languages</p>
+  <h2>What a regulator would ask for</h2>
+  <p>The same simulated losses, read the American way and the European way. The biggest difference for a mutual: under Solvency II, members' promises to pay more later can count as capital (up to half the requirement); under US statutory accounting, they don't.</p>
+  <div class="cards" id="capital-cards"></div>
+  <p class="hint">Simplified on purpose: one catastrophe-and-premium risk module, a run-off risk margin, placeholder RBC factors, and Solvency II factors still to verify. See the model's notes in <code>catmodel/capital_s2.py</code> and <code>capital_us.py</code>.</p>
+</section>
+
+<section class="chapter" id="bond">
+  <p class="kicker">Capital markets</p>
+  <h2>A cat bond on the mutual</h2>
+  <p>The same distribution, sold to investors: a bond that loses principal when the mutual's annual claims pass the attachment, and is wiped out at exhaustion. The first cyber cat bonds priced at about ten times their expected loss, against about three times for natural catastrophe: investors charge heavily for a peril nobody can model. An AI cat bond would sit at least as far out. And unlike hurricanes, an AI catastrophe is plausibly correlated with the rest of an investor's portfolio.</p>
+  <div class="bond-inputs">
+    <label>Attaches at ($bn)<input type="number" id="bond-attach" value="2" min="0" step="0.5"></label>
+    <label>Exhausts at ($bn)<input type="number" id="bond-exhaust" value="4" min="0" step="0.5"></label>
+  </div>
+  <div class="tiles" id="bond-tiles"></div>
+  <p class="hint">Spreads three ways: a multiple of expected loss (the lever above), the Lane (2000) model, and a Wang transform with λ = 0.5. Lane's coefficients and the Wang λ are still to be checked against market data.</p>
+</section>
+
+<section class="chapter" id="bio">
+  <p class="kicker">The hard case</p>
+  <h2>Is AI-assisted bio risk insurable?</h2>
+  <p>Usually asserted, rarely shown. Here are nine tests, run on the bio peril alone with the central parameters. The verdict: bio risk can be held as a small, incentive-bearing slice (which is what the mutual proposal asks for) but cannot be insured as compensation.</p>
+  <ul class="findings">
+    <li><b>No finite mean.</b> Both pandemic tail fits we found put the tail index below 1, so expected harm grows with wherever you cap it.</li>
+    <li><b>A capped slice is cheap.</b> $1bn per lab costs about $24m a year per lab, a quarter of a percent of a $10bn revenue.</li>
+    <li><b>It compensates almost nobody.</b> About 2% of what courts would pin on labs; covering half would need about $75bn per lab per event.</li>
+    <li><b>Limits turn a tail problem into a frequency problem.</b> Once limits bind, the tail hardly matters; the price hangs on how often AI helps cause a catastrophe.</li>
+    <li><b>Law decides who carries it.</b> Strict liability multiplies labs' exposure tenfold without changing what the mutual pays.</li>
+    <li><b>Solvency II's 1-in-200 standard sits on a 1-in-200 peril,</b> so the capital charge flips between nothing and the whole limit.</li>
+  </ul>
+  <div class="table-wrap"><table id="bio-table"></table></div>
+  <details class="more"><summary>Sensitivity: tail index × attribution × limit</summary>
+    <div class="table-wrap"><table id="bio-grid"></table></div>
+  </details>
+</section>
+
+<section class="chapter" id="sources">
+  <p class="kicker">Provenance</p>
+  <h2>Where the numbers come from</h2>
+  <p>Every parameter traces to an entry here, from one of four viewpoints: built up from first principles, a parallel from another fat-tailed industry, a market price or forecast, or an expert elicitation. Each says how far it has been checked.</p>
+  <div class="filters"><div class="tabs" id="lens-tabs" role="tablist"></div></div>
+  <div id="source-list"></div>
+</section>
+
+<section class="chapter" id="about">
+  <p class="kicker">About</p>
+  <h2>What this is, and isn't</h2>
+  <p>A personal project, vibe-coded with Claude Code, responding to the AI Underwriting Company's proposal for a frontier AI mutual (Trout, Kvist and Dattani, Lawfare, September 2026). The name nods to <a href="https://www.nationalsecurity.ai/chapter/deterrence-with-mutual-assured-ai-malfunction-maim">MAIM</a>, Mutual Assured AI Malfunction, from Hendrycks, Schmidt and Wang's <i>Superintelligence Strategy</i>.</p>
+  <p>It is not a price, a recommendation, or a view on any real company. Loss of control is out of scope by construction: nobody would be left to pay or receive a claim. Parameters marked as judgement are there to be argued with; the model's Python source and the parameter registry sit beside an earlier project, an LLM benchmark in which models run an AI-liability insurer.</p>
+</section>
+</div>
+
+<footer><div class="wrap">A personal project, vibe-coded with Claude Code. Not affiliated with AIUC or any employer. A toy model: not insurance, investment or legal advice. Data built <span id="built"></span>.</div></footer>
+
+<script src="data.js"></script>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

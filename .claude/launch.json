@@ -4,8 +4,26 @@
     {
       "name": "website",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "website/public"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "website/public"
+      ],
       "port": 8765
+    },
+    {
+      "name": "mutual",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8766",
+        "--directory",
+        "mutual_site/public"
+      ],
+      "port": 8766
     }
   ]
 }
