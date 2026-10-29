@@ -24,7 +24,8 @@ from runner.benchmark_mode import NPCS, SUBJECT
 OUT = os.path.join(os.path.dirname(__file__), "public", "data.js")
 SEEDS = range(10)
 SAMPLE_SEED = 7
-BATCH = "wave4"          # the LLM wave shown on the Results page and in the transcripts
+BATCHES = ("wave4", "wave5")    # LLM waves shown on the Results page and in the transcripts (same environment, same worlds)
+BATCH_LABEL = "waves 4 and 5"
 GALLERY = ["actuary", "null", "reckless", "cycle", "random", "deny_all", "no_reins", "timid"]
 
 
@@ -194,11 +195,17 @@ def _tool_output(name: str, raw: str):
     return _trim(out, 3)
 
 
+def _game_files(name: str, batches=BATCHES) -> list:
+    """A file from every game in the batches; folders set aside with a suffix (s8_capped, s0_stopped) are skipped."""
+    return sorted(p for b in batches for p in glob.glob(os.path.join("runs", b, "*", "s*", name))
+                  if "_" not in os.path.basename(os.path.dirname(p)))
+
+
 def llm_turns() -> list:
-    """One real quarter per model from the current wave: every tool call, its input and the game's reply."""
+    """One real quarter per model from the current waves: every tool call, its input and the game's reply."""
     out = []
     best = {}
-    for p in glob.glob(os.path.join("runs", BATCH, "*", "s*", "game.jsonl")):
+    for p in _game_files("game.jsonl"):
         with open(os.path.join(os.path.dirname(p), "manifest.json"), encoding="utf-8") as f:
             man = json.load(f)
         model, seed, env = man["model"], man["seed"], man.get("env_version")
@@ -244,11 +251,10 @@ def _per_quarter(cum_at_start: dict, total: float) -> list:
     return [round(cum[t] - (cum[t - 1] if t else 0.0), 6) for t in range(P.Q)]
 
 
-def results(batch: str = None) -> dict:
-    batch = batch or BATCH
-    """Every complete LLM game in a batch, as wealth paths, plus the reference actuary on the same seeds."""
+def results(batches=BATCHES) -> dict:
+    """Every complete LLM game in the batches, as wealth paths, plus the reference actuary on the same seeds."""
     models, versions = {}, set()
-    for p in sorted(glob.glob(os.path.join("runs", batch, "*", "s*", "result.json"))):
+    for p in _game_files("result.json", batches):
         with open(p, encoding="utf-8") as f:
             r = json.load(f)
         if not r.get("complete"):
@@ -275,9 +281,9 @@ def results(batch: str = None) -> dict:
         ref.append(dict(seed=s, R=round(res["R"], 4), insolvent=res["insolvent"], insolvent_q=res["insolvent_q"],
                         path=wealth_path([h["true_eq"] for h in res["history"]], ins.div_q, ins.inj_q, res["insolvent_q"])))
     if len(versions) > 1:
-        raise SystemExit(f"batch {batch} mixes environment versions {versions}")
+        raise SystemExit(f"batches {batches} mix environment versions {versions}")
     # the reference is re-simulated with today's engine; that is only valid if no scored mechanics changed since
-    return dict(batch=batch, env_version=versions.pop() if versions else None, models=models, reference=ref)
+    return dict(batch=BATCH_LABEL, env_version=versions.pop() if versions else None, models=models, reference=ref)
 
 
 def main():
@@ -297,7 +303,7 @@ def main():
     data["gallery"] = gallery()
     data["llm"] = llm_excerpts() or _existing_llm()
     data["turns"] = llm_turns() or _existing_part("turns")
-    data["results"] = results() if os.path.isdir(os.path.join("runs", BATCH)) else _existing_part("results")
+    data["results"] = results() if os.path.isdir(os.path.join("runs", BATCHES[0])) else _existing_part("results")
     _write(data)
 
 

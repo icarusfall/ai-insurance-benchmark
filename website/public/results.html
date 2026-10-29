@@ -66,13 +66,17 @@
 
 <section class="chapter" id="pilots">
   <p class="kicker">Pilots</p>
-  <h2>Two models we only tried once</h2>
-  <p>Before committing seeds, every larger model played one pilot game to measure what a full game really costs. Two were dropped from the main run, for reasons list prices would not have predicted:</p>
+  <h2>Models we only tried once</h2>
+  <p>Before committing seeds, every new model played one pilot game to measure what a full game really costs. Most stopped there, usually for reasons list prices would not have predicted. One game says little about rank, so none of these are in the chart or the table above.</p>
+  <div class="table-wrap"><table id="pilot-table"></table></div>
   <div class="grid">
-    <div class="card"><span class="tag">Too expensive</span><h4>Gemini 3.5 Flash</h4><p>Played well: R 2.16 on its pilot world. But it took 477 model calls to finish one game (Opus took 104), many small steps each re-reading the whole conversation, so a game cost $7.29, more than Opus. Cheap per token is not cheap per game.</p></div>
+    <div class="card"><span class="tag">Too expensive</span><h4>Gemini 3.5 Flash, Gemini 3.8 Flash, Grok 4.7</h4><p>Gemini 3.5 Flash played well but took 477 model calls to finish one game (Opus took 104), each step re-reading the whole conversation, so a game cost $7.29. Gemini 3.8 Flash did the same for $4.71 and a weak score. Grok 4.7 cost $8.29 and took two and a half hours. Cheap per token is not cheap per game.</p></div>
+    <div class="card"><span class="tag">Ran out of words</span><h4>MiniMax M3.1 Flash, GLM 5.3 FlashX</h4><p>Both kept hitting the 16,000-token limit on a single reply, MiniMax 33 times, often mid-thought and before acting. MiniMax left 15 quarters unfinished. Both went insolvent. The limit is the same for every model and was kept, so results stay comparable.</p></div>
     <div class="card"><span class="tag">Too slow</span><h4>Kimi K2.6</h4><p>At its default setting it reasoned until it ran out of output allowance, twice, without ever acting. With reasoning effort set to medium (the one exception to identical settings for every model) it scored R 1.74, but one game took 3 hours 13 minutes and cost $4.95.</p></div>
+    <div class="card"><span class="tag">Did not finish</span><h4>Mistral Large 4, Qwen 3.8 Max</h4><p>Mistral was stopped early when its cost per game was heading past $6. Qwen's first attempt crashed our code (a reply with reasoning but no text, which we now handle). Its second was heading for $13 a game when the connection dropped at quarter 14.</p></div>
+    <div class="card"><span class="tag">Promising</span><h4>GPT-6.1 Terra</h4><p>The best pilot: R 2.51 for $1.18. Its sibling GPT-6.1 Sol was taken to ten games instead. Terra may join it in a later wave.</p></div>
   </div>
-  <p class="hint">One game says little about rank: these two are not in the chart or the table above. Both pilots were played on seed 0, a generous world on which the reference scored 3.62.</p>
+  <p class="hint">All pilots were played on seed 0, a generous world on which the reference scored 3.62. A pilot that went on to the full run counts as that model's seed 0.</p>
 </section>
 
 <section class="chapter" id="caveats">
@@ -80,8 +84,9 @@
   <h2>Read this before quoting anything</h2>
   <ul>
     <li><b>Small samples.</b> A handful of seeds per model. Outcomes vary a great deal between seeds and between runs of the same model on the same seed. Treat this as a first look, not a ranking.</li>
-    <li><b>Few games per model.</b> Ten seeds for most models and five for Opus, so only the larger gaps are reliable; a model's own randomness also varies from run to run.</li>
-    <li><b>Not every model was run in full.</b> Gemini 3.5 Flash and Kimi K2.6 played one pilot game each (below); Gemini 3.1 Flash-Lite, DeepSeek V4 Flash, GPT-5.6 Luna and Claude Haiku 5.5 are the inexpensive tier.</li>
+    <li><b>Few games per model.</b> Ten seeds per model, so only the larger gaps are reliable: the top four are within a few points of each other. A model's own randomness also varies from run to run.</li>
+    <li><b>Not every model was run in full.</b> Several played one pilot game only (above). GPT-6 Luna, DeepSeek V4 and V4.1 Flash, Gemini 3.1 Flash-Lite, GPT-5.6 Luna and Claude Haiku 5.5 are the inexpensive tier.</li>
+    <li><b>Two waves, one set of worlds.</b> Wave 5 added newer models nine days after wave 4, on the same ten worlds and the same rules. The only change in between ends a model's quarter once it repeats the identical tool call five times in a row. It fired only for DeepSeek: in seven of DeepSeek V4.1 Flash's games and in one of DeepSeek V4 Flash's (seed 8, re-run in wave 5). DeepSeek V4 Flash's other games, played without it, are not quite like for like.</li>
     <li><b>Unequal information.</b> The reference and rivals have a near-correct risk model; the language models do not. Beating the reference is hard by design.</li>
     <li><b>One environment version.</b> Results are only comparable within one version; these were played under <span id="batch-env-2"></span>.</li>
   </ul>

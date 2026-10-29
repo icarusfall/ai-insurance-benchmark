@@ -11,12 +11,12 @@
   const medianPath = games => Array.from({ length: P.Q }, (_, t) => [t + 1, med(games.map(g => g.path[t]))]);
   const MIN_GAMES = 5;                     // models with fewer games are pilots: listed separately, not charted
   const models = Object.keys(R.models).filter(m => R.models[m].length >= MIN_GAMES).sort();
-  const colours = ["--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];   // slot 1 (blue) is the reference
+  const colours = ["--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8", "--s9", "--s10", "--s11", "--s12"];   // slot 1 (blue) is the reference
   const colourOf = Object.fromEntries(models.map((m, i) => [m, colours[i % colours.length]]));
   const short = m => m.replace(/^.*\//, "");
   const seeds = [...new Set(models.flatMap(m => R.models[m].map(g => g.seed)))].sort((a, b) => a - b);
   const counts = models.map(m => R.models[m].length);
-  $("#batch").textContent = R.batch.replace("wave", "wave ");
+  $("#batch").textContent = R.batch;
   $("#batch-env").textContent = R.env_version;
   $("#batch-env-2").textContent = R.env_version;
   $("#batch-env-3").textContent = R.env_version;
@@ -74,4 +74,14 @@
       <tr style="color:var(--ink-2)"><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--s1);margin-right:8px"></i>${refRow.m}</td>
       <td class="num">${refRow.n}</td><td class="num">${refRow.surv} of ${refRow.n}</td><td class="num"><b>${fmtR(refRow.medR)}</b></td>
       <td class="num">${fmtR(refRow.best)}</td><td class="num">${fmtR(refRow.worst)}</td><td class="num">100%</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr></tbody>`;
+
+  // pilots: models with too few games to chart, one row per game
+  const pilots = Object.keys(R.models).filter(m => R.models[m].length < MIN_GAMES)
+    .flatMap(m => R.models[m].map(g => ({ m, ...g, rel: refBySeed[g.seed] ? g.R / refBySeed[g.seed].R : null })))
+    .sort((a, b) => b.rel - a.rel);
+  $("#pilot-table").innerHTML = `<thead><tr><th>Model</th><th class="num">Seed</th><th class="num">R</th><th class="num">Share of the reference's R</th>
+      <th class="num">Survived</th><th class="num">$ per game</th><th class="num">Minutes</th></tr></thead>
+    <tbody>${pilots.map(g => `<tr><td>${short(g.m)}</td><td class="num">${g.seed}</td><td class="num"><b>${fmtR(g.R)}</b></td>
+      <td class="num">${g.rel === null ? "–" : Math.round(g.rel * 100) + "%"}</td><td class="num">${g.insolvent ? "no, Q" + (g.insolvent_q + 1) : "yes"}</td>
+      <td class="num">${g.usd.toFixed(2)}</td><td class="num">${g.minutes.toFixed(0)}</td></tr>`).join("")}</tbody>`;
 })();
