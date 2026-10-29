@@ -36,6 +36,9 @@ process.stdin.on("end", () => {
     out = { capability: c, paths: Object.fromEntries(M.TRAJECTORIES.map(t => [t, {
       horizons: req.dates.map(d => M.horizon(c, t, d)),
       years: Array.from({ length: c.last_year - c.first_year + 1 }, (_, i) => M.multipliers(c, t, c.first_year + i)) }])) };
+  } else if (req.op === "preset") {
+    const r = M.applyPreset(M.load(req.defaults, "central"), M.loadCapability(req.defaults, "central"), req.preset);
+    out = { settings: r.s, capability: r.c };
   } else if (req.op === "load") {
     out = M.load(req.defaults, req.level);
   }

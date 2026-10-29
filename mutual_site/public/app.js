@@ -125,13 +125,18 @@
     document.querySelectorAll(".presets button").forEach(b => b.setAttribute("aria-pressed", "false"));
   }
   document.querySelectorAll(".presets button").forEach(b => b.addEventListener("click", () => {
-    level = b.dataset.level;
+    usePreset(b.dataset.level);
+  }));
+
+  function usePreset(name) {
+    level = name === "market" ? "central" : name;
     S = M.load(D.defaults, level);
     C = M.loadCapability(D.defaults, level);
-    document.querySelectorAll(".presets button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    if (name === "market") ({ s: S, c: C } = M.applyPreset(S, C, D.markets.preset));
+    document.querySelectorAll(".presets button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.level === name)));
     syncLevers();
     schedule(0);
-  }));
+  }
 
   function schedule(delay = 150) {
     clearTimeout(timer);
@@ -384,6 +389,42 @@
       `<span><i style="background:var(--ink);border-radius:50%"></i>best measured model, ${hours(C.anchor_hours)}</span>`;
   }
 
+  // ---- the market lens (catmodel/markets.py)
+  function renderMarkets() {
+    const mk = D.markets, rows = Object.fromEntries(mk.rows.map(r => [r.id, r]));
+    const label = n => (D.defaults.perils[n] || {}).label || n;
+    const rateRows = mk.rows.filter(r => r.kind === "rate");
+    const byPeril = {};
+    for (const r of rateRows) (byPeril[r.peril] = byPeril[r.peril] || []).push(r);
+    const longDate = iso => new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+    $("#market-tiles").innerHTML =
+      Object.entries(byPeril).map(([p, rs]) => {
+        const implied = mk.preset[`${p}.rate`], model = D.defaults.perils[p].rate.central, ratio = implied / model;
+        return tile(`${esc(label(p))}: markets against the model`, `${num(ratio)}×`,
+          `implied ${ratePerYear(implied)} today, model ${ratePerYear(model)}`, ratio > 2 || ratio < 0.5 ? ["warn", "a gap"] : ["good", "consistent"]);
+      }).join("") +
+      tile("Markets' median date for AGI", longDate(mk.agi_median), `median of ${mk.rows.filter(r => r.kind === "agi").length} markets; the AI 2027 authors say 2028 and 2032`) +
+      tile("Members' bankruptcy risk", `${pct(mk.hazard, 1)} a year`, "Anthropic and OpenAI, from Polymarket; it trims member calls");
+    const byDate = d => d.slice(5) === "01-01" ? `end-${+d.slice(0, 4) - 1}` : longDate(d);
+    const price = q => q.probability !== undefined ? pct(q.probability, 0)
+      : q.median ? `median ${longDate(q.median)}` : q.points.map(p => `${pct(p.p, 0)} by ${byDate(p.date)}`).slice(-3).join(", ");
+    const implies = q => {
+      const r = rows[q.id], m = q.mapping;
+      if (r.kind === "rate") {
+        const xm = D.defaults.perils[r.peril].xm.central;
+        return `${ratePerYear(r.rate_now)} at ${money(m.threshold_bn)}+ today${m.share < 1 ? `, taking ${pct(m.share, 0)} as frontier labs'` : ""}; ` +
+          `along the tail, ${ratePerYear(r.implied_rate)} at the peril's ${money(xm)}+ threshold, against the model's ${ratePerYear(r.model_rate)}`;
+      }
+      if (r.kind === "agi") return r.median ? `AGI median ${longDate(r.median)}` : "";
+      if (r.kind === "default") return `${pct(r.hazard, 1)} a year`;
+      return "not used";
+    };
+    $("#market-table").innerHTML = `<thead><tr><th>Platform</th><th>Question</th><th class="num">Price</th><th>Depth</th><th>What we read into it</th></tr></thead><tbody>` +
+      mk.snapshot.questions.map(q => `<tr><td>${esc(q.platform)}</td><td><a href="${esc(q.url)}" rel="noopener">${esc(q.title)}</a><div class="hint">${esc(q.mapping.note || "")}</div></td>
+        <td class="num">${esc(price(q))}</td><td>${esc(q.depth)}</td><td>${esc(implies(q))}</td></tr>`).join("") + "</tbody>";
+    $("#market-taken").textContent = new Date(mk.taken + "T00:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  }
+
   // ---- bio insurability tables (computed in Python by catmodel.insurability)
   function renderBio() {
     $("#bio-table").innerHTML = `<thead><tr><th>Criterion</th><th>Test</th><th>Result</th><th>Verdict</th><th>What would make it pass</th></tr></thead><tbody>` +
@@ -428,6 +469,7 @@
   buildTrajLevers();
   renderTrajTabs();
   renderBio();
+  renderMarkets();
   renderChecks();
   renderSources();
   recompute();

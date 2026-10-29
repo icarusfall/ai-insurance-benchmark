@@ -14,7 +14,7 @@
 <body>
 <header class="masthead"><div class="inner">
   <a class="brand" href="#">Mutually Assured <span>AI</span> Modelling</a>
-  <nav><a href="#levers">Levers</a><a href="#time">Over time</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
+  <nav><a href="#levers">Levers</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
 </div></header>
 
 <div class="wrap">
@@ -34,6 +34,7 @@
     <button type="button" data-level="optimistic">Optimistic</button>
     <button type="button" data-level="central" aria-pressed="true">Central</button>
     <button type="button" data-level="pessimistic">Pessimistic</button>
+    <button type="button" data-level="market">Markets</button>
   </div>
   <div class="board">
     <div class="levers" id="levers-panel"></div>
@@ -76,6 +77,15 @@
     </div>
   </div>
   <p class="hint">Uses every setting from the levers above, re-simulated each year (20,000 years each). A plateau is not necessarily good news for the mutual: if capability saturates, it spreads to small open models (<a href="#src-fogelson_2026_bounded_metrics">Fogelson et al.</a>), misuse moves to non-members' models, and more of the harm goes uninsured.</p>
+</section>
+
+<section class="chapter" id="markets">
+  <p class="kicker">The market lens</p>
+  <h2>What the prediction markets say</h2>
+  <p>Prediction markets price some of the same events. Few questions match the model's perils exactly, so each one below says how we read it. A question about an incident before some year covers a window in which, on the central capability path, risk is growing. We take that growth out before comparing with today's rate, since the <a href="#time">Over time</a> chapter adds it back. Read that way, the markets agree with the model's central rates more than they disagree. The Markets preset, beside Optimistic and Pessimistic above, uses their numbers: the agent and cyber rates, the stop horizon set where the central path is at the markets' median date for AGI, and member calls trimmed by the bankruptcy risk the markets price.</p>
+  <div class="tiles" id="market-tiles"></div>
+  <div class="table-wrap"><table id="market-table"></table></div>
+  <p class="hint">Snapshot taken <span id="market-taken"></span>; refreshed with <code>python -m catmodel.markets --fetch</code>. Manifold is play money, and its AI-incident markets have 13 to 74 traders. Long-dated Polymarket prices lean towards "yes", because betting "no" ties up money for years. Metaculus forecasts are read by hand from the question pages.</p>
 </section>
 
 <section class="chapter" id="capital">

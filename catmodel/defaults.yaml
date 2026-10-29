@@ -87,7 +87,16 @@ perils:
 
 members:
   count: {central: 5, basis: "Frontier labs in the mutual. Judgement."}
-  revenue: {low: 2, central: 10, high: 50, worse: low, basis: "Annual revenue per member, $bn. Placeholder until lab revenues are sourced."}
+  revenue:
+    low: 10
+    central: 25
+    high: 65
+    worse: low
+    basis: >-
+      Annual revenue per member, $bn. Anthropic's run rate was about $65bn in July 2026 (its H1 revenue, $16.3bn, is a
+      $33bn pace) and OpenAI's about $50bn in September. The other likely members' frontier-model revenue is not
+      disclosed; we put it at about $5bn each, which makes the average about $25bn. Judgement for those three.
+    sources: [anthropic_s1_revenue_2026, openai_revenue_ft_2026]
 
 structure:
   per_event_limit: {central: 1.0, basis: "AIUC's suggested minimum cover per member.", sources: [aiuc_mutual_proposal]}

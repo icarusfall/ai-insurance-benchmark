@@ -123,3 +123,21 @@ def test_trajectories_match(level):
             assert g["stopped"] == w["stopped"] and close(g["revenue"], w["revenue"]), (t, year)
             for p, v in w["rates"].items():
                 assert close(g["rates"][p], v), (t, year, p)
+
+
+def test_markets_preset_matches():
+    from catmodel import markets
+    with open(DEFAULTS, encoding="utf-8") as f:
+        defaults = yaml.safe_load(f)
+    r = markets.implied()
+    s, c = markets.apply_preset(load(), tr.load_capability(), r["preset"])
+    got = js(dict(op="preset", defaults=defaults, preset=r["preset"]))
+    want = js_settings(s)
+    for k, v in want.items():
+        if k == "perils":
+            for gp, wp in zip(got["settings"]["perils"], v):
+                for kk, vv in wp.items():
+                    assert close(gp[kk], vv), (wp["name"], kk)
+        else:
+            assert close(got["settings"][k], v), k
+    assert close(got["capability"]["stop_hours"], c.stop_hours)

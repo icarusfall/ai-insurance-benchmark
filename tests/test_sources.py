@@ -15,7 +15,9 @@ def entries():
     out = []
     for path in sorted(glob.glob(os.path.join(ROOT, "*.yaml"))):
         with open(path, encoding="utf-8") as f:
-            out += [(os.path.basename(path), e) for e in yaml.safe_load(f)]
+            data = yaml.safe_load(f)
+        if isinstance(data, list):                       # market_snapshot.yaml is data, not registry entries
+            out += [(os.path.basename(path), e) for e in data]
     return out
 
 

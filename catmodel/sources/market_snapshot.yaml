@@ -1,0 +1,147 @@
+# Prediction-market snapshot for the Markets preset (catmodel/markets.py). Refresh: python -m catmodel.markets --fetch
+# Manifold, Polymarket and Kalshi refresh from their public APIs. Metaculus's API needs a token (METACULUS_TOKEN in
+# .env); without one its rows keep the values read by hand from the question pages on the date below.
+# Each `mapping` says how a question becomes a model input:
+#   rate     - P(at least one event by `closes`) -> Poisson rate over the window, moved to the peril's threshold along
+#              its Pareto tail, times `share` (the part of the question's events that are this peril), de-trended by
+#              the central capability path so the Over time chapter does not count growth twice
+#   agi      - points on the market's distribution for the AGI date (announcement or capability; see `note`)
+#   default  - P(a member announces bankruptcy by `closes`) -> an annual hazard that haircuts member calls
+#   context  - shown on the site, not used
+taken: "2026-10-29"
+questions:
+  - id: metaculus_7814
+    platform: Metaculus
+    url: https://www.metaculus.com/questions/7814/ai-incident-causes-1bn-damage-before-2032/
+    title: An AI malfunction causes 100+ deaths or $1bn+ of damage before 2032
+    resolution: >-
+      Three credible media reports of an event precipitated by an AI system behaving unexpectedly, causing 100+ deaths or
+      $1bn (2021 dollars) of economic damage. Excludes intended behaviour and failures of required human oversight.
+    closes: "2032-01-01"
+    probability: 0.90
+    depth: 155 forecasters
+    fetch: {manual: true}
+    mapping: {kind: rate, peril: agent_runaway, threshold_bn: 1.0, share: 0.33,
+              note: "Any AI system, including self-driving cars and hospital systems; we take a third to be frontier labs' own agents. Judgement."}
+  - id: manifold_rogue_ai_1bn_2030
+    platform: Manifold
+    url: https://manifold.markets/TonyJackson/will-a-rogue-ai-system-cause-1b-usd
+    title: A rogue AI system causes over $1bn of damage in a single incident before 2030
+    resolution: A loss-of-control incident; attacks directed by people (such as a state-run AI cyberattack) are excluded.
+    closes: "2030-01-02"
+    probability: 0.363
+    depth: 15 traders, play money
+    fetch: {manifold: will-a-rogue-ai-system-cause-1b-usd}
+    mapping: {kind: rate, peril: agent_runaway, threshold_bn: 1.0, share: 1.0,
+              note: "Close to the peril's definition, a lab's agents doing harm without a human attacker."}
+  - id: manifold_financial_cyber_1bn_2028
+    platform: Manifold
+    url: https://manifold.markets/waterlilly/internationally-active-financial-in
+    title: An internationally active financial institution loses over $1bn to an AI-assisted cyberattack before 2028
+    resolution: An AI-assisted cyberattack on one internationally active financial institution causing losses over $1bn.
+    closes: "2027-12-31"
+    probability: 0.547
+    depth: 13 traders, play money
+    fetch: {manifold: internationally-active-financial-in}
+    mapping: {kind: rate, peril: cyber_misuse, threshold_bn: 1.0, share: 1.0,
+              note: "Financial institutions only, so a floor on AI-enabled cyber losses of that size."}
+  - id: manifold_payment_system_2027
+    platform: Manifold
+    url: https://manifold.markets/brod/ai-takes-down-a-major-payment-syste
+    title: An AI-assisted cyberattack takes an OECD real-time gross settlement system offline for two hours by end-2027
+    resolution: A deliberate third-party attack using AI as a major part, taking Fedwire, T2 or similar offline for 2+ hours.
+    closes: "2027-12-31"
+    probability: 0.244
+    depth: 74 traders, play money
+    fetch: {manifold: ai-takes-down-a-major-payment-syste}
+    mapping: {kind: context, note: "The damage of a two-hour outage is unclear, so not mapped to a size."}
+  - id: kalshi_agi_announcement
+    platform: Kalshi
+    url: https://kalshi.com/markets/kxagico
+    title: Any company announces it has achieved AGI, by date
+    resolution: A company announces it has achieved AGI; an announcement suffices, whatever the definition.
+    closes: "2031-01-01"
+    depth: about 250,000 contracts traded across dates, real money
+    fetch: {kalshi_series: KXAGICO}
+    points:
+      - {date: "2027-01-01", p: 0.065}
+      - {date: "2027-04-01", p: 0.165}
+      - {date: "2027-07-01", p: 0.305}
+      - {date: "2027-10-01", p: 0.36}
+      - {date: "2028-01-01", p: 0.395}
+      - {date: "2028-04-01", p: 0.515}
+      - {date: "2028-07-01", p: 0.665}
+      - {date: "2028-10-01", p: 0.705}
+      - {date: "2029-01-01", p: 0.76}
+      - {date: "2030-01-01", p: 0.815}
+      - {date: "2031-01-01", p: 0.775}
+    mapping: {kind: agi, note: "An announcement, which may come with a loose definition, so earlier than capability."}
+  - id: manifold_agi_by_date
+    platform: Manifold
+    url: https://manifold.markets/RemNi/will-we-get-agi-before-2030
+    title: Will we get AGI before 2027 / 2028 / 2030?
+    resolution: AGI able to perform any intellectual task a human can, judged by the market creator.
+    closes: "2030-03-01"
+    depth: about 345 traders each, play money
+    fetch: {manifold_points: {"2027-01-01": will-we-get-agi-before-2027-d7b5f2b00ace, "2028-01-01": will-we-get-agi-before-2028-ff560f9e9346, "2030-01-01": will-we-get-agi-before-2030}}
+    points:
+      - {date: "2027-01-01", p: 0.035}
+      - {date: "2028-01-01", p: 0.288}
+      - {date: "2030-01-01", p: 0.520}
+    mapping: {kind: agi, note: "Capability, judged by the creator."}
+  - id: metaculus_5121_agi
+    platform: Metaculus
+    url: https://www.metaculus.com/questions/5121/date-of-artificial-general-intelligence/
+    title: When will the first general AI system be devised, tested and publicly announced?
+    resolution: A demanding multi-part test (adversarial Turing test, robotics, expert-level exams), announced publicly.
+    closes: "2200-01-01"
+    median: "2030-09-29"
+    depth: 1,900 forecasters
+    fetch: {manual: true}
+    mapping: {kind: agi, note: "The strong definition: closest to TED-AI."}
+  - id: metaculus_3479_weak_agi
+    platform: Metaculus
+    url: https://www.metaculus.com/questions/3479/date-weakly-general-ai-is-publicly-known/
+    title: When will the first weakly general AI system be devised, tested and publicly announced?
+    resolution: A weaker multi-part test (Turing test, Winograd, SAT scores, an Atari game), announced publicly.
+    closes: "2200-01-01"
+    median: "2027-09-01"
+    depth: 1,800 forecasters
+    fetch: {manual: true}
+    mapping: {kind: context, note: "The weak definition: nearer a superhuman coder than TED-AI."}
+  - id: polymarket_openai_agi_2026
+    platform: Polymarket
+    url: https://polymarket.com/event/openai-announces-it-has-achieved-agi-before-2027
+    title: OpenAI announces it has achieved AGI before 2027
+    resolution: OpenAI or an official representative announces it has created AGI by 31 December 2026.
+    closes: "2027-01-01"
+    probability: 0.095
+    depth: $345,000 traded, real money
+    fetch: {polymarket: openai-announces-it-has-achieved-agi-before-2027}
+    mapping: {kind: context, note: "One company's announcement within two months."}
+  - id: polymarket_anthropic_bankruptcy
+    platform: Polymarket
+    url: https://polymarket.com/event/anthropic-announces-bankruptcy-by
+    title: Anthropic announces bankruptcy by date
+    resolution: Anthropic, PBC announces it will file or has filed for bankruptcy of any kind.
+    closes: "2030-01-01"
+    depth: $2.8m traded, real money
+    fetch: {polymarket_points: anthropic-announces-bankruptcy-by}
+    points:
+      - {date: "2028-01-01", p: 0.085}
+      - {date: "2029-01-01", p: 0.165}
+      - {date: "2030-01-01", p: 0.23}
+    mapping: {kind: default, note: "Long-dated 'yes' prices are biased upwards: holding 'no' ties up capital for years."}
+  - id: polymarket_openai_bankruptcy
+    platform: Polymarket
+    url: https://polymarket.com/event/openai-announces-bankruptcy-by
+    title: OpenAI announces bankruptcy by date
+    resolution: OpenAI Group PBC announces it will file or has filed for bankruptcy of any kind.
+    closes: "2030-01-01"
+    depth: $524,000 traded, real money
+    fetch: {polymarket_points: openai-announces-bankruptcy-by}
+    points:
+      - {date: "2028-01-01", p: 0.095}
+      - {date: "2029-01-01", p: 0.245}
+      - {date: "2030-01-01", p: 0.275}
+    mapping: {kind: default, note: "As above."}

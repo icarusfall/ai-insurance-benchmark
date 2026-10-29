@@ -313,7 +313,19 @@
     return rows;
   }
 
-  const api = { TP, rng, ncdf, ninv, LEVELS, pick, load, expectedClaim, simulate, aggregate, stack, reserves,
+  // ---- the Markets preset: central settings with overrides built by catmodel/markets.py
+  function applyPreset(s, c, preset) {
+    s = { ...s, perils: s.perils.map(p => ({ ...p })) };
+    c = { ...c, elasticity: { ...c.elasticity }, cap_multiple: { ...c.cap_multiple } };
+    for (const [key, v] of Object.entries(preset)) {
+      if (key.startsWith("capability.")) c[key.slice(11)] = v;
+      else if (key.includes(".")) { const [peril, field] = key.split("."); s.perils.find(p => p.name === peril)[field] = v; }
+      else s[key] = v;
+    }
+    return { s, c };
+  }
+
+  const api = { TP, rng, ncdf, ninv, LEVELS, pick, load, expectedClaim, simulate, aggregate, stack, reserves, applyPreset,
                 solvency2, us, catbond, evaluate, qSorted, tvarSorted, sorted, mean, unpaidFraction,
                 TRAJECTORIES, loadCapability, horizon, multipliers, project };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.MaimModel = api;

@@ -132,3 +132,57 @@
   checks:
     - {constant: LANE (in use), model: "Lane 2000: 0.55, 0.495, 0.574", source: "0.49, 0.591, 0.017; cyber × 2.14", result: re-fitted}
     - {constant: wang_lambda, model: "0.5 (placeholder)", source: "0.47 nat cat; 0.89 cyber (median)", result: re-fitted}
+
+- id: anthropic_s1_revenue_2026
+  peril: structure
+  informs: [revenue]
+  lens: market
+  claim: >-
+    Anthropic's S-1 registration statement (filed 26 October 2026) reports revenue of $41m in 2023, $386m in 2024 and
+    $4.6bn in 2025, and $16.3bn in the six months to 30 June 2026, up 1,300% on a year before. It says it does not
+    expect growth at comparable rates to continue.
+  values: {revenue_usd_bn: {2023: 0.041, 2024: 0.386, 2025: 4.6, h1_2026: 16.3}, h1_growth_yoy: 13.0}
+  source: {title: "Form S-1 registration statement, Anthropic, PBC", publisher: US Securities and Exchange Commission (EDGAR), date: 2026-10-26, url: "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    The filing leaves figures for the quarter to 30 September 2026 blank. Run-rate figures in the press (about $65bn at
+    the end of July, per Reuters and Bloomberg) annualise a recent month and are higher than the H1 pace of about $33bn
+    a year.
+  mapping: Members' revenue (catmodel/defaults.yaml members.revenue).
+
+- id: openai_revenue_ft_2026
+  peril: structure
+  informs: [revenue]
+  lens: market
+  claim: >-
+    The Financial Times reported OpenAI's annualised revenue at about $50bn in September 2026, against the $70bn some
+    investors had estimated, and below Anthropic's $65bn. OpenAI and Anthropic calculate annualised revenue differently.
+  values: {annualised_revenue_usd_bn: {openai_sep_2026: 50, anthropic_jul_2026: 65}}
+  source: {title: "OpenAI's annualized revenue $20 billion lower than prior investor estimates", author: Daniel Howley, publisher: Yahoo Finance (reporting the Financial Times), date: 2026-10-08, url: "https://finance.yahoo.com/technology/article/openais-annualized-revenue-20-billion-lower-than-prior-investor-estimates-174058048.html"}
+  accessed: 2026-10-29
+  status: secondary
+  caveats: OpenAI publishes no audited figures; every number is a leak or a memo. The FT original was not read.
+  mapping: Members' revenue.
+
+- id: prediction_markets_2026_10
+  peril: all
+  informs: [frequency, trajectory, capital]
+  lens: market
+  claim: >-
+    Prediction markets on 29 October 2026 put an AI-malfunction disaster (100+ deaths or $1bn) before 2032 at 90%
+    (Metaculus), a $1bn rogue-AI incident before 2030 at 36% and a $1bn AI-assisted cyber loss at a financial
+    institution before 2028 at 55% (Manifold). The median dates for AGI are March 2028 for a company's announcement
+    (Kalshi), October 2029 for Manifold's question, and September 2030 for Metaculus's strong definition. Polymarket
+    prices Anthropic and OpenAI announcing bankruptcy by 2030 at 23% and 28%.
+  values: {see: catmodel/sources/market_snapshot.yaml}
+  source: {title: "Metaculus, Manifold, Polymarket and Kalshi questions (one link per question in the snapshot)", publisher: Various, date: 2026-10-29, url: "https://www.metaculus.com/questions/7814/ai-incident-causes-1bn-damage-before-2032/"}
+  accessed: 2026-10-29
+  status: verified
+  caveats: >-
+    Read at each platform's own API or question page. Manifold is play money and its AI-incident markets are thin (13 to
+    74 traders). Long-dated Polymarket "yes" prices are biased upwards because holding "no" ties up capital for years.
+    Question definitions rarely match the model's perils, so each mapping carries a judgement (see the snapshot).
+  mapping: >-
+    catmodel/markets.py turns each question into a model input and builds the Markets preset: the agent and cyber
+    rates, the stop horizon, and a haircut on member calls.

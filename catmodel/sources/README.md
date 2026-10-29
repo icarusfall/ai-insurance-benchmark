@@ -1,6 +1,6 @@
 # Parameter registry
 
-Every number the catastrophe model or the site uses comes from an entry here. One file per area: `capability.yaml` (how fast AI improves), `cyber.yaml`, `bio.yaml`, `market.yaml` (prices, capacity, forecasts) and `structures.yaml` (precedent schemes, regulation, the AIUC proposal).
+Every number the catastrophe model or the site uses comes from an entry here. `market_snapshot.yaml` is not registry entries but the prediction-market prices behind the Markets preset (`python -m catmodel.markets`). One file per area: `capability.yaml` (how fast AI improves), `cyber.yaml`, `bio.yaml`, `market.yaml` (prices, capacity, forecasts) and `structures.yaml` (precedent schemes, regulation, the AIUC proposal).
 
 ## Entry fields
 
@@ -35,8 +35,8 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - Anthropic ASL-3 and OpenAI "High" bio capability: dates and definitions.
   - The 2023 correction to Marani et al.: which return periods stand.
 - **Market:**
-  - Live Metaculus, Manifold, Polymarket and Kalshi questions on AI incidents, AI-attributed deaths and bio events, each with its resolution criteria and liquidity.
-  - Lab revenues.
+  - Prediction markets on AI-enabled bio events (none found with an AI-specific definition), and deeper real-money markets on AI incidents.
+  - Disclosed frontier-model revenue for Google, Meta and xAI (the defaults assume about $5bn each).
   - AIUC's own product limits.
   - Munich Re aiSure.
 - **Structures:**
