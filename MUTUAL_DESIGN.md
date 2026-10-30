@@ -62,7 +62,7 @@ catmodel/            plain Python, no LLM dependencies
   pricing.py         the layer stack (reinsurance or cat bond, government share, premium, paid-in capital, calls),
                      premium, cat bond pricing (multiple of EL, Lane, Wang transform)
   reserves.py        year-end reserves from payment lags: undiscounted (US) and best estimate (Solvency II)
-  capital_us.py      RBC-style ratio and action levels, rating-agency 99.6% test
+  capital_us.py      NAIC P&C RBC (2024 factors) as written and with an AI Rcat; rating-agency 99.6% test
   capital_s2.py      SCR (99.5% 1-year VaR), MCR, risk margin, own funds tiers including ancillary member calls
   report.py          `python -m catmodel.report [--level pessimistic] [--set name=value] [--bond 2,4]`
   sources/           parameter registry, YAML: every number with its range and provenance

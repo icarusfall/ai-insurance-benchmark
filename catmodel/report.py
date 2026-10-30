@@ -66,8 +66,10 @@ def show(r):
           f"risk margin {s2['risk_margin']:.4f}")
     print(f"  own funds: tier 1 {s2['tier1']:.2f} + ancillary tier 2 {s2['tier2_ancillary']:.2f} -> eligible {s2['eligible_own_funds_scr']:.2f}; "
           f"SCR ratio {s2['solvency_ratio']:.0%}, MCR ratio {s2['mcr_ratio']:.0%}")
-    print(f"US: RBC {u['rbc']:.3f} (premium {u['r_premium']:.3f}, reserve {u['r_reserve']:.3f}, cat 1-in-100 {u['r_cat']:.3f}), "
-          f"ACL {u['acl']:.3f}; RBC ratio {u['rbc_ratio']:.0%} ({u['action_level']})")
+    print(f"US ({s.us_line}): RBC {u['rbc']:.3f} (premium {u['r_premium']:.3f}, reserve {u['r_reserve']:.3f}), ACL {u['acl']:.3f}; "
+          f"RBC ratio {u['rbc_ratio']:.0%} ({u['action_level']}) as written")
+    print(f"  with the 1-in-100 AI loss {u['r_cat']:.3f} charged like Rcat: ACL {u['acl_with_cat']:.3f}; "
+          f"RBC ratio {u['rbc_ratio_with_cat']:.0%} ({u['action_level_with_cat']})")
     print(f"  statutory reserves {u['statutory_reserves']:.3f}; capital for a 99.6% year {u['capital_for_996']:.3f} "
           f"(covered {u['rating_cover']:.1f}x)")
     if "bond" in r:

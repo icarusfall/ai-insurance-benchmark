@@ -149,3 +149,79 @@
   checks:
     - {constant: Tier 2 cap, model: "min(calls, ½ SCR, Tier 1)", source: "½ SCR (Art. 82(1)(c))", result: corrected}
     - {constant: MCR own funds, model: "Tier 1 only", source: "basic own funds only (Art. 98(4))", result: confirmed}
+
+- id: naic_pc_rbc_formula
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    US P&C risk-based capital is R0 + sqrt(R1² + R2² + R3² + R4² + R5² + Rcat²), plus a basic operational risk add-on
+    of 3% of that total. The authorized control level is half the result. Action levels are set on total adjusted
+    capital as a share of it: company action below 200%, regulatory action below 150%, authorized control below 100%,
+    mandatory control below 70%. A trend test also triggers company action between 200% and 300% if the combined ratio
+    is above 120%. Rcat charges earthquake and hurricane only; wildfire and severe convective storm are reported for
+    information.
+  values: {operational_add_on: 0.03, acl_share_of_rbc: 0.5, company_action: 2.0, regulatory_action: 1.5, authorized_control: 1.0, mandatory_control: 0.7, trend_test: {band: [2.0, 3.0], combined_ratio_above: 1.2}}
+  source: {title: "Risk-Based Capital Forecasting & Instructions, Property/Casualty, 2024", author: NAIC, publisher: "NAIC, via the Indiana Department of Insurance", date: 2024-10-14, url: "https://secure.in.gov/idoi/files/RBCP24-INpdf.pdf"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    The 2024 edition, read in a copy posted by Indiana (content.naic.org refuses automated downloads). Later editions
+    may add perils to Rcat; an NAIC proposal for 2026 concerns wildfire. No edition charges man-made or AI
+    catastrophe, so an AI mutual's tail would enter only through reserve and premium risk. The model leaves out asset
+    risk (R0-R2), credit risk (R3) and the trend test.
+  mapping: OPERATIONAL, LEVELS and the Rcat treatment in catmodel/capital_us.py and mutual_site/public/model.js.
+  checks:
+    - {constant: Covariance, model: "sqrt(R4² + R5² + Rcat²)", source: "R0 + sqrt(R1² … R5² + Rcat²) (PR032)", result: confirmed}
+    - {constant: Operational risk, model: "none", source: "3% of RBC after covariance (PR032 L61)", result: corrected}
+    - {constant: ACL, model: "½ RBC", source: "½ RBC including operational risk (PR032 L65)", result: confirmed}
+    - {constant: Action levels, model: "200 / 150 / 100 / 70%", source: "200 / 150 / 100 / 70% (PR034)", result: confirmed}
+    - {constant: Rcat on AI losses, model: "1-in-100 net AI loss", source: "earthquake and hurricane only (PR027)", result: corrected}
+
+- id: naic_pc_rbc_underwriting_factors_2024
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    Reserve risk charges reserves at (1 + RBC%) × investment-income factor − 1, and premium risk charges net written
+    premium at loss & LAE ratio × investment-income factor + expense ratio − 1 (each floored at zero). The industry
+    factors for 2024 reporting are: other liability RBC% 51.4% and 0.858, loss ratio 1.003 and 0.827; products
+    liability 101.4% and 0.843, 1.229 and 0.788; reinsurance liability 62.6% and 0.816, 1.253 and 0.794. A company is
+    weighted half on its own experience, or wholly on the industry's if it has too little history. A monoline writer
+    gets no concentration discount.
+  values:
+    other_liability: {reserve_rbc_pct: 0.514, reserve_inv: 0.858, loss_ratio: 1.003, premium_inv: 0.827}
+    products_liability: {reserve_rbc_pct: 1.014, reserve_inv: 0.843, loss_ratio: 1.229, premium_inv: 0.788}
+    reinsurance_liability: {reserve_rbc_pct: 0.626, reserve_inv: 0.816, loss_ratio: 1.253, premium_inv: 0.794}
+  source: {title: "Risk-Based Capital Forecasting & Instructions, Property/Casualty, 2024 (PR017, PR018 and the September 2024 RBC newsletter)", author: NAIC, publisher: "NAIC, via the Indiana Department of Insurance", date: 2024-10-14, url: "https://secure.in.gov/idoi/files/RBCP24-INpdf.pdf"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    2024 factors, which moved halfway to the indicated levels; 2025 reporting moved the rest of the way, and those
+    factors were not read. The loss ratio and expense ratio used together are the industry's and the model's, not an
+    AI mutual's. With a 10% expense ratio the other liability premium charge is zero. At 2024 levels, a dollar of
+    reserves carries about 30¢ of capital as other liability and 70¢ as products liability.
+  mapping: LINES in catmodel/capital_us.py and mutual_site/public/model.js, chosen by capital.us_line.
+  checks:
+    - {constant: Reserve factor (other liability), model: "30% (was a 30% placeholder)", source: "1.514 × 0.858 − 1 = 29.9%", result: confirmed}
+    - {constant: Premium factor (other liability), model: "0% at a 10% expense ratio (was a 30% placeholder)", source: "1.003 × 0.827 + 0.10 − 1 < 0", result: corrected}
+    - {constant: Reserve factor (products liability), model: "70%", source: "2.014 × 0.843 − 1 = 69.8%", result: confirmed}
+
+- id: naic_rbc_captive_rrgs
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    The P&C RBC report applies to captive risk retention groups. They keep GAAP books, so must use undiscounted
+    reserves and deduct any reserve discount from total adjusted capital. Where the domicile's law lets an RRG count
+    letters of credit as capital, they are included in surplus and total adjusted capital.
+  values: {}
+  source: {title: "Risk-Based Capital Forecasting & Instructions, Property/Casualty, 2024 (Applicability)", author: NAIC, publisher: "NAIC, via the Indiana Department of Insurance", date: 2024-10-14, url: "https://secure.in.gov/idoi/files/RBCP24-INpdf.pdf"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    An RRG can only write liability for its members and is chartered in one state (Liability Risk Retention Act).
+    Kentucky's 2011 bulletin confirms the NAIC accreditation standards for RRG captives took effect from 2011
+    (https://insurance.ky.gov/PPC/Documents/bulletin1102rrgnaicaccredit032311.pdf). The model admits no letters of
+    credit; members' calls backed by them would count towards a US ratio, unlike plain uncalled assessments.
+  mapping: total_adjusted_capital in catmodel/capital_us.py (paid-in capital only).

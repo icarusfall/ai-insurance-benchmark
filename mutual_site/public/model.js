@@ -216,15 +216,22 @@
              solvency_ratio: req ? eligible / req : Infinity, mcr_ratio: mcr ? tier1 / mcr : Infinity, tier1_covers_half_scr: tier1 >= 0.5 * req };
   }
   const US_LEVELS = [[2.0, "no action"], [1.5, "company action"], [1.0, "regulatory action"], [0.7, "authorized control"]];
+  // NAIC 2024 industry factors: reserve RBC %, its investment-income factor, loss & LAE ratio, its investment-income factor
+  const US_LINES = { other_liability: [0.514, 0.858, 1.003, 0.827], products_liability: [1.014, 0.843, 1.229, 0.788],
+                     reinsurance_liability: [0.626, 0.816, 1.253, 0.794] };
+  const US_OPERATIONAL = 0.03;
   const actionLevel = ratio => (US_LEVELS.find(([t]) => ratio >= t) || [0, "mandatory control"])[1];
   function us(s, st, res) {
-    const rPrem = s.us_premium_factor * st.premium, rRes = s.us_reserve_factor * res.statutory;
-    const rCat = qSorted(st.netSorted, 0.99);
-    const rbc = Math.sqrt(rPrem * rPrem + rRes * rRes + rCat * rCat), acl = 0.5 * rbc, tac = s.paid_in_capital;
-    const ratio = acl ? tac / acl : Infinity;
+    const [rbcPct, invRes, lr, invPrem] = US_LINES[s.us_line];
+    const fRes = Math.max((1 + rbcPct) * invRes - 1, 0), fPrem = Math.max(lr * invPrem + s.expense_ratio - 1, 0);
+    const rPrem = fPrem * st.premium, rRes = fRes * res.statutory;
+    const rCat = qSorted(st.netSorted, 0.99), tac = s.paid_in_capital;
+    const view = cat => { const rbc = (1 + US_OPERATIONAL) * Math.sqrt(rPrem * rPrem + rRes * rRes + cat * cat); return [rbc, rbc ? tac / (0.5 * rbc) : Infinity]; };
+    const [rbc, ratio] = view(0), [rbcCat, ratioCat] = view(rCat);
     const need = Math.max(qSorted(st.netSorted, 0.996) - st.premium * (1 - s.expense_ratio), 0);
-    return { statutory_reserves: res.statutory, r_premium: rPrem, r_reserve: rRes, r_cat: rCat, rbc, acl,
-             total_adjusted_capital: tac, rbc_ratio: ratio, action_level: actionLevel(ratio),
+    return { statutory_reserves: res.statutory, reserve_factor: fRes, premium_factor: fPrem, r_premium: rPrem, r_reserve: rRes,
+             r_cat: rCat, rbc, acl: 0.5 * rbc, total_adjusted_capital: tac, rbc_ratio: ratio, action_level: actionLevel(ratio),
+             rbc_with_cat: rbcCat, acl_with_cat: 0.5 * rbcCat, rbc_ratio_with_cat: ratioCat, action_level_with_cat: actionLevel(ratioCat),
              capital_for_996: need, rating_cover: need ? tac / need : Infinity };
   }
 

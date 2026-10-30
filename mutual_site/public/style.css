@@ -148,3 +148,5 @@ footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 20px 0 
   .results { position: static; }
 }
 svg text.halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; fill: var(--ink-2); }
+.us-line { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.us-line select { font: inherit; padding: 0.25rem 0.5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; max-width: 100%; }

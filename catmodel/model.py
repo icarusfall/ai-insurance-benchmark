@@ -56,8 +56,7 @@ class Settings:
     wang_lambda: float = 0.5
     s2_coc: float = 0.0475
     discount_rate: float = 0.04
-    us_premium_factor: float = 0.3
-    us_reserve_factor: float = 0.3
+    us_line: str = "other_liability"
 
     def with_peril(self, name: str, **changes) -> "Settings":
         return replace(self, perils=tuple(replace(p, **changes) if p.name == name else p for p in self.perils))

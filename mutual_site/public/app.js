@@ -165,13 +165,13 @@
     const prem = r.stack.premium / S.members, share = prem / S.revenue;
     const s2 = r.s2, u = r.us;
     const s2s = s2.solvency_ratio >= 1.5 ? ["good", "comfortable"] : s2.solvency_ratio >= 1 ? ["warn", "covered, thinly"] : ["bad", "below the SCR"];
-    const uss = u.action_level === "no action" ? ["good", "no action"] : u.action_level === "company action" ? ["warn", "company action"] : ["bad", u.action_level];
+    const lvl = u.action_level_with_cat, uss = [lvl === "no action" ? "good" : lvl === "company action" ? "warn" : "bad", `with an AI charge: ${lvl}`];
     $("#tiles").innerHTML =
       tile("Premium per member", money(prem), `${pct(share)} of ${money(S.revenue)} revenue`,
            share < 0.01 ? ["good", "a rounding error"] : share < 0.05 ? ["warn", "noticeable"] : ["bad", "a large bill"]) +
       tile("Share of expected harm the mutual pays", pct(r.gross / r.harm), `of ${money(r.harm)} a year in the world`) +
       tile("Solvency II ratio", pct(s2.solvency_ratio, 0), `SCR ${money(s2.scr)} · own funds ${money(s2.eligible_own_funds_scr)}`, s2s) +
-      tile("US RBC ratio", pct(u.rbc_ratio, 0), `ACL ${money(u.acl)} · capital ${money(u.total_adjusted_capital)}`, uss) +
+      tile("US RBC ratio, as written", pct(u.rbc_ratio, 0), `${pct(u.rbc_ratio_with_cat, 0)} if the 1-in-100 AI loss were charged like a hurricane`, uss) +
       tile("Years members get a call", pct(r.p_calls), "premium and paid-in capital not enough") +
       tile("Years claims go unpaid", pct(r.p_unpaid), r.p_unpaid ? `average shortfall ${money(r.mean_unpaid)}` : "never, in 100,000 years",
            r.p_unpaid === 0 ? ["good", "always paid"] : r.p_unpaid < 0.002 ? ["warn", "rarely short"] : ["bad", "often short"]);
@@ -274,12 +274,15 @@
         ["Risk margin", money(s2.risk_margin)], ["Tier 1: paid-in capital", money(s2.tier1)],
         ["Tier 2: callable from members", money(s2.tier2_ancillary)], ["Eligible for the SCR", money(s2.eligible_own_funds_scr), "total"],
         ["SCR ratio", pct(s2.solvency_ratio, 0), "total"], ["MCR ratio (tier 1 only)", pct(s2.mcr_ratio, 0), "total"]])}</div>` +
-      `<div class="card"><h3>US statutory <small>RBC-style</small></h3>${kv([
-        ["Premium risk charge", money(u.r_premium)], ["Reserve risk charge", money(u.r_reserve)],
-        ["Catastrophe charge (1-in-100 year)", money(u.r_cat)], ["RBC", money(u.rbc)], ["Authorized control level", money(u.acl)],
-        ["Surplus (calls not admitted)", money(u.total_adjusted_capital)], ["RBC ratio", pct(u.rbc_ratio, 0), "total"],
-        ["Regulator's response", u.action_level, "total"], ["Statutory reserves", money(u.statutory_reserves)],
-        ["Capital for a 1-in-250 year", money(u.capital_for_996)]])}</div>`;
+      `<div class="card"><h3>US statutory <small>NAIC RBC, 2024 factors</small></h3>${kv([
+        ["Statutory reserves", money(u.statutory_reserves)], [`Reserve risk, ${pct(u.reserve_factor, 0)} of reserves`, money(u.r_reserve)],
+        [`Premium risk, ${pct(u.premium_factor, 1)} of premium`, money(u.r_premium)], ["Catastrophe risk (AI is not a listed peril)", money(0)],
+        ["Authorized control level, with 3% operational risk", money(u.acl)], ["Surplus (calls not admitted)", money(u.total_adjusted_capital)],
+        ["RBC ratio as written", pct(u.rbc_ratio, 0), "total"],
+        ["If the 1-in-100 AI loss were charged like a hurricane", money(u.r_cat)], ["Authorized control level then", money(u.acl_with_cat)],
+        ["RBC ratio then", pct(u.rbc_ratio_with_cat, 0), "total"], ["Regulator's response then", u.action_level_with_cat, "total"],
+        ["Capital for a 1-in-250 year (rating view)", money(u.capital_for_996)]])}</div>`;
+    $("#us-line").value = S.us_line;
   }
 
   function renderBond() {
@@ -604,6 +607,7 @@
   buildLevers();
   buildChainLevers();
   buildLegalLevers();
+  $("#us-line").addEventListener("change", e => { S.us_line = e.target.value; schedule(0); });
   renderMethodTabs();
   buildTrajLevers();
   renderTrajTabs();

@@ -73,7 +73,8 @@ def test_defaults_load_the_same(level):
 
 @pytest.mark.parametrize("level,changes", [("central", {}), ("pessimistic", {}),
                                            ("central", dict(reinsurance_attach=1.0, reinsurance_limit=2.0,
-                                                            government_attach=3.0, government_share=0.8))])
+                                                            government_attach=3.0, government_share=0.8)),
+                                           ("central", dict(us_line="products_liability", expense_ratio=0.2))])
 def test_everything_downstream_of_the_years_matches(level, changes):
     from dataclasses import replace
     s = replace(load(level), **changes)

@@ -131,8 +131,15 @@
   <p class="kicker">Capital in two languages</p>
   <h2>What a regulator would ask for</h2>
   <p>The same simulated losses, read the American way and the European way. The biggest difference for a mutual: under Solvency II, members' promises to pay more later can count as capital (up to half the requirement); under US statutory accounting, they don't.</p>
+  <p>The US formula has a blind spot. NAIC risk-based capital charges reserves and premium by line of business at industry factors, and charges catastrophe only for earthquake and hurricane. As written, it never sees the tail of an AI catastrophe, so the mutual's ratio is in the tens of thousands of percent. The second ratio adds the mutual's 1-in-100 year loss as if regulators charged it like a hurricane. A domicile would more likely ask for that through its own review than through the formula.</p>
+  <p class="us-line"><label for="us-line">File in the US as</label>
+    <select id="us-line">
+      <option value="other_liability">other liability (general liability)</option>
+      <option value="products_liability">products liability (as the AI LEAD Act would frame it)</option>
+      <option value="reinsurance_liability">reinsurance liability (reinsuring the labs' captives)</option>
+    </select></p>
   <div class="cards" id="capital-cards"></div>
-  <p class="hint">Simplified on purpose: one catastrophe-and-premium risk module, a run-off risk margin, and placeholder RBC factors. The Solvency II factors themselves are checked against the regulation (see <a href="#checks">the model's own constants</a>). See the model's notes in <code>catmodel/capital_s2.py</code> and <code>capital_us.py</code>.</p>
+  <p class="hint">Simplified on purpose: one catastrophe-and-premium risk module and a run-off risk margin for Solvency II; for the US, reserve, premium and operational risk without asset or credit risk. The Solvency II and NAIC factors are checked against the rules (see <a href="#checks">the model's own constants</a>). See the model's notes in <code>catmodel/capital_s2.py</code> and <code>capital_us.py</code>.</p>
 </section>
 
 <section class="chapter" id="bond">

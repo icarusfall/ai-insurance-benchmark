@@ -41,7 +41,8 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
 - **Structures:**
   - P&I International Group: pool retention, general excess-of-loss reinsurance and overspill.
   - Liability Risk Retention Act and Risk Retention Group capital rules.
-  - NAIC RBC factors, including the R5 catastrophe charge.
+  - NAIC RBC underwriting factors for 2025 reporting (the full indicated change; only 2024's were read), and whether any domicile charges man-made catastrophe outside Rcat.
+  - Which RRG domiciles admit members' letters of credit as capital, and on what terms.
   - Solvency II standard-formula man-made liability catastrophe factors.
   - The Solvency II text as amended by the 2025 review: whether the Annex II and XIX rows changed.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.

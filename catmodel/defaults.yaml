@@ -149,8 +149,13 @@ pricing:
 capital:
   s2_coc: {central: 0.0475, basis: "Solvency II risk margin cost of capital from 2027.", sources: [solvency2_cost_of_capital]}
   discount_rate: {central: 0.04, basis: "Judgement."}
-  us_premium_factor: {central: 0.3, basis: "Toy RBC premium-risk factor. Placeholder until NAIC factors are sourced."}
-  us_reserve_factor: {central: 0.3, basis: "Toy RBC reserve-risk factor. Placeholder."}
+  us_line:
+    central: other_liability
+    basis: >-
+      The NAIC line whose industry RBC factors apply: other_liability (as a direct general liability writer, matching the
+      Solvency II segment), products_liability (if AI harms are treated as product defects, as the AI LEAD Act would) or
+      reinsurance_liability (if the mutual reinsures the labs' captives).
+    sources: [naic_pc_rbc_underwriting_factors_2024]
 
 # How fast capability grows, and how the perils' rates respond (catmodel/trajectory.py). Capability is METR's 50% time
 # horizon in hours. Each year's rates are today's times min(cap, (horizon that year / horizon now) ^ elasticity).
