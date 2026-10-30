@@ -339,6 +339,13 @@
     return out;
   }
 
+  // ---- who pays (catmodel/legal.py): attribution = liable x recoverable x (joint + (1 - joint) x fault_share)
+  function attributionChain(defaults, peril, level = "central", overrides = {}) {
+    const links = Object.fromEntries(defaults.legal.attribution[peril].map(l => [l.key, l.key in overrides ? overrides[l.key] : pick(l, level)]));
+    const pays = links.joint + (1 - links.joint) * links.fault_share;
+    return { links, pays, attribution: links.liable * links.recoverable * pays };
+  }
+
   // ---- the Markets preset: central settings with overrides built by catmodel/markets.py
   function applyPreset(s, c, preset) {
     s = { ...s, perils: s.perils.map(p => ({ ...p })) };
@@ -353,6 +360,6 @@
 
   const api = { TP, rng, ncdf, ninv, LEVELS, pick, load, expectedClaim, simulate, aggregate, stack, reserves, applyPreset,
                 solvency2, us, catbond, evaluate, qSorted, tvarSorted, sorted, mean, unpaidFraction,
-                TRAJECTORIES, loadCapability, horizon, multipliers, project, METHODS, actuarialRate, chain, methodRates };
+                TRAJECTORIES, loadCapability, horizon, multipliers, project, METHODS, actuarialRate, chain, methodRates, attributionChain };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.MaimModel = api;
 })(typeof window !== "undefined" ? window : globalThis);

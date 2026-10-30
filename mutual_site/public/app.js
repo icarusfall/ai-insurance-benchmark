@@ -132,7 +132,7 @@
     level = name === "market" ? "central" : name;
     S = M.load(D.defaults, level);
     C = M.loadCapability(D.defaults, level);
-    chainOver = {};
+    chainOver = {}; legalOver = {}; legalScenario = name === "central" ? "central" : null;
     if (name === "market") { method = "expert"; ({ s: S, c: C } = M.applyPreset(S, C, D.markets.preset)); }
     else if (method !== "expert") applyMethod();
     renderMethodTabs();
@@ -152,7 +152,7 @@
     const r = M.evaluate(S, y);
     r.grossSorted = M.sorted(r.stack.claims);
     last = r;
-    renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory(); renderFrequency();
+    renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory(); renderFrequency(); renderLegal();
     syncLevers();
   }
 
@@ -440,6 +440,54 @@
     }
   }
 
+  // ---- who pays (catmodel/legal.py): the attribution chain sets the peril's attribution on the lever board
+  let legalOver = {}, legalScenario = "central";
+  function applyLegal(peril) {
+    const c = M.attributionChain(D.defaults, peril, level, legalOver[peril] || {});
+    S.perils.find(p => p.name === peril).attribution = c.attribution;
+    return c;
+  }
+  function buildLegalLevers() {
+    const panel = $("#legal-levers");
+    panel.innerHTML = "";
+    for (const [peril, links] of Object.entries(D.defaults.legal.attribution)) {
+      const fs = el("fieldset");
+      fs.innerHTML = `<legend><i style="background:var(${PERIL_COLOURS[peril] || "--s7"})"></i>${esc(D.defaults.perils[peril].label)}</legend>`;
+      for (const link of links) {
+        const lv = { key: link.key, label: link.label, scale: "lin", min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0) };
+        const over = () => (legalOver[peril] = legalOver[peril] || {});
+        addLever(fs, lv, () => link.key in over() ? over()[link.key] : M.pick(link, level),
+                 v => { over()[link.key] = v; legalScenario = null; applyLegal(peril); }, link);
+      }
+      fs.appendChild(el("div", { className: "chain-total", id: `legal-total-${peril}` }));
+      panel.appendChild(fs);
+    }
+    syncLevers();
+  }
+  function renderLegal() {
+    for (const peril of Object.keys(D.defaults.legal.attribution)) {
+      const c = M.attributionChain(D.defaults, peril, level, legalOver[peril] || {});
+      const box = document.getElementById(`legal-total-${peril}`);
+      if (box) box.innerHTML = `The lab pays <b>${pct(c.pays, 0)}</b> of what can be claimed, so <b>${pct(c.attribution)}</b> of the harm is pinned on it.`;
+    }
+    const scs = D.defaults.legal.scenarios, rows = Object.fromEntries(D.legal.scenarios.map(r => [r.key, r]));
+    $("#legal-table").innerHTML = `<thead><tr><th>Scenario</th><th class="num">Cyber attribution</th><th class="num">Premium, share of revenue</th>
+      <th class="num">Share of expected harm paid</th><th class="num">Solvency II ratio</th><th></th></tr></thead><tbody>` +
+      scs.map(sc => {
+        const r = rows[sc.key];
+        return `<tr class="${sc.key === legalScenario ? "on" : ""}"><td>${esc(sc.label)}${sc.basis ? `<div class="hint">${esc(sc.basis)}</div>` : ""}</td>
+          <td class="num">${pct(r.attribution.cyber_misuse)}</td><td class="num">${pct(r.premium_share)}</td>
+          <td class="num">${pct(r.share_paid)}</td><td class="num">${pct(r.solvency_ratio, 0)}</td>
+          <td><button type="button" data-sc="${esc(sc.key)}">Use</button></td></tr>`;
+      }).join("") + "</tbody>";
+    $("#legal-table").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      const sc = scs.find(x => x.key === b.dataset.sc);
+      legalOver = JSON.parse(JSON.stringify(sc.changes)); legalScenario = sc.key;
+      for (const peril of Object.keys(D.defaults.legal.attribution)) applyLegal(peril);
+      markCustom(); schedule(0);
+    }));
+  }
+
   // ---- sensitivity (catmodel/sensitivity.py, central settings)
   const TORNADO = [["premium_share", "Premium, share of revenue", v => pct(v)], ["share_paid", "Share of expected harm paid", v => pct(v)],
                    ["solvency_ratio", "Solvency II ratio", v => pct(v, 0)]];
@@ -555,6 +603,7 @@
   $("#built").textContent = D.built;
   buildLevers();
   buildChainLevers();
+  buildLegalLevers();
   renderMethodTabs();
   buildTrajLevers();
   renderTrajTabs();

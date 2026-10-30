@@ -133,6 +133,12 @@ tr.muted td { color: var(--muted); }
 #sources h3, #frequency h3 { margin: 22px 0 8px; }
 .chains { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
 .chain-total { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+.steps { max-width: 760px; padding-left: 20px; }
+.steps li { margin-bottom: 8px; }
+#legal-levers { max-width: 520px; display: block; }
+#legal-table button { font: inherit; font-size: 13px; border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+  padding: 3px 10px; border-radius: 999px; cursor: pointer; }
+#legal-table tr.on td { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 details.more > summary { cursor: pointer; color: var(--accent); margin: 10px 0; }
 
 footer { border-top: 1px solid var(--border); margin-top: 48px; padding: 20px 0 40px; font-size: 13px; color: var(--ink-2); }

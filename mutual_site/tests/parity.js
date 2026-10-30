@@ -41,6 +41,8 @@ process.stdin.on("end", () => {
     out = { settings: r.s, capability: r.c };
   } else if (req.op === "frequency") {
     out = Object.fromEntries(M.METHODS.map(m => [m, M.methodRates(req.defaults, req.level, m)]));
+  } else if (req.op === "legal") {
+    out = Object.fromEntries(Object.keys(req.defaults.legal.attribution).map(p => [p, M.attributionChain(req.defaults, p, req.level, req.overrides || {})]));
   } else if (req.op === "load") {
     out = M.load(req.defaults, req.level);
   }

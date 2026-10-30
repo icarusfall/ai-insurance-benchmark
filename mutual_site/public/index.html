@@ -14,7 +14,7 @@
 <body>
 <header class="masthead"><div class="inner">
   <a class="brand" href="#">Mutually Assured <span>AI</span> Modelling</a>
-  <nav><a href="#levers">Levers</a><a href="#frequency">How often</a><a href="#tornado">What matters</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
+  <nav><a href="#levers">Levers</a><a href="#frequency">How often</a><a href="#tornado">What matters</a><a href="#legal">Who pays</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
 </div></header>
 
 <div class="wrap">
@@ -71,13 +71,29 @@
 <section class="chapter" id="tornado">
   <p class="kicker">Sensitivity</p>
   <h2>Which levers move the answer</h2>
-  <p>Each bar swings one parameter from the low to the high end of its range, with everything else at the central settings. The cover and capital levers have no range, so they are halved and doubled. Every run uses the same simulated years, so the bars show each parameter's effect, not noise. The answer hangs on members' revenue, on how much cyber harm a court would pin on a lab, and on how often AI cyber catastrophes and agent accidents happen. Bio dominates the harm in the world but hardly moves the premium: limits and near-zero attribution keep it off the mutual's books.</p>
+  <p>Each bar swings one parameter from the low to the high end of its range, with everything else at the central settings. The cover and capital levers have no range, so they are halved and doubled. Every run uses the same simulated years, so the bars show each parameter's effect, not noise. The answer hangs most on how much cyber harm a court would pin on a lab (the next chapter builds that up from case law), then on members' revenue and on how often AI cyber catastrophes happen. Bio dominates the harm in the world but hardly moves the premium: limits and near-zero attribution keep it off the mutual's books.</p>
   <div class="filters"><div class="tabs" id="tornado-tabs" role="tablist"></div></div>
   <figure class="chart">
     <div class="legend"><span><i style="background:var(--s1)"></i>parameter at its low end</span><span><i style="background:var(--s2)"></i>at its high end</span><span><i class="dash"></i>central</span></div>
     <div id="tornado-chart"></div>
   </figure>
   <p class="hint" id="tornado-note"></p>
+</section>
+
+<section class="chapter" id="legal">
+  <p class="kicker">Who pays</p>
+  <h2>How much of a cyber catastrophe a court would pin on a lab</h2>
+  <p>When an attacker uses a frontier model to take down a payment system, the attacker is the obvious wrongdoer, but the attacker will never pay: it is a state, or a gang beyond reach. What the mutual owes depends on how much a court would put on the lab instead. That is a chain of three legal questions, each with case law behind it.</p>
+  <ol class="steps">
+    <li><b>Does a claim survive?</b> A criminal act usually breaks the chain of causation. It does not where stopping that act was the point of the safeguards the defendant neglected (Restatement § 449). Pennsylvania's Supreme Court applied this to a data breach in <a href="#src-dittman_v_upmc_2018">Dittman</a>.</li>
+    <li><b>How much of the loss can be claimed at all?</b> Most of a cyber catastrophe's cost is business interruption at companies with no tie to the lab. Under the economic loss rule, courts across the country refuse negligence claims for purely economic loss after a man-made disaster. California's Supreme Court did so unanimously after the Aliso Canyon gas leak (<a href="#src-southern_california_gas_leak_2019">Gas Leak Cases</a>), though it left open whether the rule holds "in cyberspace". What remains is damage to systems and data, injuries, and customers, whose contracts may cap what they get.</li>
+    <li><b>Of that, how much does the lab pay?</b> Where liability is joint and several, the lab pays the attacker's share as well as its own: that is the rule in Restatement § 14 and for economic damages in California. Where it is several only, as in Idaho, the lab pays just its own share of the fault, and a jury will put most of the fault on the attacker (<a href="#src-restatement_third_apportionment_14">§ 14</a>).</li>
+  </ol>
+  <p>Multiplied together, the central reading puts about 7% of an AI-enabled cyber catastrophe on the lab. Move the links below and the cyber attribution on the levers board moves with them.</p>
+  <div class="levers chains" id="legal-levers"></div>
+  <h3>What changing the law would do</h3>
+  <p class="hint">Each row changes some links and keeps everything else at the central settings. Computed by the Python model over 60,000 simulated years. Use a row to set the links above.</p>
+  <div class="table-wrap"><table id="legal-table"></table></div>
 </section>
 
 <section class="chapter" id="time">

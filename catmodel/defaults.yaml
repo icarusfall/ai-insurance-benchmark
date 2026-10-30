@@ -65,15 +65,17 @@ perils:
       sources: [cyber_losses_infinite_mean_type, lloyds_systemic_payment_scenario]
     cap: {central: 20000, basis: "Above Lloyd's $16tn extreme scenario. Judgement."}
     attribution:
-      low: 0.01
-      central: 0.05
-      high: 0.3
+      low: 0.0048
+      central: 0.072
+      high: 0.41
       basis: >-
-        Misuse by a third party: the same superseding-cause logic as bio (§§ 448-449), and most cyber catastrophe losses
-        are businesses' economic losses, outside the EU directive's strict liability. The low end is a statutory shield
-        like the firearms industry's PLCAA. The high end is a court finding safeguards defectively designed
-        (Garcia shows design claims can proceed) in a mostly agent-run attack. The numbers within the range are judgement.
-      sources: [restatement_448_449_superseding_cause, eu_product_liability_directive_2024, plcaa_firearms_immunity, garcia_v_character_technologies_2025]
+        The product of the chain in `legal.attribution` below (catmodel/legal.py): the chance a claim survives, times
+        the share of the loss victims can claim at all, times what the lab pays of that. Most cyber catastrophe losses
+        are business interruption to companies with no tie to the lab, which the economic loss rule bars in negligence
+        (Southern California Gas Leak Cases). Where liability is joint and several (Restatement § 14, California's
+        Proposition 51 for economic damages) the lab can owe the attacker's share as well as its own. The ends multiply
+        every link's end, so the range is wider than a 90% band.
+      sources: [southern_california_gas_leak_2019, dittman_v_upmc_2018, restatement_third_apportionment_14, california_civil_code_1431_2, restatement_448_449_superseding_cause]
     insurable: {low: 0.4, central: 0.7, high: 0.9, basis: "War and state-actor exclusions bite (Merck). Judgement."}
     common_mode: {low: 0.0, central: 0.2, high: 0.6, basis: "Attackers can switch models; a technique that works on one often works on all. Judgement."}
     rate_cv: {central: 0.5, basis: "Better observed than bio."}
@@ -342,3 +344,83 @@ frequency:
         high: 0.5
         basis: "Hugging Face rebuilt about a third of its infrastructure. Judgement."
         sources: [openai_huggingface_2026]
+
+# Who pays (catmodel/legal.py). A peril's attribution, built up from the law: the chance a claim against the lab
+# survives, times the share of the loss victims can claim at all, times what the lab pays of that. Where liability is
+# joint and several the lab pays the attacker's share too; elsewhere only its own share of fault:
+#   attribution = liable x recoverable x (joint + (1 - joint) x fault_share)
+# The peril's `attribution` above is this chain at each level. `scenarios` change links to show what a law would do.
+legal:
+  attribution:
+    cyber_misuse:
+      - key: liable
+        label: Chance a claim against the lab survives duty and causation
+        low: 0.2
+        central: 0.5
+        high: 0.8
+        basis: >-
+          A hacker's crime does not cut off the duty of a defendant whose weak safeguards were meant to stop it: § 449,
+          and Dittman for a data breach. Design-defect claims against an AI product can proceed (Garcia), as can gross
+          negligence against a software supplier (Delta v. CrowdStrike). Against that, harmful code may look like
+          protected "expression", and plaintiffs must show the model, not the attacker's skill, made the difference.
+          The numbers are judgement.
+        sources: [restatement_448_449_superseding_cause, dittman_v_upmc_2018, garcia_v_character_technologies_2025, delta_v_crowdstrike_2025]
+      - key: recoverable
+        label: Share of the loss victims can claim at all
+        low: 0.1
+        central: 0.25
+        high: 0.6
+        basis: >-
+          Most of a cyber catastrophe's cost is business interruption to companies with no tie to the lab. The
+          economic loss rule bars that in negligence in most states (Southern California Gas Leak Cases, 532 Madison).
+          What remains is damage to systems and data, injuries, and customers, whose contracts may cap recovery
+          (CrowdStrike says Delta's claim is capped at single-digit millions). The high end is states that follow
+          Pennsylvania's source-of-duty test (Dittman); the California court left the cyber case open. The EU
+          directive covers only consumers. The shares are judgement.
+        sources: [southern_california_gas_leak_2019, dittman_v_upmc_2018, delta_v_crowdstrike_2025, eu_product_liability_directive_2024]
+      - key: joint
+        label: Share of those claims where the lab can be made to pay the attacker's share
+        low: 0.2
+        central: 0.5
+        high: 0.8
+        basis: >-
+          Most courts do not let a jury give the intentional wrongdoer a share in a suit against the negligent party,
+          and Restatement § 14 makes the negligent party jointly liable for it; California keeps joint liability for
+          economic damages. Idaho-style statutes compare the two and make each pay only its own share. The mix of
+          forums is judgement.
+        sources: [restatement_third_apportionment_14, california_civil_code_1431_2]
+      - key: fault_share
+        label: The lab's share of fault where it pays only its own
+        low: 0.05
+        central: 0.15
+        high: 0.3
+        basis: >-
+          The Restatement warns that a jury comparing a negligent party with an intentional one will put the bulk of
+          the fault on the intentional one. Judgement.
+        sources: [restatement_third_apportionment_14]
+  scenarios:
+    - key: central
+      label: The central reading
+      changes: {}
+    - key: lead_act
+      label: The AI LEAD Act passes
+      changes: {cyber_misuse: {liable: 0.7, recoverable: 0.6}}
+      basis: >-
+        Financial injury counts as harm, so the economic loss rule no longer bars a product claim, and foreseeable
+        misuse becomes a question of design. The values are judgement.
+      sources: [ai_lead_act_s2937]
+    - key: shield
+      label: A firearms-style shield for misuse
+      changes: {cyber_misuse: {liable: 0.02}}
+      basis: "Congress bars claims over criminal misuse, as PLCAA does for guns, leaving narrow exceptions. Judgement."
+      sources: [plcaa_firearms_immunity]
+    - key: all_joint
+      label: Joint and several everywhere
+      changes: {cyber_misuse: {joint: 1}}
+      basis: "Every forum follows Restatement § 14 or refuses to compare fault with the attacker."
+      sources: [restatement_third_apportionment_14]
+    - key: all_several
+      label: Several only everywhere
+      changes: {cyber_misuse: {joint: 0}}
+      basis: "Every forum compares fault and the lab pays only its own share, as in Idaho."
+      sources: [restatement_third_apportionment_14]

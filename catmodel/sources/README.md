@@ -46,10 +46,11 @@ Rules: paraphrase, never paste; one short quote at most per entry; a figure only
   - The Solvency II text as amended by the 2025 review: whether the Annex II and XIX rows changed.
   - Price-Anderson: confirm the annual payment cap after the 2023 adjustment.
 - **Legal:**
-  - The economic loss rule: how far negligence claims for pure economic loss (most cyber losses) are barred by state.
-  - How states split fault between a negligent party and an intentional one (Restatement (Third) Apportionment § 14).
-  - The AI LEAD Act (S.2937, introduced September 2025): text and status, from congress.gov.
+  - The economic loss rule: a count of states by approach (flat bar, source-of-duty as in Dittman, People Express).
+  - Which states follow Restatement § 14 or the no-comparison rule, and which compare and apportion severally.
+  - The Delta v. CrowdStrike order itself (only a scanned image found), and 532 Madison read at first hand.
   - The LASST v. OpenAI complaint itself.
+  - An attribution chain for bio, as cyber now has.
 - **Capability:**
   - Evidence for how each peril's rate scales with the time horizon. The elasticities and caps in `defaults.yaml` are judgement.
   - METR measurements beyond Mythos Preview, once its suite reaches past 16 hours.

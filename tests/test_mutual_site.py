@@ -152,3 +152,15 @@ def test_frequency_methods_match(level):
     for m in frequency.METHODS:
         for p, v in frequency.rates(level, m).items():
             assert close(got[m][p], v), (level, m, p)
+
+
+@pytest.mark.parametrize("level", LEVELS)
+def test_attribution_chains_match(level):
+    from catmodel import legal
+    with open(DEFAULTS, encoding="utf-8") as f:
+        defaults = yaml.safe_load(f)
+    over = dict(joint=0.3)
+    got = js(dict(op="legal", defaults=defaults, level=level, overrides=over))
+    for p in defaults["legal"]["attribution"]:
+        want = legal.chain(defaults, p, level, over)
+        assert close(got[p]["attribution"], want["attribution"]) and close(got[p]["pays"], want["pays"]), (level, p)

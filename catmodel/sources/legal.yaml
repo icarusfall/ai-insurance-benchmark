@@ -134,3 +134,139 @@
   status: secondary
   caveats: Practitioners' views in a news piece, not a ruling. Proving quantified damages may be hard.
   mapping: Agent attribution near 0.9.
+
+- id: southern_california_gas_leak_2019
+  peril: cyber
+  informs: [attribution]
+  lens: parallel
+  claim: >-
+    Businesses near the Aliso Canyon gas leak sued for lost income. The California Supreme Court held unanimously
+    (7 Cal.5th 391, 30 May 2019, Cuéllar J.) that the gas company owed no tort duty to guard against purely economic
+    losses, as distinct from injury to people or physical damage to property. The exception is a "special
+    relationship", where the plaintiff was the intended beneficiary of a transaction. The court described this as the
+    rule across the country for man-made disasters (532 Madison, Testbank, Barber Lines) and the Restatement's view:
+    no general duty to avoid unintentionally inflicting economic loss. Its reasons include insurance: liability for
+    economic loss is so indeterminate that third-party cover cannot be priced, while victims can buy first-party cover.
+  values: {}
+  source: {title: "Southern California Gas Leak Cases, S246669 (opinion)", publisher: Supreme Court of California, date: 2019-05-30, url: "https://www.courts.ca.gov/opinions/archive/S246669.PDF"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    Footnote 8 expressly leaves open whether the line-drawing problems persist "in cyberspace", citing Dittman. A
+    negligence ruling; it does not touch contract claims, statutory claims or claims for physical damage.
+  mapping: >-
+    The recoverable share of cyber attribution. Most cyber catastrophe losses are business interruption suffered by
+    companies with no tie to the lab, which this rule bars in negligence. Damage to systems and data, injuries, and
+    customers with a contract are what remains.
+
+- id: dittman_v_upmc_2018
+  peril: cyber
+  informs: [attribution]
+  lens: parallel
+  claim: >-
+    UPMC's employees sued after hackers stole their personal and financial data. The Pennsylvania Supreme Court (196
+    A.3d 1036, 21 November 2018) held that an employer that collects and stores such data owes a duty of reasonable
+    care to protect it. The hackers' crimes did not relieve UPMC of that duty, because a breach was within the scope
+    of the risk its weak security created. The economic loss doctrine did not bar the claim: in Pennsylvania it turns
+    on the source of the duty, so a duty arising outside any contract can support a negligence claim for purely
+    economic loss. The court noted that some states bar all such recovery.
+  values: {}
+  source: {title: "Dittman v. UPMC, No. 43 WAP 2017, 2018 WL 6072199 (opinion of Baer J.)", publisher: Supreme Court of Pennsylvania, date: 2018-11-21, url: "https://www.hodgsonruss.com/assets/htmldocuments/Dittman%20v%20UPMC%20SCt%20opinion.pdf"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    The plaintiffs had a direct relationship with UPMC (they were required to hand over the data), which a stranger
+    hit by an AI-enabled attack does not. A ruling at the pleading stage. Chief Justice Saylor would have treated the
+    claim as part contract.
+  mapping: >-
+    Two links of cyber attribution. Liability: a criminal hack within the risk the defendant's weak safeguards
+    created does not cut off its duty, as under § 449. Recoverable share: the high end, where states follow
+    Pennsylvania's source-of-duty test rather than a flat bar.
+
+- id: delta_v_crowdstrike_2025
+  peril: cyber
+  informs: [attribution]
+  lens: parallel
+  claim: >-
+    Delta sued CrowdStrike over the July 2024 outage. On 16 May 2025 Judge Kelly Lee Ellerbe of the Fulton County
+    Superior Court (No. 24CV013621) let claims including gross negligence and computer trespass proceed, and
+    dismissed some fraud claims. CrowdStrike's counsel expects any recovery to be capped by contract at single-digit
+    millions; Delta had put its costs at about $500m.
+  values: {delta_estimated_cost: 0.5}
+  source: {title: "Judge allows Delta's lawsuit against CrowdStrike to proceed with millions in damages on the line", author: Connor Jones, publisher: The Register, date: 2025-05-21, url: "https://www.theregister.com/2025/05/21/judge_allows_deltas_lawsuit_against/"}
+  accessed: 2026-10-30
+  status: secondary
+  caveats: >-
+    The order itself is a scanned image and was not read. Reports differ on which fraud theories survived and give
+    no detail on how the court treated the economic loss rule. A customer suing its supplier, not a stranger suing a lab.
+  mapping: >-
+    Recoverable share: a customer with a contract can get past the economic loss rule through gross negligence or a
+    statutory duty, but a liability cap may still hold its recovery to a sliver of the loss.
+
+- id: restatement_third_apportionment_14
+  peril: all
+  informs: [attribution]
+  lens: scratch
+  claim: >-
+    Restatement (Third) of Torts: Apportionment of Liability § 14 (2000): a person liable for failing to protect
+    another from the specific risk of an intentional tort is jointly and severally liable for the intentional
+    tortfeasor's share as well as its own, so it bears the risk that the intentional tortfeasor cannot pay. Its comment
+    notes that most courts instead refuse to let the jury assign any share to the intentional tortfeasor in a suit
+    against the negligent party, so the negligent party pays in full. Idaho takes a third course: by statute the jury
+    compares the two and the negligent party pays only its own share, which the court warned a jury will naturally
+    keep small.
+  values: {}
+  source: {title: "John Does I-XIX v. Boy Scouts of America, No. 1:13-cv-00275-BLW, Doc. 538 (memorandum decision, quoting § 14 and comment b)", publisher: "US District Court, D. Idaho (via GovInfo)", date: 2019-04-17, url: "https://govinfo.gov/content/pkg/USCOURTS-idd-1_13-cv-00275/pdf/USCOURTS-idd-1_13-cv-00275-29.pdf"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    The Restatement was read as quoted in the opinion, not at the ALI. How many states follow each approach is not
+    counted here; Indiana's Court of Appeals adopted § 14 (Santelli v. Rahmatullah, 2012, not read).
+  mapping: >-
+    The joint-and-several link of cyber attribution. Where § 14 or the no-comparison rule applies, a lab whose weak
+    safeguards let the attack through can be made to pay the attacker's share, which a state hacker or criminal gang
+    never will. Where liability is several, as in Idaho, the lab pays only its share of fault, and juries put most
+    of the fault on the attacker.
+
+- id: california_civil_code_1431_2
+  peril: all
+  informs: [attribution]
+  lens: scratch
+  claim: >-
+    California's Proposition 51 (Civil Code § 1431.2, 1986) makes each defendant's liability for non-economic
+    damages several only, in proportion to its fault. It leaves joint and several liability in place for economic
+    damages, defined as objectively verifiable monetary losses including lost earnings, loss of use of property, repair
+    costs and lost business opportunities.
+  values: {}
+  source: {title: "Civil Code § 1431.2", publisher: California Legislature, date: 1986-06-03, url: "https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?lawCode=CIV&sectionNum=1431.2"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    Joint liability for economic damages is the effect of the section's carve-out, not its own words. Whether a court
+    compares a negligent lab's fault with a hacker's at all is a separate question.
+  mapping: >-
+    The joint-and-several link: a cyber catastrophe's recoverable losses are almost all economic damages, so in the
+    state where most labs sit a lab found partly at fault can owe the attacker's share too.
+
+- id: ai_lead_act_s2937
+  peril: all
+  informs: [attribution]
+  lens: scratch
+  claim: >-
+    The AI LEAD Act (S.2937, introduced 29 September 2025 by Durbin and Hawley; Welch, King and Blackburn joined in
+    March 2026) would create a federal product-liability claim against AI developers: negligent design, failure to
+    warn, breach of express warranty, and strict liability for a product unreasonably dangerous when used or misused
+    in a reasonably foreseeable way. "Harm" includes financial injury as well as death, injury and property damage.
+    Developers could not contract out of liability, and the act would pre-empt only conflicting state law. It is silent
+    on third-party criminal acts; liability still needs proximate cause. Its only action is referral to the Senate
+    Judiciary Committee.
+  values: {cosponsors: 4}
+  source: {title: "S.2937 - AI LEAD Act (introduced text and bill status)", publisher: US Government Publishing Office (GovInfo), date: 2025-09-29, url: "https://www.govinfo.gov/content/pkg/BILLS-119s2937is/html/BILLS-119s2937is.htm"}
+  accessed: 2026-10-30
+  status: verified
+  caveats: >-
+    A bill in committee, not law; the GovInfo status file was last updated in August 2026. Its joint-and-several clause
+    covers developers and deployers, not attackers.
+  mapping: >-
+    A scenario, not a default: it would lift the recoverable share (financial injury is harm, so the economic loss
+    rule no longer bars a product claim) and make misuse a design question.
