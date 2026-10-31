@@ -225,3 +225,40 @@
     (https://insurance.ky.gov/PPC/Documents/bulletin1102rrgnaicaccredit032311.pdf). The model admits no letters of
     credit; members' calls backed by them would count towards a US ratio, unlike plain uncalled assessments.
   mapping: total_adjusted_capital in catmodel/capital_us.py (paid-in capital only).
+
+- id: factory_mutual_1835
+  peril: structure
+  informs: [capital]
+  lens: parallel
+  claim: >-
+    Zachariah Allen fire-proofed his mill but could not get his insurer to lower the premium, so in 1835 he and other
+    mill owners formed the Manufacturers Mutual Fire Insurance Company, which priced each mill by its fire protection
+    and inspected members regularly. Its laboratory, founded in 1886, tested sprinklers, and its 1891 sprinkler
+    spacing rules came before the national standard (NFPA 13). Its descendant is FM Global.
+  values: {founded: 1835, laboratory: 1886, sprinkler_guidelines: 1891}
+  source: {title: "FM (insurance); Zachariah Allen", publisher: "Wikipedia, with BAFSA's note 'Sprinklers and the Insurance Industry'", date: 2026, url: "https://en.wikipedia.org/wiki/FM_(insurance)"}
+  accessed: 2026-10-31
+  status: secondary
+  caveats: >-
+    Encyclopaedia and industry histories. The claim that members paid about half other insurers' rates in the first
+    14 years comes from the same side and is not used. The precedent for a mutual of the insured that enforced
+    standards on its own members.
+
+- id: leung_2026_insurability_frontier
+  peril: all
+  informs: [layer]
+  lens: market
+  claim: >-
+    Codes 55 AI threat classes against 26 products and exclusions from carriers' public materials. Affirmative AI cover
+    is sorting by peril (Munich Re on model performance, Armilla and Lloyd's on hallucination and liability, Coalition
+    on deepfakes), legacy lines carry silent AI exposure, and exclusions are spreading. Foundation-model concentration
+    is the one genuinely new frontier, because one upstream failure correlates losses across many insurers. For that
+    risk it ranks structures as a sequence: provider indemnities, diversification, a captive, RRG or mutual, a
+    reinsurance pool, cat bonds (none yet, for want of a trigger), then a government backstop.
+  values: {threat_classes: 55, products: 26}
+  source: {title: "The Insurability Frontier of AI Risk: Mapping Threats to Affirmative Coverage, Silent Exposures, and Exclusions", author: "Leung, Zhang, Ling, Toyoda and Loh (AIFT)", publisher: arXiv, date: 2026-06-12, url: "https://arxiv.org/abs/2605.18784"}
+  accessed: 2026-10-31
+  status: verified
+  caveats: >-
+    Measures what carriers publicly say they cover, not what they would pay: no pricing, capital or loss distributions.
+    Its buyers are AI deployers, not frontier labs.

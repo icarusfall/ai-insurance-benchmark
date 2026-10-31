@@ -136,8 +136,9 @@ tr.muted td { color: var(--muted); }
 .steps { max-width: 760px; padding-left: 20px; }
 .steps li { margin-bottom: 8px; }
 #legal-levers { max-width: 520px; display: block; }
-#legal-table button { font: inherit; font-size: 13px; border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+#legal-table button, #carrier-table button { font: inherit; font-size: 13px; border: 1px solid var(--border); background: var(--surface); color: var(--ink);
   padding: 3px 10px; border-radius: 999px; cursor: pointer; }
+#carrier-traits td { font-size: 13px; vertical-align: top; }
 #legal-table tr.on td { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 details.more > summary { cursor: pointer; color: var(--accent); margin: 10px 0; }
 

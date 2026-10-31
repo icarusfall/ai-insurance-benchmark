@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mutually Assured AI Modelling</title>
-<meta name="description" content="A toy catastrophe model for a frontier AI mutual insurer: premium, capital in US and Solvency II terms, cat bonds, and whether bio risk is insurable.">
+<meta name="description" content="A toy catastrophe model for insuring frontier AI: premium, capital in US and Solvency II terms, a mutual against captives, insurers and a government backstop, cat bonds, and whether bio risk is insurable.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
@@ -14,14 +14,14 @@
 <body>
 <header class="masthead"><div class="inner">
   <a class="brand" href="#">Mutually Assured <span>AI</span> Modelling</a>
-  <nav><a href="#levers">Levers</a><a href="#frequency">How often</a><a href="#tornado">What matters</a><a href="#legal">Who pays</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
+  <nav><a href="#levers">Levers</a><a href="#frequency">How often</a><a href="#tornado">What matters</a><a href="#legal">Who pays</a><a href="#time">Over time</a><a href="#markets">Markets</a><a href="#capital">Capital</a><a href="#carriers">Who carries it</a><a href="#bond">Cat bond</a><a href="#bio">Bio</a><a href="#sources">Sources</a><a href="#about">About</a></nav>
 </div></header>
 
 <div class="wrap">
 <div class="hero">
   <p class="kicker">A toy catastrophe model</p>
-  <h1>Could a frontier AI mutual afford the tail?</h1>
-  <p class="dek">The AI Underwriting Company has proposed that frontier labs <a href="https://www.lawfaremedia.org/article/bootstrapping-frontier-ai-governance-by-mutualizing-risk">insure each other through a mutual</a>: pooled capital, shared safety standards, audits with teeth. They sketch the structure; this page puts rough numbers on it. Move the levers and watch the premium, the capital a regulator would ask for, and how much of the harm the mutual would actually pay.</p>
+  <h1>Could insurance carry the tail of frontier AI?</h1>
+  <p class="dek">The AI Underwriting Company has proposed that frontier labs <a href="https://www.lawfaremedia.org/article/bootstrapping-frontier-ai-governance-by-mutualizing-risk">insure each other through a mutual</a>: pooled capital, shared safety standards, audits with teeth. They sketch the structure; this page puts rough numbers on it. It starts from their mutual, and then asks whether the labs' own captives, a commercial insurer or a government backstop would carry the same losses better (<a href="#carriers">who carries it</a>). Move the levers and watch the premium, the capital a regulator would ask for, and how much of the harm would actually be paid.</p>
   <div class="toy"><b>This is a toy model to take the idea out for a walk, not to definitively price catastrophe.</b> Every number is a starting point with its source shown; many are judgement calls labelled as such. The interesting output is which levers matter, not any one figure.</div>
 </div>
 
@@ -140,6 +140,19 @@
     </select></p>
   <div class="cards" id="capital-cards"></div>
   <p class="hint">Simplified on purpose: one catastrophe-and-premium risk module and a run-off risk margin for Solvency II; for the US, reserve, premium and operational risk without asset or credit risk. The Solvency II and NAIC factors are checked against the rules (see <a href="#checks">the model's own constants</a>). See the model's notes in <code>catmodel/capital_s2.py</code> and <code>capital_us.py</code>.</p>
+</section>
+
+<section class="chapter" id="carriers">
+  <p class="kicker">Who carries it</p>
+  <h2>A mutual is one option, not the only one</h2>
+  <p>Most of what is written about insuring frontier AI starts from AIUC's mutual. But nothing in the losses above depends on who holds them. The same simulated years can be carried by the labs together, by each lab alone, by a commercial insurer or reinsurer, or in layers. The structure decides three things: what capital costs, whether pooling cuts how much is needed, and who has a reason to watch the labs.</p>
+  <p>Pooling matters more than the mutual form. A lab insuring itself through its own captive pays about four times what it pays in a pool, because it must hold capital for its own bad year alone. A diversified insurer is cheapest, because an AI catastrophe does not coincide with a hurricane, so it asks less for its capital. That flatters it, though: the same event would hit its cyber and technology books, which is the correlation <a href="#src-leung_2026_insurability_frontier">Leung et al.</a> single out as AI's genuinely new insurance problem. Members' callable capital lifts the Solvency II ratio but does not change the premium.</p>
+  <p class="hint">Each row changes a few settings from the central mutual and keeps everything else. Computed by the Python model over 60,000 simulated years. Use a row to load its settings into the levers.</p>
+  <div class="table-wrap"><table id="carrier-table"></table></div>
+  <h3>What each structure is good for</h3>
+  <p>An insurer's case as a check on the labs rests on independence and on having its own money at stake. A mutual scores worst on independence; its case is different: members pay for each other's losses, so they have reason to police each other, as the mill owners of <a href="#src-factory_mutual_1835">Factory Mutual</a> did from 1835. Both are fair arguments, but they are different ones. A plausible answer is not one carrier but a stack: the labs pool the frequent losses, reinsurers price the layer above from outside, and government takes the far tail.</p>
+  <div class="table-wrap"><table id="carrier-traits"></table></div>
+  <p class="hint">The qualitative columns are judgement. Today's standalone AI liability cover runs to about $25m per insured (<a href="#src-armilla_ai_liability_limit">Armilla</a>), against AIUC's $1bn minimum per member.</p>
 </section>
 
 <section class="chapter" id="bond">

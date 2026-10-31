@@ -429,3 +429,56 @@ legal:
       changes: {cyber_misuse: {joint: 0}}
       basis: "Every forum compares fault and the lab pays only its own share, as in Idaho."
       sources: [restatement_third_apportionment_14]
+
+# Who carries the risk (catmodel/carriers.py). The same simulated losses, carried five ways. `changes` are settings that
+# differ from the central mutual; everything else stays central. The qualitative columns are judgement.
+carriers:
+  - key: mutual
+    label: A mutual of the labs (AIUC's proposal)
+    changes: {}
+    basis: "Five labs pool $5bn of paid-in capital and can each be called for $1bn more, as in Price-Anderson."
+    independence: "Weakest: the insured own it."
+    incentive: "Members pay for each other's losses, so they have reason to police each other, as Factory Mutual's mill owners did."
+    capacity: "What the labs put in."
+    sources: [aiuc_mutual_proposal, price_anderson, factory_mutual_1835]
+  - key: captive
+    label: Each lab insures itself (a captive)
+    changes: {members: 1, paid_in_capital: 1.0, callable_per_member: 0.0}
+    basis: "Each lab holds its fifth of the capital alone. Nothing is pooled, and a parent's promise to recapitalise does not count."
+    independence: "None: the lab marks its own homework."
+    incentive: "Only the lab's own losses, which it bears anyway."
+    capacity: "One lab's balance sheet."
+    sources: []
+  - key: commercial
+    label: A diversified insurer or reinsurer
+    changes: {cost_of_capital: 0.06, callable_per_member: 0.0}
+    basis: >-
+      The same $5bn of capital, held by a carrier whose other books (natural catastrophe, life) do not lose money in an
+      AI catastrophe, so it asks a lower return on it: the low end of the cost-of-capital range. This flatters it: its
+      cyber, tech E&O and D&O books would lose money on the same day.
+    independence: "Strongest: paid by the labs, but loses its own money if it misprices."
+    incentive: "Its own claims only, which today's law keeps small."
+    capacity: >-
+      Large in principle but voluntary: standalone AI cover runs to tens of millions per insured, and many carriers are
+      writing AI out of existing policies.
+    sources: [armilla_ai_liability_limit, leung_2026_insurability_frontier]
+  - key: stack
+    label: The mutual, with reinsurance above it
+    changes: {reinsurance_attach: 1.0, reinsurance_limit: 4.0}
+    basis: >-
+      The mutual keeps the first $1bn of claims in a year; reinsurers or a cat bond take the next $4bn, priced at the
+      reinsurance price lever (10 times expected loss, as the first cyber cat bonds were).
+    independence: "Mixed: the reinsurer prices its layer from outside."
+    incentive: "Members police the bottom layer; the reinsurer's price is an outside signal of risk."
+    capacity: "The mutual's, plus whatever the market will write."
+    sources: [aiuc_mutual_proposal, cyber_cat_bond_polestar, leung_2026_insurability_frontier]
+  - key: backstop
+    label: The mutual, with a government backstop
+    changes: {government_attach: 1.0, government_share: 0.8}
+    basis: >-
+      The government pays 80% of claims above $1bn a year, as TRIA pays 80% of terrorism losses above insurers'
+      deductibles. Free at the point of cover.
+    independence: "Strong, but political."
+    incentive: "Weakest on price: the subsidy blunts it unless the government attaches conditions."
+    capacity: "Largest."
+    sources: [tria]

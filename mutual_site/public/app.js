@@ -491,6 +491,29 @@
     }));
   }
 
+  // ---- who carries it (catmodel/carriers.py, central settings)
+  function renderCarriers() {
+    const defs = D.defaults.carriers, rows = Object.fromEntries(D.carriers.carriers.map(r => [r.key, r]));
+    const carried = r => [["own", "kept"], ["reinsurer", "reinsurer"], ["government", "government"]]
+      .filter(([k]) => r.carried[k] > 0.005).map(([k, l]) => `${pct(r.carried[k], 0)} ${l}`).join(", ");
+    $("#carrier-table").innerHTML = `<thead><tr><th>Who carries it</th><th class="num">Premium per lab</th><th class="num">Share of revenue</th>
+      <th class="num">Solvency II ratio</th><th>Expected claims</th><th></th></tr></thead><tbody>` +
+      defs.map(c => {
+        const r = rows[c.key];
+        return `<tr><td>${esc(c.label)}<div class="hint">${esc(c.basis)}</div></td>
+          <td class="num">${money(r.premium_per_lab)}</td><td class="num">${pct(r.premium_share)}</td>
+          <td class="num">${pct(r.solvency_ratio, 0)}</td><td>${carried(r)}</td>
+          <td><button type="button" data-carrier="${esc(c.key)}">Use</button></td></tr>`;
+      }).join("") + "</tbody>";
+    $("#carrier-table").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      Object.assign(S, defs.find(c => c.key === b.dataset.carrier).changes);
+      markCustom(); schedule(0);
+      document.getElementById("levers").scrollIntoView({ behavior: "smooth" });
+    }));
+    $("#carrier-traits").innerHTML = `<thead><tr><th>Who carries it</th><th>Independent of the labs?</th><th>Reason to care about safety</th><th>Capacity</th></tr></thead><tbody>` +
+      defs.map(c => `<tr><td>${esc(c.label)}</td><td>${esc(c.independence)}</td><td>${esc(c.incentive)}</td><td>${esc(c.capacity)}</td></tr>`).join("") + "</tbody>";
+  }
+
   // ---- sensitivity (catmodel/sensitivity.py, central settings)
   const TORNADO = [["premium_share", "Premium, share of revenue", v => pct(v)], ["share_paid", "Share of expected harm paid", v => pct(v)],
                    ["solvency_ratio", "Solvency II ratio", v => pct(v, 0)]];
@@ -614,6 +637,7 @@
   renderBio();
   renderTornadoTabs();
   renderTornado();
+  renderCarriers();
   renderMarkets();
   renderChecks();
   renderSources();
