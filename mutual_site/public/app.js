@@ -164,6 +164,7 @@
     const y = M.simulate(S, N_YEARS, SEED);
     const r = M.evaluate(S, y);
     r.grossSorted = M.sorted(r.stack.claims);
+    r.liableSorted = M.sorted(y.liable);
     last = r;
     renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory(); renderFrequency(); renderLegal();
     syncLevers();
@@ -223,7 +224,16 @@
     svg += `<line id="ep-x" y1="${mt}" y2="${H - mb}" stroke="var(--axis)" visibility="hidden"/>`;
     svg += `<rect x="${ml}" y="${mt}" width="${W - ml - mr}" height="${H - mt - mb}" fill="transparent" id="ep-hit"/></svg>`;
     box.innerHTML = svg;
-    $("#ep-legend").innerHTML = `<span><i style="background:var(--s1)"></i>mutual's claims</span>` +
+    const perLab = Math.min(S.per_event_limit, S.annual_aggregate), common = S.perils.some(p => p.common_mode > 0);
+    const oneEvent = common ? S.members * perLab : perLab, oneYear = S.members * S.annual_aggregate;
+    const lia1000 = M.qSorted(r.liableSorted, 0.999);
+    const money1 = v => v >= 10 && v < 100 ? `$${v.toFixed(1)}bn` : money(v);   // so $10.2bn held vs $10bn owed reads right
+    $("#ep-note").innerHTML = `<b>Why the line flattens.</b> The cover, not the capital, sets the ceiling. One event costs the carrier at most ` +
+      `${money(oneEvent)}${common ? ` (${S.members} labs' ${money(perLab)} limits, when every lab's model is to blame)` : ""}, and a year at most ` +
+      `${money1(oneYear)}. It holds ${money1(withCalls)}${S.callable_per_member > 0 ? " with member calls" : ""}, so it ${withCalls >= oneYear ? "can always pay" : "can run out in the worst years"}. ` +
+      `Anything above the limits stays with the labs: on average ${pct(1 - r.gross / r.liable)} of what courts would make them pay is uninsured, ` +
+      `and in a 1-in-1,000 year their liability is ${money(lia1000)} against ${money1(oneYear)} of cover. The insurer's stake ends where its limits end.`;
+    $("#ep-legend").innerHTML = `<span><i style="background:var(--s1)"></i>carrier's claims</span>` +
       (layered ? `<span><i style="background:var(--s2)"></i>after reinsurance and government</span>` : "") +
       `<span><i class="dash"></i>what pays for it</span>`;
     const tip = $("#ep-tip"), hit = $("#ep-hit"), xline = $("#ep-x");

@@ -65,6 +65,7 @@ section.chapter > p { max-width: 760px; }
 .lever output { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
 .lever input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--accent); margin: 2px 0 0; }
 .lever details { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); }
+.chart-note { font-size: 13px; color: var(--ink-2); margin: 10px 0 0; line-height: 1.5; }
 .lever-note { grid-column: 1 / -1; font-size: 12.5px; color: var(--ink-2); margin: 0 0 2px; }
 .lever summary { cursor: pointer; color: var(--muted); list-style: none; }
 .lever summary::-webkit-details-marker { display: none; }
