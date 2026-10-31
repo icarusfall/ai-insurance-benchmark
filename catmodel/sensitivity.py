@@ -19,8 +19,8 @@ PERIL_FIELDS = {"rate": "how often", "alpha": "tail index", "attribution": "shar
 SHORT = {"bio_misuse": "Bio", "cyber_misuse": "Cyber", "agent_runaway": "Agents"}
 SETTINGS = {"revenue": "Members' revenue", "cost_of_capital": "Return required on capital",
             "catbond_multiple": "Reinsurance price"}
-SCALED = {"per_event_limit": "Cover per member per event", "annual_aggregate": "Cover per member per year",
-          "paid_in_capital": "Paid-in capital", "callable_per_member": "Callable from each member"}
+SCALED = {"per_event_limit": "Cover each lab buys, per event", "annual_aggregate": "Cover each lab buys, per year",
+          "paid_in_capital": "Carrier's paid-in capital", "callable_per_member": "Callable from each lab (a mutual only)"}
 METRICS = ("premium_share", "share_paid", "solvency_ratio")
 
 

@@ -31,22 +31,27 @@
 
   // ---- lever definitions
   const PERIL_LEVERS = [
-    { key: "rate", label: "How often", scale: "log", min: 1e-4, max: 5, fmt: ratePerYear },
-    { key: "alpha", label: "Tail index α (lower is fatter)", scale: "lin", min: 0.4, max: 2.5, step: 0.05, fmt: v => v.toFixed(2) },
+    { key: "xm", label: "Smallest event counted", scale: "log", min: 0.001, max: 10000, fmt: money },
+    { key: "rate", label: "How often", scale: "log", min: 1e-4, max: 5, fmt: ratePerYear,
+      note: p => `Events of at least ${money(p.xm)}. Lowering the threshold without raising this makes big events rarer.` },
+    { key: "alpha", label: "Tail index α (lower is fatter)", scale: "lin", min: 0.4, max: 2.5, step: 0.05, fmt: v => v.toFixed(2),
+      note: p => { const t = M.TP(p.xm, p.alpha, p.cap);
+        return `Half of events cost more than ${money(t.quantile(0.5))}; one in ten more than ${money(t.quantile(0.9))}; one in a hundred more than ${money(t.quantile(0.99))}.`; } },
     { key: "attribution", label: "Share of the harm pinned on the lab", scale: "log", min: 0.001, max: 1, fmt: v => pct(v) },
     { key: "insurable", label: "Share of that which is insurable", scale: "lin", min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0) },
     { key: "common_mode", label: "Chance all members' models are to blame", scale: "lin", min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0) },
   ];
   const GROUPS = [
-    { title: "The mutual", section: "structure", levers: [
-      { key: "members", label: "Member labs", scale: "int", min: 1, max: 12, spec: D.defaults.members.count, fmt: v => String(v) },
-      { key: "revenue", label: "Revenue per member", scale: "log", min: 0.5, max: 200, spec: D.defaults.members.revenue, fmt: money },
-      { key: "per_event_limit", label: "Cover per member per event", scale: "log", min: 0.05, max: 500, fmt: money },
-      { key: "annual_aggregate", label: "Cover per member per year", scale: "log", min: 0.05, max: 1000, fmt: money },
-      { key: "paid_in_capital", label: "Paid-in capital", scale: "log0", min: 0.1, max: 1000, fmt: money },
-      { key: "callable_per_member", label: "Callable from each member", scale: "log0", min: 0.05, max: 200, fmt: money },
+    { title: "The cover", section: "structure", levers: [
+      { key: "members", label: "Labs covered", scale: "int", min: 1, max: 12, spec: D.defaults.members.count, fmt: v => String(v) },
+      { key: "revenue", label: "Revenue per lab", scale: "log", min: 0.5, max: 200, spec: D.defaults.members.revenue, fmt: money },
+      { key: "per_event_limit", label: "Cover each lab buys, per event", scale: "log", min: 0.05, max: 500, fmt: money },
+      { key: "annual_aggregate", label: "Cover each lab buys, per year", scale: "log", min: 0.05, max: 1000, fmt: money,
+        note: s => `The carrier can owe up to ${money(s.members * s.annual_aggregate)} a year across ${s.members} labs.` },
+      { key: "paid_in_capital", label: "Carrier's paid-in capital", scale: "log0", min: 0.1, max: 1000, fmt: money },
+      { key: "callable_per_member", label: "Callable from each lab (a mutual only)", scale: "log0", min: 0.05, max: 200, fmt: money },
     ] },
-    { title: "Above the mutual", section: "structure", levers: [
+    { title: "Above the first carrier", section: "structure", levers: [
       { key: "reinsurance_attach", label: "Reinsurance or cat bond attaches at", scale: "log0", min: 0.05, max: 500, fmt: money },
       { key: "reinsurance_limit", label: "Reinsurance or cat bond limit", scale: "log0", min: 0.05, max: 500, fmt: money },
       { key: "government_attach", label: "Government steps in above", scale: "log0", min: 0.05, max: 1000, fmt: money },
@@ -87,15 +92,15 @@
     return `<details><summary></summary>${esc(spec.basis || "")}${range}<br>${chips}</details>`;
   }
 
-  function addLever(container, lv, get, set, spec) {
+  function addLever(container, lv, get, set, spec, note) {
     const id = `lv-${inputs.length}`;
     const row = el("div", { className: "lever" });
     row.innerHTML = `<label for="${id}">${esc(lv.label)}</label><output for="${id}"></output>
-      <input type="range" id="${id}" min="${lv.scale === "int" ? lv.min : 0}" max="${lv.scale === "int" ? lv.max : 1000}" step="1">${basisHtml(spec)}`;
+      <input type="range" id="${id}" min="${lv.scale === "int" ? lv.min : 0}" max="${lv.scale === "int" ? lv.max : 1000}" step="1">${note ? `<p class="lever-note"></p>` : ""}${basisHtml(spec)}`;
     container.appendChild(row);
-    const input = row.querySelector("input"), output = row.querySelector("output");
-    input.addEventListener("input", () => { set(toValue(lv, input.value)); output.textContent = lv.fmt(get()); markCustom(); schedule(); });
-    inputs.push({ lv, input, output, get, set });
+    const input = row.querySelector("input"), output = row.querySelector("output"), noteEl = row.querySelector(".lever-note");
+    input.addEventListener("input", () => { set(toValue(lv, input.value)); output.textContent = lv.fmt(get()); syncNotes(); markCustom(); schedule(); });
+    inputs.push({ lv, input, output, get, set, note, noteEl });
   }
 
   function buildLevers() {
@@ -105,21 +110,29 @@
     S.perils.forEach((p, i) => {
       const fs = el("fieldset");
       fs.innerHTML = `<legend><i style="background:var(${PERIL_COLOURS[p.name] || "--s7"})"></i>${esc(p.label)}</legend>`;
-      for (const lv of PERIL_LEVERS)
-        addLever(fs, lv, () => S.perils[i][lv.key], v => { S.perils[i][lv.key] = v; }, D.defaults.perils[p.name][lv.key]);
+      for (const lv of PERIL_LEVERS) {
+        const l = lv.key === "xm" ? { ...lv, max: Math.min(lv.max, p.cap / 10) } : lv;   // the threshold stays below the cap
+        addLever(fs, l, () => S.perils[i][lv.key], v => { S.perils[i][lv.key] = v; }, D.defaults.perils[p.name][lv.key],
+                 lv.note && (() => lv.note(S.perils[i])));
+      }
       panel.appendChild(fs);
     });
     for (const g of GROUPS) {
       const fs = el("fieldset");
       fs.innerHTML = `<legend>${esc(g.title)}</legend>`;
       for (const lv of g.levers)
-        addLever(fs, lv, () => S[lv.key], v => { S[lv.key] = v; }, lv.spec || D.defaults[g.section][lv.key]);
+        addLever(fs, lv, () => S[lv.key], v => { S[lv.key] = v; }, lv.spec || D.defaults[g.section][lv.key],
+                 lv.note && (() => lv.note(S)));
       panel.appendChild(fs);
     }
     syncLevers();
   }
   function syncLevers() {
     for (const { lv, input, output, get } of inputs) { input.value = toPos(lv, get()); output.textContent = lv.fmt(get()); }
+    syncNotes();
+  }
+  function syncNotes() {
+    for (const { note, noteEl } of inputs) if (note) noteEl.textContent = note();
   }
   function markCustom() {
     document.querySelectorAll(".presets button").forEach(b => b.setAttribute("aria-pressed", "false"));
@@ -167,9 +180,9 @@
     const s2s = s2.solvency_ratio >= 1.5 ? ["good", "comfortable"] : s2.solvency_ratio >= 1 ? ["warn", "covered, thinly"] : ["bad", "below the SCR"];
     const lvl = u.action_level_with_cat, uss = [lvl === "no action" ? "good" : lvl === "company action" ? "warn" : "bad", `with an AI charge: ${lvl}`];
     $("#tiles").innerHTML =
-      tile("Premium per member", money(prem), `${pct(share)} of ${money(S.revenue)} revenue`,
+      tile("Premium per lab", money(prem), `${pct(share)} of ${money(S.revenue)} revenue`,
            share < 0.01 ? ["good", "a rounding error"] : share < 0.05 ? ["warn", "noticeable"] : ["bad", "a large bill"]) +
-      tile("Share of expected harm the mutual pays", pct(r.gross / r.harm), `of ${money(r.harm)} a year in the world`) +
+      tile("Share of expected harm the cover pays", pct(r.gross / r.harm), `of ${money(r.harm)} a year in the world`) +
       tile("Solvency II ratio", pct(s2.solvency_ratio, 0), `SCR ${money(s2.scr)} · own funds ${money(s2.eligible_own_funds_scr)}`, s2s) +
       tile("US RBC ratio, as written", pct(u.rbc_ratio, 0), `${pct(u.rbc_ratio_with_cat, 0)} if the 1-in-100 AI loss were charged like a hurricane`, uss) +
       tile("Years members get a call", pct(r.p_calls), "premium and paid-in capital not enough") +
@@ -354,7 +367,7 @@
       tile("Where it stops", stopRow ? String(stopRow.year) : "never", stopRow ? `mid-year horizon ${hours(stopRow.horizon)}` : `stays under ${hours(C.stop_hours)} to ${C.last_year}`);
     renderTrajChart();
     $("#traj-table").innerHTML = `<thead><tr><th>Year</th><th class="num">Horizon</th>${S.perils.map(p => `<th class="num">${esc(PERIL_SHORT[p.name] || p.name)} rate</th>`).join("")}
-      <th class="num">Harm in the world</th><th class="num">Mutual pays</th><th class="num">Premium per member</th><th class="num">Share of revenue</th><th class="num">SII ratio</th></tr></thead><tbody>` +
+      <th class="num">Harm in the world</th><th class="num">Cover pays</th><th class="num">Premium per lab</th><th class="num">Share of revenue</th><th class="num">SII ratio</th></tr></thead><tbody>` +
       rows.map(r => r.stopped
         ? `<tr class="muted"><td>${r.year}</td><td class="num">${hoursShort(r.horizon)}</td><td colspan="${S.perils.length + 5}">past the stop</td></tr>`
         : `<tr><td>${r.year}</td><td class="num">${hoursShort(r.horizon)}</td>${S.perils.map(p => `<td class="num">${num(r.rates[p.name] ?? 1)}×</td>`).join("")}
@@ -592,7 +605,7 @@
     $("#bio-table").innerHTML = `<thead><tr><th>Criterion</th><th>Test</th><th>Result</th><th>Verdict</th><th>What would make it pass</th></tr></thead><tbody>` +
       D.bio.criteria.map(c => `<tr><td><b>${esc(c.criterion)}</b></td><td>${esc(c.test)}</td><td>${esc(c.result)}</td>
         <td class="verdict ${esc(c.verdict)}">${esc(c.verdict)}</td><td>${esc(c.fix)}</td></tr>`).join("") + "</tbody>";
-    $("#bio-grid").innerHTML = `<thead><tr><th class="num">α</th><th class="num">Attribution</th><th class="num">Limit per member</th><th class="num">Expected claims</th>
+    $("#bio-grid").innerHTML = `<thead><tr><th class="num">α</th><th class="num">Attribution</th><th class="num">Limit per lab</th><th class="num">Expected claims</th>
       <th class="num">Share of lab liability paid</th><th class="num">Premium, % of revenue</th><th class="num">VaR 99.5%</th><th class="num">TVaR 99.5%</th></tr></thead><tbody>` +
       D.bio.grid.map(g => `<tr><td class="num">${g.alpha}</td><td class="num">${pct(g.attribution)}</td><td class="num">${money(g.limit)}</td>
         <td class="num">${money(g.el)}</td><td class="num">${pct(g.share_of_liability)}</td><td class="num">${pct(g.premium_share_revenue, 2)}</td>

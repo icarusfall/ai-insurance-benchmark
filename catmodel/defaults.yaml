@@ -15,7 +15,13 @@ perils:
         the annual chance of a human-caused epidemic of that size at 0.3% today, 1.25–1.5% with AI uplift, 0.4% with
         safeguards; the AI-attributable increment runs from about 0.1% (safeguards) to 1.2% (none).
       sources: [fri_llm_biorisk_2025]
-    xm: {central: 1000, basis: "Event threshold of $1tn, matching FRI's damage threshold."}
+    xm:
+      central: 1000
+      basis: >-
+        Event threshold of $1tn. FRI counts epidemics that kill at least 100,000 people or cause $1tn of damage; at
+        American values of a statistical life the two are about the same size. The rate above counts events of at
+        least this size, so move the two together.
+      sources: [fri_llm_biorisk_2025]
     alpha:
       low: 0.6
       central: 0.7
@@ -123,7 +129,13 @@ members:
     sources: [anthropic_s1_revenue_2026, openai_revenue_ft_2026]
 
 structure:
-  per_event_limit: {central: 1.0, basis: "AIUC's suggested minimum cover per member.", sources: [aiuc_mutual_proposal]}
+  per_event_limit:
+    central: 1.0
+    basis: >-
+      AIUC's suggested minimum cover per lab: the least that justifies serious technical underwriting, not a market
+      price. For scale, the largest standalone AI policy on offer is $25m (Armilla) and primary nuclear cover is $500m
+      a site. Any carrier writes the same two limits, per event and per year.
+    sources: [aiuc_mutual_proposal, armilla_ai_liability_limit, price_anderson]
   annual_aggregate: {central: 2.0, basis: "Per member, all perils. Judgement."}
   paid_in_capital: {central: 5.0, basis: "AIUC expects 'billions'.", sources: [aiuc_mutual_proposal]}
   callable_per_member: {central: 1.0, basis: "Retrospective assessment per member per year, as in Price-Anderson's second layer.", sources: [price_anderson]}
