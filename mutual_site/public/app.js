@@ -275,12 +275,31 @@
     box.innerHTML = svg + "</svg>";
   }
 
+  // one unit ($m) for every money column, so the gap between columns shows in the digit count
+  const millions = v => {
+    const m = v * 1000;
+    if (!isFinite(m)) return "∞";
+    if (m === 0) return "0";
+    if (m < 0.1) return "&lt;0.1";
+    return m.toLocaleString("en", { maximumFractionDigits: m >= 10 ? 0 : 1, minimumFractionDigits: m >= 10 ? 0 : 1 });
+  };
+
   function renderPerilTable(r) {
-    const total = r.gross || 1;
-    $("#peril-table").innerHTML = `<thead><tr><th>Peril, expected per year</th><th class="num">Harm in the world</th><th class="num">Insurable lab liability</th><th class="num">Mutual pays</th><th class="num">Share of claims</th></tr></thead><tbody>` +
-      S.perils.map(p => { const b = r.byPeril[p.name]; return `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(${PERIL_COLOURS[p.name]});margin-right:6px"></i>${esc(p.label)}</td>
-        <td class="num">${money(b.harm)}</td><td class="num">${money(b.liable)}</td><td class="num">${money(b.claims)}</td><td class="num">${pct(b.claims / total, 0)}</td></tr>`; }).join("") +
-      `<tr><td><b>All</b></td><td class="num"><b>${money(r.harm)}</b></td><td class="num"><b>${money(r.liable)}</b></td><td class="num"><b>${money(r.gross)}</b></td><td class="num">100%</td></tr></tbody>`;
+    // rows give exact expected harm and liability, but r.harm and r.liable are simulated means, so the total is
+    // the sum of the rows to make the columns add up
+    const parts = S.perils.map(p => r.byPeril[p.name]), sum = k => parts.reduce((t, b) => t + b[k], 0);
+    const all = { harm: sum("harm"), liable: sum("liable"), claims: r.gross };
+    const harmTotal = all.harm || 1, claimTotal = r.gross || 1;
+    const row = (label, b, bold) => {
+      const w = s => bold ? `<b>${s}</b>` : s;
+      return `<tr><td>${label}</td><td class="num">${w(millions(b.harm))}</td><td class="num">${pct(b.harm / harmTotal)}</td>
+        <td class="num">${w(millions(b.liable))}</td><td class="num">${w(millions(b.claims))}</td><td class="num">${pct(b.claims / claimTotal)}</td>
+        <td class="num">${b.harm > 0 ? pct(b.claims / b.harm) : "–"}</td></tr>`;
+    };
+    $("#peril-table").innerHTML = `<thead><tr><th>Peril, expected per year</th><th class="num">Harm in the world, $m</th><th class="num">Share of all harm</th>` +
+      `<th class="num">Insurable lab liability, $m</th><th class="num">Mutual pays, $m</th><th class="num">Share of all claims</th><th class="num">Mutual pays as share of harm</th></tr></thead><tbody>` +
+      S.perils.map(p => row(`<i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(${PERIL_COLOURS[p.name]});margin-right:6px"></i>${esc(p.label)}`, r.byPeril[p.name])).join("") +
+      row("<b>All</b>", all, true) + `</tbody>`;
   }
 
   function renderCapital(r) {
