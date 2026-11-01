@@ -39,7 +39,7 @@
         return `Half of events cost more than ${money(t.quantile(0.5))}; one in ten more than ${money(t.quantile(0.9))}; one in a hundred more than ${money(t.quantile(0.99))}.`; } },
     { key: "attribution", label: "Share of the harm pinned on the lab", scale: "log", min: 0.001, max: 1, fmt: v => pct(v) },
     { key: "insurable", label: "Share of that which is insurable", scale: "lin", min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0) },
-    { key: "common_mode", label: "Chance all members' models are to blame", scale: "lin", min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0) },
+    { key: "common_mode", label: "Chance all labs' models are to blame", scale: "lin", min: 0, max: 1, step: 0.01, fmt: v => pct(v, 0) },
   ];
   const GROUPS = [
     { title: "The cover", section: "structure", levers: [
@@ -165,6 +165,11 @@
     const r = M.evaluate(S, y);
     r.grossSorted = M.sorted(r.stack.claims);
     r.liableSorted = M.sorted(y.liable);
+    // exact expected harm and liability (rate × mean severity, summed over perils); r.harm and r.liable are simulated
+    // means, which fat tails make noisy, so the tiles, funnel and table use these instead
+    const parts = S.perils.map(p => r.byPeril[p.name]);
+    r.harmExact = parts.reduce((t, b) => t + b.harm, 0);
+    r.liableExact = parts.reduce((t, b) => t + b.liable, 0);
     last = r;
     renderTiles(r); renderEP(r); renderFunnel(r); renderPerilTable(r); renderCapital(r); renderBond(); renderTrajectory(); renderFrequency(); renderLegal();
     syncLevers();
@@ -183,10 +188,10 @@
     $("#tiles").innerHTML =
       tile("Premium per lab", money(prem), `${pct(share)} of ${money(S.revenue)} revenue`,
            share < 0.01 ? ["good", "a rounding error"] : share < 0.05 ? ["warn", "noticeable"] : ["bad", "a large bill"]) +
-      tile("Share of expected harm the cover pays", pct(r.gross / r.harm), `of ${money(r.harm)} a year in the world`) +
+      tile("Share of expected harm the cover pays", pct(r.gross / r.harmExact), `of ${money(r.harmExact)} a year in the world`) +
       tile("Solvency II ratio", pct(s2.solvency_ratio, 0), `SCR ${money(s2.scr)} · own funds ${money(s2.eligible_own_funds_scr)}`, s2s) +
       tile("US RBC ratio, as written", pct(u.rbc_ratio, 0), `${pct(u.rbc_ratio_with_cat, 0)} if the 1-in-100 AI loss were charged like a hurricane`, uss) +
-      tile("Years members get a call", pct(r.p_calls), "premium and paid-in capital not enough") +
+      tile("Years labs are asked for more", pct(r.p_calls), "premium and paid-in capital not enough") +
       tile("Years claims go unpaid", pct(r.p_unpaid), r.p_unpaid ? `average shortfall ${money(r.mean_unpaid)}` : "never, in 100,000 years",
            r.p_unpaid === 0 ? ["good", "always paid"] : r.p_unpaid < 0.002 ? ["warn", "rarely short"] : ["bad", "often short"]);
   }
@@ -231,7 +236,7 @@
     $("#ep-note").innerHTML = `<b>Why the line flattens.</b> The cover, not the capital, sets the ceiling. One event costs the carrier at most ` +
       `${money(oneEvent)}${common ? ` (${S.members} labs' ${money(perLab)} limits, when every lab's model is to blame)` : ""}, and a year at most ` +
       `${money1(oneYear)}. It holds ${money1(withCalls)}${S.callable_per_member > 0 ? " with member calls" : ""}, so it ${withCalls >= oneYear ? "can always pay" : "can run out in the worst years"}. ` +
-      `Anything above the limits stays with the labs: on average ${pct(1 - r.gross / r.liable)} of what courts would make them pay is uninsured, ` +
+      `Anything above the limits stays with the labs: on average ${pct(1 - r.gross / r.liableExact)} of what courts would make them pay is uninsured, ` +
       `and in a 1-in-1,000 year their liability is ${money(lia1000)} against ${money1(oneYear)} of cover. The insurer's stake ends where its limits end.`;
     $("#ep-legend").innerHTML = `<span><i style="background:var(--s1)"></i>carrier's claims</span>` +
       (layered ? `<span><i style="background:var(--s2)"></i>after reinsurance and government</span>` : "") +
@@ -265,13 +270,13 @@
     $("#funnel-scale-note").textContent = log
       ? "Log scale: each step down is a fall of orders of magnitude."
       : "Linear scale: bars at true size, so the smaller ones all but vanish.";
-    const rows = [["Harm in the world", r.harm], ["Insurable liability pinned on labs", r.liable], ["Paid by the insurer", r.gross]];
+    const rows = [["Harm in the world", r.harmExact], ["Insurable liability pinned on labs", r.liableExact], ["Paid by the insurer", r.gross]];
     if (S.reinsurance_limit > 0 || S.government_share > 0) rows.push(["Kept by the insurer after layers", r.net]);
     const box = $("#funnel"), W = Math.max(box.clientWidth, 280), narrow = W < 520;
     const rowH = narrow ? 44 : 30, lw = narrow ? 0 : Math.min(250, W * 0.45), H = rows.length * rowH + 6;
-    const lo = 1e-4, hi = Math.max(r.harm, 1) * 1.5;
+    const lo = 1e-4, hi = Math.max(r.harmExact, 1) * 1.5;
     const X = log ? v => (W - lw - 70) * Math.log(Math.max(v, lo) / lo) / Math.log(hi / lo)
-                  : v => (W - lw - 70) * Math.max(v, 0) / Math.max(r.harm, 1e-9);
+                  : v => (W - lw - 70) * Math.max(v, 0) / Math.max(r.harmExact, 1e-9);
     let svg = `<svg width="${W}" height="${H}" role="img" aria-label="expected harm from world to mutual">`;
     rows.forEach(([label, v], i) => {
       const y = i * rowH + 4, w = Math.max(X(v), 2), by = narrow ? y + 18 : y + 4;
@@ -291,10 +296,7 @@
   };
 
   function renderPerilTable(r) {
-    // rows give exact expected harm and liability, but r.harm and r.liable are simulated means, so the total is
-    // the sum of the rows to make the columns add up
-    const parts = S.perils.map(p => r.byPeril[p.name]), sum = k => parts.reduce((t, b) => t + b[k], 0);
-    const all = { harm: sum("harm"), liable: sum("liable"), claims: r.gross };
+    const all = { harm: r.harmExact, liable: r.liableExact, claims: r.gross };
     const harmTotal = all.harm || 1, claimTotal = r.gross || 1;
     const row = (label, b, bold) => {
       const w = s => bold ? `<b>${s}</b>` : s;
@@ -360,7 +362,7 @@
     { key: "ai2027_pace", label: "AI 2027: pace of reality", scale: "lin", min: 0.3, max: 1.2, step: 0.05, fmt: v => `${Math.round(v * 100)}% of AI 2027` },
     { key: "plateau_ceiling_hours", label: "Plateau: ceiling", scale: "log", min: 20, max: 10000, fmt: hours },
     { key: "stop_hours", label: "Stop the model at a horizon of", scale: "log", min: 50, max: 100000, fmt: hours },
-    { key: "revenue_growth", label: "Members' revenue growth", scale: "lin", min: 1, max: 7, step: 0.25, fmt: v => `${v}× a year` },
+    { key: "revenue_growth", label: "Labs' revenue growth", scale: "lin", min: 1, max: 7, step: 0.25, fmt: v => `${v}× a year` },
   ];
   let C = M.loadCapability(D.defaults, level), traj = C.trajectory;
 

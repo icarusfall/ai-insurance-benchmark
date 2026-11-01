@@ -15,9 +15,9 @@ from .report import run
 
 N_YEARS, SEED = 60_000, 3
 PERIL_FIELDS = {"rate": "how often", "alpha": "tail index", "attribution": "share pinned on the lab",
-                "insurable": "share insurable", "common_mode": "all members to blame"}
+                "insurable": "share insurable", "common_mode": "all labs to blame"}
 SHORT = {"bio_misuse": "Bio", "cyber_misuse": "Cyber", "agent_runaway": "Agents"}
-SETTINGS = {"revenue": "Members' revenue", "cost_of_capital": "Return required on capital",
+SETTINGS = {"revenue": "Labs' revenue", "cost_of_capital": "Return required on capital",
             "catbond_multiple": "Reinsurance price"}
 SCALED = {"per_event_limit": "Cover each lab buys, per event", "annual_aggregate": "Cover each lab buys, per year",
           "paid_in_capital": "Carrier's paid-in capital", "callable_per_member": "Callable from each lab (a mutual only)"}
