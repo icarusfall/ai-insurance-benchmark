@@ -260,8 +260,8 @@
 
   // where expected harm goes: log bars
   function renderFunnel(r) {
-    const rows = [["Harm in the world", r.harm], ["Insurable liability pinned on labs", r.liable], ["Paid by the mutual", r.gross]];
-    if (S.reinsurance_limit > 0 || S.government_share > 0) rows.push(["Kept by the mutual after layers", r.net]);
+    const rows = [["Harm in the world", r.harm], ["Insurable liability pinned on labs", r.liable], ["Paid by the insurer", r.gross]];
+    if (S.reinsurance_limit > 0 || S.government_share > 0) rows.push(["Kept by the insurer after layers", r.net]);
     const box = $("#funnel"), W = Math.max(box.clientWidth, 280), narrow = W < 520;
     const rowH = narrow ? 44 : 30, lw = narrow ? 0 : Math.min(250, W * 0.45), H = rows.length * rowH + 6;
     const lo = 1e-4, hi = Math.max(r.harm, 1) * 1.5;
@@ -297,7 +297,7 @@
         <td class="num">${b.harm > 0 ? pct(b.claims / b.harm) : "–"}</td></tr>`;
     };
     $("#peril-table").innerHTML = `<thead><tr><th>Peril, expected per year</th><th class="num">Harm in the world, $m</th><th class="num">Share of all harm</th>` +
-      `<th class="num">Insurable lab liability, $m</th><th class="num">Mutual pays, $m</th><th class="num">Share of all claims</th><th class="num">Mutual pays as share of harm</th></tr></thead><tbody>` +
+      `<th class="num">Insurable lab liability, $m</th><th class="num">Insurer pays, $m</th><th class="num">Share of all claims</th><th class="num">Insurer pays as share of harm</th></tr></thead><tbody>` +
       S.perils.map(p => row(`<i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(${PERIL_COLOURS[p.name]});margin-right:6px"></i>${esc(p.label)}`, r.byPeril[p.name])).join("") +
       row("<b>All</b>", all, true) + `</tbody>`;
   }
