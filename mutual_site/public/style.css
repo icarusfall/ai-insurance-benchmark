@@ -55,6 +55,8 @@ section.chapter > p { max-width: 760px; }
   padding: 6px 14px; border-radius: 999px; cursor: pointer;
 }
 .presets button[aria-pressed="true"], .tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.presets.scale-toggle { margin: 4px 0 10px; gap: 6px; }
+.presets.scale-toggle button { font-size: 13px; padding: 4px 12px; }
 .board { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 24px; align-items: start; }
 .levers { display: flex; flex-direction: column; gap: 14px; }
 .levers fieldset { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 10px 14px 12px; margin: 0; }

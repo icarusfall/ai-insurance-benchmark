@@ -50,7 +50,11 @@
       </figure>
       <figure class="chart">
         <div class="title">Where the expected harm goes</div>
-        <div class="sub">Expected harm per year, from the world down to what the insurer pays. Log scale: each step is a fall of orders of magnitude.</div>
+        <div class="sub">Expected harm per year, from the world down to what the insurer pays. <span id="funnel-scale-note"></span></div>
+        <div class="presets scale-toggle" id="funnel-scale" role="group" aria-label="Bar scale">
+          <button type="button" data-scale="log" aria-pressed="true">Log scale</button>
+          <button type="button" data-scale="linear" aria-pressed="false">Linear scale</button>
+        </div>
         <div id="funnel"></div>
       </figure>
       <div class="table-wrap"><table id="peril-table"></table></div>

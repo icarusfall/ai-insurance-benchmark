@@ -258,14 +258,20 @@
     return out;
   }
 
-  // where expected harm goes: log bars
+  // where expected harm goes: log bars by default, linear to show true proportions
+  let funnelScale = "log";
   function renderFunnel(r) {
+    const log = funnelScale === "log";
+    $("#funnel-scale-note").textContent = log
+      ? "Log scale: each step down is a fall of orders of magnitude."
+      : "Linear scale: bars at true size, so the smaller ones all but vanish.";
     const rows = [["Harm in the world", r.harm], ["Insurable liability pinned on labs", r.liable], ["Paid by the insurer", r.gross]];
     if (S.reinsurance_limit > 0 || S.government_share > 0) rows.push(["Kept by the insurer after layers", r.net]);
     const box = $("#funnel"), W = Math.max(box.clientWidth, 280), narrow = W < 520;
     const rowH = narrow ? 44 : 30, lw = narrow ? 0 : Math.min(250, W * 0.45), H = rows.length * rowH + 6;
     const lo = 1e-4, hi = Math.max(r.harm, 1) * 1.5;
-    const X = v => (W - lw - 70) * Math.log(Math.max(v, lo) / lo) / Math.log(hi / lo);
+    const X = log ? v => (W - lw - 70) * Math.log(Math.max(v, lo) / lo) / Math.log(hi / lo)
+                  : v => (W - lw - 70) * Math.max(v, 0) / Math.max(r.harm, 1e-9);
     let svg = `<svg width="${W}" height="${H}" role="img" aria-label="expected harm from world to mutual">`;
     rows.forEach(([label, v], i) => {
       const y = i * rowH + 4, w = Math.max(X(v), 2), by = narrow ? y + 18 : y + 4;
@@ -684,5 +690,10 @@
   renderChecks();
   renderSources();
   recompute();
+  document.querySelectorAll("#funnel-scale button").forEach(b => b.addEventListener("click", () => {
+    funnelScale = b.dataset.scale;
+    document.querySelectorAll("#funnel-scale button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    if (last) renderFunnel(last);
+  }));
   window.addEventListener("resize", () => { if (last) { renderEP(last); renderFunnel(last); renderTrajChart(); } renderTornado(); });
 })();
