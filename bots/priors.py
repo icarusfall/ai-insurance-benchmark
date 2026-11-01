@@ -6,6 +6,7 @@ per-sector bias and weaker risk-factor coefficients.
 import math
 
 from engine import loss
+from engine import perils
 from engine import params as P
 
 FREQ_BIAS = {"medical": 0.85, "finance": 1.10, "logistics": 0.90, "customer_service": 1.20,
@@ -29,6 +30,13 @@ def el_annual(app: dict, limit: float, retention: float, upstream_excl: bool = F
     if misuse_excl:
         el *= 1 - EXCL_DISCOUNT["misuse_excl"]
     return el
+
+
+def cat_el_annual(app: dict, limit: float, retention: float, horizon: float) -> float:
+    """Expected catastrophe loss over a year at the published capability, from the textbook peril model (v0.4).
+    An undisclosed vendor counts as an average one."""
+    prov = P.PROVIDER_NAMES.index(app["provider"]) if app.get("provider") in P.PROVIDER_NAMES else None
+    return 4 * perils.expected_quarter(prov, app["size_band"], round(limit, 2), round(retention, 3), horizon)
 
 
 def quote_limit(app: dict, own: dict, treaty) -> float:

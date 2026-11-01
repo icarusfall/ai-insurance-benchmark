@@ -16,7 +16,7 @@ MARGIN = 0.35   # the reference's profit margin; set by the calibration sweep (s
 class ActuaryBot(Bot):
     name = "actuary"
 
-    def __init__(self, margin: float = None, cat_load: float = 0.25, cred_k: float = 6.0, maturity: int = 8,
+    def __init__(self, margin: float = None, cat_load: float = 0.5, cred_k: float = 6.0, maturity: int = 8,
                  div_buffer: float = 10.0):
         self.margin = MARGIN if margin is None else margin
         self.cat_load, self.cred_k, self.maturity = cat_load, cred_k, maturity
@@ -49,10 +49,12 @@ class ActuaryBot(Bot):
                 self.expo[t][sector] += raw / P.POLICY_TERM
 
     # ---- pricing
-    def price(self, app, q, retreat=1.0, limit=None):
-        raw = priors.el_annual(app, app["ideal_limit"] if limit is None else limit, app["default_retention"])
+    def price(self, app, q, retreat=1.0, limit=None, horizon=P.HORIZON_START):
+        lim = app["ideal_limit"] if limit is None else limit
+        raw = priors.el_annual(app, lim, app["default_retention"])
         self.quoted[app["id"]] = (app["sector"], raw)
-        gross = raw * self.mult(app["sector"], q) * (1 + self.cat_load)
+        cat = priors.cat_el_annual(app, lim, app["default_retention"], horizon)   # v0.4: priced explicitly, loaded
+        gross = raw * self.mult(app["sector"], q) + cat * (1 + self.cat_load)
         return gross / (1 - P.EXPENSE - self.margin) * retreat
 
     def act(self, view):
@@ -71,7 +73,7 @@ class ActuaryBot(Bot):
                 lim = priors.quote_limit(app, own, treaty)
                 if lim <= 0:
                     continue
-                prem = self.price(app, q, retreat, lim)
+                prem = self.price(app, q, retreat, lim, view["public"]["horizon_hours"])
                 if running > cap:
                     prem *= 1.6
                 else:

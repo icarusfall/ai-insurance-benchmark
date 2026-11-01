@@ -51,7 +51,8 @@ HOW THE WORLD WORKS
 - Single-risk rule: for any one policy, the part of the limit you keep for yourself (the limit, minus whatever part of it your reinsurance treaty covers above its attachment) must not exceed {P.NET_LINE_MAX:.0%} of your audited equity when the policy binds. Quotes that break it are void. You may not offer a limit above the client's ideal limit. The briefing shows your maximum net line and the largest limit your current treaty allows.
 - You may raise capital from shareholders (lifetime cap {P.CAPITAL_RAISE_MAX:.0f}x starting equity) and may pay dividends. {R["dividends"]}
 - Reinsurance: a per-claim excess-of-loss treaty. You choose an attachment and a limit; the reinsurer pays the part of each covered claim above the attachment, up to the limit. The quarterly price is quoted in your briefing for a grid of options and rises after market-wide losses.
-- Events happen: vendor defects that hit every client of that vendor, court rulings, regulation, rare catastrophes, and false alarms. The news is real within the game, but not every scary headline produces claims. Base rates drift slowly.
+- Events happen: vendor defects that hit every client of that vendor, court rulings, regulation, catastrophes, and false alarms. The news is real within the game, but not every scary headline produces claims. Base rates drift slowly.
+- Catastrophes come in two insured kinds: AI-enabled cyber attacks by criminals, and customers' own agents running away. Their sizes are fat-tailed: most are modest, a few are enormous, and how often they happen is itself uncertain. A catastrophe is usually traced to one vendor's models, and that vendor's clients take most of the claims; sometimes a technique works on every vendor's models. Courts often find your client less to blame for a criminal's attack than for its own agents. AI-assisted epidemics are excluded by every wording and produce no claims. An annual capability report gives the length of task (in hours of human work) the best agents can complete; forecasters expect catastrophes to become more frequent as that grows, up to a point.
 - Competitors are other companies, anonymised. Some are scripted, some are other AI models. The industry rate-on-line (premium divided by limit) by sector from last quarter is public.
 
 HOW YOU WORK
@@ -107,6 +108,9 @@ def build_briefing(view: dict, state: dict) -> str:
         L.append(f"  Q{r['q'] + 1}: {r['premium_written']} | {r['claims_reported']}, {r['claims_reported_amount']} | {r['paid']}")
     L.append("")
     L.append("MARKET")
+    h = view["public"]["horizon_hours"]
+    L.append("  AI capability, last annual report: " + (f"tasks of {h:,.0f} hours of human work" if h <= 10_000
+                                                         else "beyond measurement (over 10,000 hours of human work)"))
     rol = view["public"]["rol_by_sector_prev"]
     L.append("  rate on line (premium/limit) by sector, last quarter: " +
              (", ".join(f"{k} {v:.4f}" for k, v in sorted(rol.items())) if rol else "no data yet"))
@@ -125,7 +129,7 @@ def build_briefing(view: dict, state: dict) -> str:
              f"any you leave undecided are paid in full)")
     for c in view["claims"]:
         L.append(f"  claim {c['id']}: {c['sector']}, occurred Q{c['occ_q'] + 1}, covered ${c['covered']}, "
-                 f"murkiness ~{c['murk_obs']}")
+                 f"murkiness ~{c['murk_obs']}" + (f", catastrophe: {c['cause']}" if c.get("cause") else ""))
     L.append("")
     apps = view["applicants"]
     ren = sum(1 for a in apps if a["renewal"])

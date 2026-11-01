@@ -36,7 +36,7 @@ def params() -> dict:
             "SETTLE_ACCEPT", "CAT_RATE", "RULING_RATE", "FALSE_ALARM_RATE", "LEVY_CAP_ANNUAL", "REINS_BASE_LOAD",
             "LADDER", "REGIME",
             "COURT_DELAY", "SIZE_MULT", "SIZE_WORDS", "PROVIDER_NAMES"]
-    out = {k: getattr(P, k) for k in keys}
+    out = {k: getattr(P, k, None) for k in keys}   # CAT_RATE is v0.3 only
     out["SECTORS"] = P.SECTORS
     out["ACTUARY_MARGIN"] = bots.actuary.MARGIN
     return out

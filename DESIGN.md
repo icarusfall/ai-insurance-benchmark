@@ -128,6 +128,7 @@ Each policy picks from: misuse-by-third-party exclusion; catastrophe/pandemic ca
 
 Same timeline for all insurers within a seed. Types:
 - **Catastrophes**: AI-assisted engineered pathogen; trading-agent cascade; mass impersonation incident; infrastructure outage. Rare, enormous, legally unresolved at the time.
+  - *v0.4*: catastrophes come from the `catmodel/` perils (`engine/perils.py`, `PERILS` in `engine/params.py`). AI-enabled cyber attacks and clients' runaway agents each have a gamma-mixed rate (redrawn yearly), a truncated Pareto event size, and a chance of being "common mode" (every vendor's models to blame); otherwise one vendor's clients take most of the hits. Cyber catastrophes are third-party misuse: murkier, caught by the misuse exclusion, and courts find the client liable less often (attribution 0.6). Engineered epidemics are news only, since catmodel finds them uninsurable. Rates rise with an annual capability report (METR-style time horizon, one of three paths per seed), capped at 3x for cyber and 4x for agents.
 - **Upstream flaws**: a provider ships a defect; all its users generate claims for ~2 quarters.
 - **Regulatory**: mandatory cover introduced (demand up, prices crash); liability safe harbour (claims down); mandatory minimum wording.
 - **Competitor collapse**: orphaned clients flood the market.

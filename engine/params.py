@@ -1,6 +1,7 @@
 """All tunable constants. Everything here is a [tune] placeholder until calibrated (see DESIGN.md)."""
 
-BASE_VERSION = "0.3.0-dev"   # 0.3: graded capital ladder, dividend rule, guarantee levy cap, regime presets
+BASE_VERSION = "0.4.0-dev"   # 0.4: catastrophes from catmodel perils (fat tails, vendor concentration, attribution,
+                             #      capability growth). 0.3: graded capital ladder, dividend rule, levy cap, regimes
 ENV_VERSION = BASE_VERSION   # gains a "+uk" suffix under set_regime("uk")
 
 Q = 40                      # quarters
@@ -49,12 +50,41 @@ PROVIDER_NAMES = ["Gorbly", "Yottabrain", "Mindful Systems", "ChadGPT",
 PROVIDER_SHARES = [0.30, 0.22, 0.18, 0.12, 0.10, 0.08]
 
 # event rates per quarter (events only after quarter 3)
-CAT_RATE = 0.03
 RULING_RATE = 0.06
 MANDATE_RATE = 0.02
 SAFE_HARBOUR_RATE = 0.015
 FALSE_ALARM_RATE = 0.06
 DRIFT_SIGMA = 0.04
+
+# --------------------------------------------------------------------------- catastrophes (v0.4, from catmodel/)
+# Each peril follows catmodel/defaults.yaml in shape: a gamma-mixed Poisson rate (redrawn each game year), a truncated
+# Pareto event size S (1 to cap, tail index alpha), a chance the event is "common mode" (every vendor's models to blame)
+# and otherwise one vendor's, a legal attribution factor on liability, and rates that rise with AI capability as
+# min(cap_mult, (horizon / horizon at the start) ** elasticity). Rates are per quarter at the start of the game.
+# A client's chance of being hit by an event is min(HIT_MAX, hit * sqrt(S)) times its vendor's concentration factor,
+# and each hit's gross loss is the v0.3 per-client catastrophe loss times sqrt(S), so an event's total loss scales
+# with S. The rates, hits and caps are set for the game (calibrated with the bots); tail indices, rate uncertainty,
+# common mode and elasticities are catmodel's central values except where noted.
+PERILS = {
+    "cyber_misuse": dict(label="AI-enabled cyber attack by a third party", rate=0.02, alpha=1.1, cap=30.0, hit=0.0035,
+                         rate_cv=0.5, common_mode=0.2, attribution=0.6, misuse=True, insured=True,
+                         elasticity=0.3, cap_mult=3.0),      # catmodel cap_mult 5; attribution: superseding cause
+    "agent_runaway": dict(label="the client's own agents ran away", rate=0.03, alpha=1.0, cap=20.0, hit=0.0016,
+                          rate_cv=0.5, common_mode=0.0, attribution=1.0, misuse=False, insured=True,
+                          elasticity=0.5, cap_mult=4.0),     # catmodel elasticity 1.0, cap_mult 50: unplayable in a game
+    "bio_misuse": dict(label="AI-assisted engineered epidemic", rate=0.00125, alpha=0.7, cap=100.0, hit=0.0,
+                       rate_cv=1.0, common_mode=0.1, attribution=0.0, misuse=True, insured=False,
+                       elasticity=0.15, cap_mult=1.5),       # news only: catmodel finds it uninsurable; wordings exclude it
+}
+HIT_MAX = 0.25
+CONC_IN = 4.0               # a one-vendor event: that vendor's clients are hit this many times more often than average;
+                            # other clients less, so that across the market the average is unchanged
+
+# AI capability: METR-style 50% time horizon in hours. Each seed draws one path (catmodel/trajectory.py).
+HORIZON_START = 50.0
+CAPABILITY_PATHS = {"plateau": 1 / 3, "metr_long_run": 1 / 3, "metr_2023": 1 / 3}
+DOUBLING_Q = {"metr_2023": 128.7 / 91.3, "metr_long_run": 187.8 / 91.3}   # quarters per doubling
+PLATEAU_CEILING = 167.0     # hours; the plateau starts at the metr_2023 slope and flattens towards this
 
 # arrivals
 INITIAL_CLIENTS = 120
@@ -150,6 +180,8 @@ def set_regime(name: str) -> None:
     from . import loss                      # severity caches depend on SEVERITY_MULT
     loss.layer_expectation.cache_clear()
     loss.cat_layer_expectation.cache_clear()
+    from . import perils
+    perils.event_layer_expectation.cache_clear()
 
 
 _US_DEFAULTS = {k: globals()[k] for k in set().union(*REGIMES.values())}

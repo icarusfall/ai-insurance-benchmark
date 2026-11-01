@@ -73,7 +73,7 @@ mutual_site/         second static site: own Railway service, root dir mutual_si
 engine/ agents/ website/ ...   the benchmark, unchanged
 ```
 
-- **The benchmark stays at v0.3.** Later, the benchmark's catastrophe process switches to `catmodel` under a new ENV_VERSION (v0.4), so waves 4 and 5 stay comparable among themselves.
+- **Benchmark v0.4 (2026-11-01).** The benchmark's catastrophe process now follows `catmodel` (perils, fat tails, vendor concentration, attribution, capability growth) under ENV_VERSION 0.4.0-dev. Waves 4 and 5 stay v0.3 and comparable among themselves; v0.4 runs need a fresh wave.
 - **The browser needs live sliders.**
   - Python is the reference and is tested.
   - A small JavaScript port runs in the page.

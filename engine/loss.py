@@ -44,16 +44,16 @@ def layer_expectation(sector: str, size: int, limit: float, retention: float,
     return (1 - P.TAIL_P) * e_base + P.TAIL_P * e_tail
 
 
-# catastrophe gross loss = CAT_SCALE_PER_SIZE * SIZE_MULT * exp(-2.65 + 0.8 z) * sev_mult, sev_mult ~ lognormal(0, 0.3)
+# catastrophe gross loss on a hit client = CAT_SCALE_PER_SIZE * SIZE_MULT * exp(-2.65 + 0.8 z) * sev, where sev is the
+# square root of the event's size (engine/perils.py)
 CAT_MU = -2.65
-CAT_SIGMA = math.sqrt(0.8 ** 2 + 0.3 ** 2)
-CAT_HIT_MEAN = (0.012 + 0.03) / 2          # mean of the per-event hit probability (world._make_events)
+CAT_SIGMA = 0.8
 
 
 @lru_cache(maxsize=None)
-def cat_layer_expectation(size: int, limit: float, retention: float) -> float:
+def cat_layer_expectation(size: int, limit: float, retention: float, sev: float = 1.0) -> float:
     """E[min(max(X - retention, 0), limit)] for one catastrophe hit on a client of this size."""
-    base = np.exp(math.log(P.CAT_SCALE_PER_SIZE * P.SIZE_MULT[size]) + CAT_MU + CAT_SIGMA * _ZG)
+    base = np.exp(math.log(P.CAT_SCALE_PER_SIZE * P.SIZE_MULT[size] * sev) + CAT_MU + CAT_SIGMA * _ZG)
     return float(np.minimum(np.maximum(base - retention, 0.0), limit).mean())
 
 

@@ -54,6 +54,8 @@ class Claim:
     bad_faith: bool = False
     cede: float = 0.0
     fee: float = 0.0
+    peril: str = None                 # catastrophe claims (v0.4): which peril
+    attribution: float = 1.0          # scales the chance a court finds the insured liable
 
 
 @dataclass
@@ -160,7 +162,7 @@ class Market:
             cl = self.claims[cid]
             if cl.status == "court":
                 load = 1 + P.INTEREST_LOADING + P.CLAIMANT_COSTS + (P.BAD_FAITH_LOADING if cl.bad_faith else 0.0)
-                t += cl.covered * (1 - cl.cede) * self.world.liability_p(self.q, cl.sector, cl.murk) * load
+                t += cl.covered * (1 - cl.cede) * self.world.liability_p(self.q, cl.sector, cl.murk, cl.attribution) * load
             else:
                 t += cl.covered * (1 - cl.cede) * 0.9
         return t
@@ -255,7 +257,8 @@ class Market:
             cl = self.claims[cid]
             if cl.insurer == me:
                 claims.append(dict(id=cl.id, client=cl.client, sector=cl.sector, occ_q=cl.occ_q,
-                                   covered=round(cl.covered, 4), murk_obs=round(cl.murk_obs, 2), age=q - cl.occ_q))
+                                   covered=round(cl.covered, 4), murk_obs=round(cl.murk_obs, 2), age=q - cl.occ_q,
+                                   cause=P.PERILS[cl.peril]["label"] if cl.peril else None))
         shares = {}
         tot = sum(self.npw4(i) for i in self.ins.values() if not i.insolvent) or 1.0
         for n, i in self.ins.items():
@@ -287,7 +290,12 @@ class Market:
             reinsurance_quotes=[dict(attachment=a, limit=l, quarterly_cost=round(float(self.reins_quote(me, a, l)), 3))
                                 for a in (0.5, 1, 2, 5, 10) for l in (10, 25, 50)],
             public=dict(rol_by_sector_prev=dict(self.rol_prev), rol_index_prev=self.rol_index_prev,
-                        insurers=shares))
+                        insurers=shares, horizon_hours=self.public_horizon()))
+
+    def public_horizon(self) -> float:
+        """AI capability as last published (the annual report each fourth quarter; the starting level before that)."""
+        last = max((e.q for e in self.world.events if e.kind == "capability" and e.q <= self.q), default=None)
+        return round(float(self.world.horizon[last]), 1) if last is not None else P.HORIZON_START
 
     # ----------------------------------------------------------------- resolve
     def resolve(self, actions: dict) -> None:
@@ -370,7 +378,7 @@ class Market:
 
     def _decide(self, cl: Claim, d: dict):
         ins = self.ins[cl.insurer]
-        p_l = self.world.liability_p(self.q, cl.sector, cl.murk)
+        p_l = self.world.liability_p(self.q, cl.sector, cl.murk, cl.attribution)
         action = d.get("action", "pay")
         self.open[cl.insurer].discard(cl.id)
         if action == "settle":
@@ -397,7 +405,7 @@ class Market:
 
     def _court(self, cl: Claim):
         ins = self.ins[cl.insurer]
-        p_l = self.world.liability_p(self.q, cl.sector, cl.murk)
+        p_l = self.world.liability_p(self.q, cl.sector, cl.murk, cl.attribution)
         if cl.u_court < p_l:
             self._pay(cl, cl.covered * (1 + P.INTEREST_LOADING + P.CLAIMANT_COSTS
                                         + (P.BAD_FAITH_LOADING if cl.bad_faith else 0)))
@@ -486,7 +494,8 @@ class Market:
                 if cov <= 0:
                     continue
                 cl = Claim(self._next_claim, c.id, pol.id, pol.insurer, c.sector, q, q + inc["lag"], inc["comp"],
-                           inc["gross"], cov, inc["murk"], inc["murk_obs"], inc["u_court"], inc["u_sue"])
+                           inc["gross"], cov, inc["murk"], inc["murk_obs"], inc["u_court"], inc["u_sue"],
+                           peril=inc["peril"], attribution=inc["attribution"])
                 self._next_claim += 1
                 act_q += cov
                 if ins.reins and cov > ins.reins["attachment"]:
