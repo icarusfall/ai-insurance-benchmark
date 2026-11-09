@@ -24,8 +24,8 @@ from runner.benchmark_mode import NPCS, SUBJECT
 OUT = os.path.join(os.path.dirname(__file__), "public", "data.js")
 SEEDS = range(10)
 SAMPLE_SEED = 7
-BATCHES = ("wave4", "wave5")    # LLM waves shown on the Results page and in the transcripts (same environment, same worlds)
-BATCH_LABEL = "waves 4 and 5"
+BATCHES = ("wave4", "wave5", "wave6")    # LLM waves shown on the Results page and in the transcripts (same environment, same worlds)
+BATCH_LABEL = "waves 4 to 6"
 GALLERY = ["actuary", "null", "reckless", "cycle", "random", "deny_all", "no_reins", "timid"]
 
 
@@ -282,6 +282,9 @@ def results(batches=BATCHES) -> dict:
                         path=wealth_path([h["true_eq"] for h in res["history"]], ins.div_q, ins.inj_q, res["insolvent_q"])))
     if len(versions) > 1:
         raise SystemExit(f"batches {batches} mix environment versions {versions}")
+    if versions and P.ENV_VERSION not in versions:
+        raise SystemExit(f"games are {versions} but this engine is {P.ENV_VERSION}: the reference would be re-simulated "
+                         "under the wrong rules. Build results from a checkout of that version (e.g. git worktree at cf65f78)")
     # the reference is re-simulated with today's engine; that is only valid if no scored mechanics changed since
     return dict(batch=BATCH_LABEL, env_version=versions.pop() if versions else None, models=models, reference=ref)
 
