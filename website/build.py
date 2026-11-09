@@ -289,6 +289,45 @@ def results(batches=BATCHES) -> dict:
     return dict(batch=BATCH_LABEL, env_version=versions.pop() if versions else None, models=models, reference=ref)
 
 
+def spend(batches=BATCHES) -> dict:
+    """Where each model's API bill went, per game, from the call logs (the subject's calls only). Each call's billed
+    dollars are split across output, fresh input, cache reads and cache writes in proportion to their list-price cost.
+    Needs no engine, so it can be rebuilt from any checkout."""
+    out = {}
+    for p in _game_files("result.json", batches):
+        with open(p, encoding="utf-8") as f:
+            r = json.load(f)
+        if not r.get("complete"):
+            continue
+        a = dict(usd=0.0, output=0.0, input=0.0, cache_read=0.0, cache_write=0.0, calls=0, out_tokens=0, read_tokens=0,
+                 cached_tokens=0)
+        for line in open(os.path.join(os.path.dirname(p), "calls.jsonl"), encoding="utf-8"):
+            c = json.loads(line)
+            if c.get("bot") != "subject":
+                continue
+            u, pr = c["usage"], c.get("prices", {})
+            parts = {k: (u.get(k) or 0) * pr.get(k, 0) / 1e6 for k in ("output", "input", "cache_read", "cache_write")}
+            tot = sum(parts.values())
+            for k, v in parts.items():
+                a[k] += c["usd"] * v / tot if tot else 0.0
+            a["usd"] += c["usd"]
+            a["calls"] += 1
+            a["out_tokens"] += u.get("output") or 0
+            a["read_tokens"] += sum(u.get(k) or 0 for k in ("input", "cache_read", "cache_write"))
+            a["cached_tokens"] += u.get("cache_read") or 0
+        m = out.setdefault(r["model"], dict(games=0, minutes=0.0, **{k: 0.0 for k in a}))
+        m["games"] += 1
+        m["minutes"] += r["wall_seconds"] / 60
+        for k, v in a.items():
+            m[k] += v
+    for m in out.values():                     # per-game averages
+        n = m.pop("games")
+        for k in list(m):
+            m[k] = round(m[k] / n, 4)
+        m["games"] = n
+    return out
+
+
 def main():
     import sys
     only = sys.argv[sys.argv.index("--only") + 1].split(",") if "--only" in sys.argv else None
@@ -296,7 +335,7 @@ def main():
         txt = open(OUT, encoding="utf-8").read()
         data = json.loads(txt[txt.index("=") + 1:].rstrip().rstrip(";"))
         parts = dict(results=results, turns=llm_turns, llm=llm_excerpts, briefing=briefing, gallery=gallery, dossiers=sample_dossiers,
-                     world=world_summary, lags=lag_histogram, params=params)
+                     world=world_summary, lags=lag_histogram, params=params, spend=spend)
         for k in only:
             data[k] = parts[k]()
         _write(data)
@@ -307,6 +346,7 @@ def main():
     data["llm"] = llm_excerpts() or _existing_llm()
     data["turns"] = llm_turns() or _existing_part("turns")
     data["results"] = results() if os.path.isdir(os.path.join("runs", BATCHES[0])) else _existing_part("results")
+    data["spend"] = spend() or _existing_part("spend")
     _write(data)
 
 

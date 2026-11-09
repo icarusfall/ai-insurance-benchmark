@@ -174,7 +174,80 @@
     if (opts.table !== false) box.appendChild(table([opts.labelName || "", opts.valueName || "Value"], items.map(i => [i.label, (opts.format || fmt)(i.value)])));
   }
 
-  window.Charts = { line, bars, table, fmt };
+  // scatter: [{label, x, y, color, note}] with a log x axis; opts: {xTicks, xFormat, yFormat, yMin, yMax, xName, yName}
+  function scatter(target, pts, opts = {}) {
+    const box = typeof target === "string" ? document.querySelector(target) : target;
+    box.innerHTML = "";
+    const W = 720, H = opts.height || 380, m = { l: 48, r: 24, t: 16, b: 40 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart-svg", role: "img", "aria-label": opts.aria || "scatter chart" }, box);
+    const lx0 = Math.log10(opts.xMin), lx1 = Math.log10(opts.xMax);
+    const yt = niceTicks(opts.yMin ?? 0, opts.yMax ?? Math.max(...pts.map(p => p.y)), 4);
+    const y0 = yt[0], y1 = yt[yt.length - 1];
+    const X = v => m.l + (Math.log10(v) - lx0) / (lx1 - lx0) * (W - m.l - m.r);
+    const Y = v => H - m.b - (v - y0) / (y1 - y0 || 1) * (H - m.t - m.b);
+    const g = el("g", { class: "grid" }, svg);
+    yt.forEach(v => {
+      el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v) }, g);
+      el("text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }, svg).textContent = (opts.yFormat || fmt)(v);
+    });
+    (opts.xTicks || []).forEach(v => {
+      el("line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b }, g);
+      el("text", { x: X(v), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = (opts.xFormat || fmt)(v);
+    });
+    if (opts.xName) el("text", { x: W - m.r, y: H - 4, "text-anchor": "end" }, svg).textContent = opts.xName;
+    // labels: try right, left, above, below; keep the first spot that clears the points and the labels placed so far
+    const boxes = pts.map(p => ({ x0: X(p.x) - 6, x1: X(p.x) + 6, y0: Y(p.y) - 6, y1: Y(p.y) + 6 }));
+    const clash = b => boxes.some(o => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0) || b.x0 < m.l || b.x1 > W - 2 || b.y0 < 0;
+    pts.forEach(p => {
+      const cx = X(p.x), cy = Y(p.y), w = p.label.length * 6.6 + 4;
+      const spots = [[cx + 9, cy + 4, "start"], [cx - 9, cy + 4, "end"], [cx, cy - 10, "middle"], [cx, cy + 18, "middle"],
+                     [cx + 9, cy - 8, "start"], [cx + 9, cy + 16, "start"], [cx - 9, cy - 8, "end"], [cx - 9, cy + 16, "end"]];
+      const fit = spots.map(([x, y, a]) => ({ x, y, a, b: { x0: a === "start" ? x : a === "end" ? x - w : x - w / 2, y0: y - 11, y1: y + 3 } }))
+        .map(s => ({ ...s, b: { ...s.b, x1: s.b.x0 + w } }))
+        .find(s => !clash(s.b)) || { x: cx + 9, y: cy + 4, a: "start", b: { x0: 0, x1: 0, y0: 0, y1: 0 } };
+      boxes.push(fit.b);
+      el("text", { x: fit.x, y: fit.y, "text-anchor": fit.a, class: "label" }, svg).textContent = p.label;
+    });
+    pts.forEach(p => {
+      const c = el("circle", { cx: X(p.x), cy: Y(p.y), r: 6, fill: `var(${p.color})`, stroke: "var(--surface)", "stroke-width": 2 }, svg);
+      c.addEventListener("mousemove", e => showTip(e, `<div class="t">${p.label}</div>${p.note || ""}`));
+      c.addEventListener("mouseleave", hideTip);
+    });
+    if (opts.table !== false) box.appendChild(table(["", opts.xName || "x", opts.yName || "y"],
+      pts.map(p => [p.label, (opts.xFormat || fmt)(p.x), (opts.yFormat || fmt)(p.y)])));
+  }
+
+  // stacked horizontal bars: rows [{label, parts: [values...], note}], keys [{name, color}]; opts: {format, labelWidth}
+  function stack(target, rows, keys, opts = {}) {
+    const box = typeof target === "string" ? document.querySelector(target) : target;
+    box.innerHTML = "";
+    box.appendChild(legend(keys));
+    const rowH = 30, W = 720, lw = opts.labelWidth || 160, H = rows.length * rowH + 8;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart-svg", role: "img", "aria-label": opts.aria || "stacked bar chart" }, box);
+    const f = opts.format || fmt;
+    const max = Math.max(...rows.map(r => r.parts.reduce((a, b) => a + b, 0)));
+    const X = v => v / max * (W - lw - 70);
+    el("line", { x1: lw, x2: lw, y1: 0, y2: H, class: "baseline" }, svg);
+    rows.forEach((r, i) => {
+      const y = i * rowH + 8, h = 18, tot = r.parts.reduce((a, b) => a + b, 0);
+      el("text", { x: lw - 10, y: y + 13, "text-anchor": "end", class: "label" }, svg).textContent = r.label;
+      let x = lw;
+      r.parts.forEach((v, k) => {
+        const w = X(v);
+        if (w > 0) el("rect", { x, y, width: Math.max(w - 1, 0.5), height: h, fill: `var(${keys[k].color})` }, svg);
+        x += w;
+      });
+      el("text", { x: x + 8, y: y + 13, class: "label" }, svg).textContent = f(tot);
+      const hit = el("rect", { x: 0, y: y - 6, width: W, height: rowH, fill: "transparent" }, svg);
+      hit.addEventListener("mousemove", e => showTip(e, `<div class="t">${r.label}: ${f(tot)}</div>` + keys.map((k, j) =>
+        `<div class="row"><span><i style="background:var(${k.color})"></i>${k.name}</span><b>${f(r.parts[j])} (${Math.round(r.parts[j] / tot * 100)}%)</b></div>`).join("") + (r.note || "")));
+      hit.addEventListener("mouseleave", hideTip);
+    });
+    if (opts.table !== false) box.appendChild(table(["", ...keys.map(k => k.name), "Total"],
+      rows.map(r => [r.label, ...r.parts.map(f), f(r.parts.reduce((a, b) => a + b, 0))])));
+  }
+
+  window.Charts = { line, bars, scatter, stack, table, fmt };
 })();
 
 // table-of-contents highlighting, shared by every page

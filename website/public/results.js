@@ -75,6 +75,29 @@
       <td class="num">${refRow.n}</td><td class="num">${refRow.surv} of ${refRow.n}</td><td class="num"><b>${fmtR(refRow.medR)}</b></td>
       <td class="num">${fmtR(refRow.best)}</td><td class="num">${fmtR(refRow.worst)}</td><td class="num">100%</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr></tbody>`;
 
+  // the bill: score against cost, where the money went, and the habits behind it
+  const SP = S.spend || {};
+  const spent = rows.filter(r => SP[r.m]);
+  if (spent.length) {
+    const usd = v => v >= 1 ? "$" + v.toFixed(2) : Math.round(v * 100) + "¢";
+    const big = v => v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : Math.round(v / 1e3) + "K";
+    Charts.scatter("#chart-value", spent.map(r => ({ label: short(r.m), x: SP[r.m].usd, y: r.rel, color: colourOf[r.m],
+        note: `${Math.round(r.rel * 100)}% of the reference's R<br>${usd(SP[r.m].usd)} per game` })),
+      { xMin: 0.08, xMax: 8, xTicks: [0.1, 0.3, 1, 3], xFormat: usd, yMin: 0, yMax: 0.8, yFormat: v => Math.round(v * 100) + "%",
+        xName: "$ per game", yName: "Share of the reference's R", aria: "share of the reference's R against cost per game, by model" });
+    const keys = [{ name: "Output and reasoning", color: "--s2" }, { name: "Fresh input", color: "--s1" },
+                  { name: "Cache reads", color: "--s9" }, { name: "Cache writes", color: "--s11" }];
+    const byCost = [...spent].sort((a, b) => SP[b.m].usd - SP[a.m].usd);
+    Charts.stack("#chart-bill", byCost.map(r => ({ label: short(r.m),
+        parts: ["output", "input", "cache_read", "cache_write"].map(k => SP[r.m][k]) })), keys,
+      { format: usd, aria: "cost per game by model, split into output, fresh input, cache reads and cache writes" });
+    $("#habits").innerHTML = `<thead><tr><th>Model</th><th class="num">$ per game</th><th class="num">Calls per quarter</th>
+        <th class="num">Tokens written per game</th><th class="num">Tokens read per game</th><th class="num">Read from cache</th><th class="num">Minutes per game</th></tr></thead>
+      <tbody>${byCost.map(r => { const x = SP[r.m]; return `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(${colourOf[r.m]});margin-right:8px"></i>${short(r.m)}</td>
+        <td class="num"><b>${usd(x.usd)}</b></td><td class="num">${(x.calls / P.Q).toFixed(1)}</td><td class="num">${big(x.out_tokens)}</td>
+        <td class="num">${big(x.read_tokens)}</td><td class="num">${Math.round(x.cached_tokens / x.read_tokens * 100)}%</td><td class="num">${x.minutes.toFixed(0)}</td></tr>`; }).join("")}</tbody>`;
+  }
+
   // pilots: models with too few games to chart, one row per game
   const pilots = Object.keys(R.models).filter(m => R.models[m].length < MIN_GAMES)
     .flatMap(m => R.models[m].map(g => ({ m, ...g, rel: refBySeed[g.seed] ? g.R / refBySeed[g.seed].R : null })))

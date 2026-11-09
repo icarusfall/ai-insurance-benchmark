@@ -64,6 +64,30 @@
   <p style="font-size:15px;color:var(--ink-2)">Models are ranked by "share of the reference's R": each game's R divided by the reference actuary's R on the same world, median across games. This is fairer than median R alone, because models played different numbers of seeds and some worlds are kinder than others. "Beat the reference" counts seeds where the model's final R exceeded the reference actuary's on the same world. Cost is the API bill per game; minutes are wall-clock time per 40-quarter game.</p>
 </section>
 
+<section class="chapter" id="spend">
+  <p class="kicker">The bill</p>
+  <h2>What it cost, and why</h2>
+  <p>The models' bills for one game run from about 12 cents to $4.50, nearly forty-fold. The best score and the biggest bill don't go together. DeepSeek V4 Flash gets within three points of GPT-6.1 Sol for about a seventh of the price. Opus is the most expensive model and comes third.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Score against cost per game</div><div class="sub">Share of the reference's R (median over 20 seeds) against the average API bill per 40-quarter game. The cost axis is logarithmic: each gridline is ten times the last. Up and to the left is better value.</div></figcaption>
+    <div id="chart-value"></div>
+  </figure>
+  <p>A bill is the price per token times the tokens used, and models differ wildly in how many tokens they use. Each quarter is a fresh conversation. Every call re-sends the whole conversation so far (the briefing, the tool results and the model's own replies). The model is charged for reading that again, at a tenth of the price if the provider has cached it. On top of that it pays for what it writes, including hidden reasoning, at two to six times the input price.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Where each game's bill went</div><div class="sub">Average dollars per game, split by what was paid for. Output includes reasoning. Fresh input is the part of the conversation the provider had not cached. Only Anthropic charges to write to its cache.</div></figcaption>
+    <div id="chart-bill"></div>
+  </figure>
+  <div class="table-wrap"><table id="habits"></table></div>
+  <p class="hint">The token counts are measured; the explanations in the cards below are our best guesses. Costs come from the call logs. OpenRouter (DeepSeek) reports what it billed. For the other providers, the reported token counts are multiplied by list prices, so treat those figures as close estimates.</p>
+  <div class="grid">
+    <div class="card"><span class="tag">Pays to remember</span><h4>Claude Opus 5.5</h4><p>Over half of Opus's bill (56%) goes on writing its conversation into Anthropic's prompt cache. Anthropic charges a quarter extra to write to the cache and a tenth of the price to read from it, so the cache only pays off when it is read several times. Opus does a quarter's work in two or three large calls, firing several tools at once, then the conversation is thrown away. Sonnet and Haiku have the same habit. A harness that kept one conversation per game would probably cut this, at the price of ever-longer prompts.</p></div>
+    <div class="card"><span class="tag">Looks before it leaps</span><h4>GPT-6.1 Sol</h4><p>Sol makes about six calls a quarter, two and a half times as many as Opus, and reads 3.8 million tokens a game. Most of that comes from cache at a tenth of the price, but there is so much of it that fresh input is still two fifths of the bill. Our guess is that it checks its book, the market and the applicants before each decision. It is also the best of the three models that never went insolvent, so the habit may be worth paying for.</p></div>
+    <div class="card"><span class="tag">Thinks out loud, cheaply</span><h4>DeepSeek V4 and V4.1 Flash</h4><p>V4.1 Flash writes about 880,000 tokens a game, ten times as much as Opus, nearly all of it reasoning. V4 Flash makes eleven calls a quarter and reads eleven million tokens a game. Both stay cheap only because their tokens cost a twentieth to a hundredth of the frontier models' price. They pay in time instead: about two hours a game for V4 Flash. They were also the only models that kept repeating the same tool call until the harness's loop breaker stopped them.</p></div>
+    <div class="card"><span class="tag">Barely thinks</span><h4>Gemini 3.1 Flash-Lite</h4><p>About 54 output tokens per call: it acts with almost no visible reasoning. Most of its bill is reading. It finishes a game in four minutes for 30 cents and lands mid-table, ahead of models that cost seven times as much.</p></div>
+    <div class="card"><span class="tag">The price list isn't the bill</span><h4>Sonnet against Sol</h4><p>Sonnet 5.5 and GPT-6.1 Sol charge the same per token, yet Sonnet's games cost a third less because it makes fewer than two calls a quarter. Opus's tokens cost twice Sol's, but its bill is only a third higher. The pilots taught the same lesson more painfully: Gemini 3.5 Flash took 477 calls to finish one game and cost $7.29.</p></div>
+  </div>
+</section>
+
 <section class="chapter" id="pilots">
   <p class="kicker">Pilots</p>
   <h2>Models we only tried once</h2>
