@@ -328,6 +328,41 @@ def spend(batches=BATCHES) -> dict:
     return out
 
 
+def spend_total() -> dict:
+    """Every dollar in the run logs (runs/**/calls.jsonl) by model, split by what the games were for: scored games on
+    the Results page, pilots and failed or re-run games, preflight checks, and earlier environment versions."""
+    scored_dirs, counts = set(), Counter()
+    for p in _game_files("result.json"):
+        with open(p, encoding="utf-8") as f:
+            r = json.load(f)
+        if r.get("complete"):
+            scored_dirs.add(os.path.normpath(os.path.dirname(p)))
+            counts[r["model"]] += 1
+    out = {}
+    for p in glob.glob(os.path.join("runs", "**", "calls.jsonl"), recursive=True):
+        d = os.path.normpath(os.path.dirname(p))
+        parts = os.path.relpath(d, "runs").replace("\\", "/").split("/")
+        for line in open(p, encoding="utf-8"):
+            try:
+                c = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            usd, m = float(c.get("usd") or 0.0), c.get("model", "?")
+            if not usd:
+                continue
+            if parts[0] not in BATCHES:
+                kind = "earlier" if parts[0].startswith("wave") or len(parts) == 1 else "pilots"
+            elif "_preflight" in parts:
+                kind = "checks"
+            elif d in scored_dirs and counts[m] >= 5:
+                kind = "scored"
+            else:
+                kind = "pilots"
+            row = out.setdefault(m, dict(scored=0.0, pilots=0.0, checks=0.0, earlier=0.0))
+            row[kind] += usd
+    return {m: {k: round(v, 4) for k, v in row.items()} for m, row in out.items()}
+
+
 def main():
     import sys
     only = sys.argv[sys.argv.index("--only") + 1].split(",") if "--only" in sys.argv else None
@@ -335,7 +370,7 @@ def main():
         txt = open(OUT, encoding="utf-8").read()
         data = json.loads(txt[txt.index("=") + 1:].rstrip().rstrip(";"))
         parts = dict(results=results, turns=llm_turns, llm=llm_excerpts, briefing=briefing, gallery=gallery, dossiers=sample_dossiers,
-                     world=world_summary, lags=lag_histogram, params=params, spend=spend)
+                     world=world_summary, lags=lag_histogram, params=params, spend=spend, spend_total=spend_total)
         for k in only:
             data[k] = parts[k]()
         _write(data)
@@ -347,6 +382,7 @@ def main():
     data["turns"] = llm_turns() or _existing_part("turns")
     data["results"] = results() if os.path.isdir(os.path.join("runs", BATCHES[0])) else _existing_part("results")
     data["spend"] = spend() or _existing_part("spend")
+    data["spend_total"] = spend_total() or _existing_part("spend_total")
     _write(data)
 
 

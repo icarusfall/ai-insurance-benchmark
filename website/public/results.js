@@ -111,6 +111,25 @@
         <td class="num">${big(x.read_tokens)}</td><td class="num">${Math.round(x.cached_tokens / x.read_tokens * 100)}%</td><td class="num">${x.minutes.toFixed(0)}</td></tr>`; }).join("")}</tbody>`;
   }
 
+  // the whole bill: every dollar in the run logs, by model and by what it was for
+  const ST = S.spend_total || {};
+  if (Object.keys(ST).length) {
+    const kinds = ["scored", "pilots", "checks", "earlier"];
+    const sum = m => kinds.reduce((a, k) => a + ST[m][k], 0);
+    const all = Object.keys(ST).reduce((a, m) => a + sum(m), 0);
+    const dollars = v => v >= 10 ? "$" + v.toFixed(0) : v >= 1 ? "$" + v.toFixed(2) : Math.round(v * 100) + "¢";
+    $("#spend-total").textContent = "$" + all.toFixed(2);
+    const ranked = Object.keys(ST).sort((a, b) => sum(b) - sum(a));
+    const big = ranked.filter(m => sum(m) >= 1), small = ranked.filter(m => sum(m) < 1);
+    const bars = big.map(m => ({ label: short(m), parts: kinds.map(k => ST[m][k]) }));
+    if (small.length) bars.push({ label: `${small.length} others, under $1 each`, parts: kinds.map(k => small.reduce((a, m) => a + ST[m][k], 0)),
+                                  note: `<div style="color:var(--muted)">${small.map(short).join(", ")}</div>` });
+    Charts.stack("#chart-total", bars,
+      [{ name: "Scored games", color: "--s1" }, { name: "Pilots, stopped and re-run games", color: "--s2" },
+       { name: "Preflight checks", color: "--s4" }, { name: "Earlier versions of the game", color: "--s12" }],
+      { format: dollars, labelWidth: 190, aria: "total API spend by model, split by purpose" });
+  }
+
   // pilots: models with too few games to chart, one row per game
   const pilots = Object.keys(R.models).filter(m => R.models[m].length < MIN_GAMES)
     .flatMap(m => R.models[m].map(g => ({ m, ...g, rel: refBySeed[g.seed] ? g.R / refBySeed[g.seed].R : null })))

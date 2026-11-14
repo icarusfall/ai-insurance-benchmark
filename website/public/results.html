@@ -97,6 +97,12 @@
     <div class="card"><span class="tag">Barely thinks</span><h4>Gemini 3.1 Flash-Lite</h4><p>About 54 output tokens per call: it acts with almost no visible reasoning. Most of its bill is reading. It finishes a game in four minutes for 30 cents and lands mid-table, ahead of models that cost seven times as much.</p></div>
     <div class="card"><span class="tag">The price list isn't the bill</span><h4>Sonnet against Sol</h4><p>Sonnet 5.5 and GPT-6.1 Sol charge the same per token, yet Sonnet's games cost a third less because it makes fewer than two calls a quarter. Opus's tokens cost twice Sol's, but its bill is only a third higher. The pilots taught the same lesson more painfully: Gemini 3.5 Flash took 477 calls to finish one game and cost $7.29.</p></div>
   </div>
+  <h3>The whole bill</h3>
+  <p>Everything above is the cost of the games on the scoreboard. The project's full API bill also covers models that only played a pilot, games that were stopped, capped or re-run, the one-quarter preflight check before every batch, and the earlier versions of the game. In all: <b id="spend-total"></b>.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Everything spent, by model</div><div class="sub">Every API call in the run logs, including those that never reached the scoreboard. Hover over a bar for the breakdown.</div></figcaption>
+    <div id="chart-total"></div>
+  </figure>
 </section>
 
 <section class="chapter" id="pilots">
