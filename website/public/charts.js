@@ -174,16 +174,16 @@
     if (opts.table !== false) box.appendChild(table([opts.labelName || "", opts.valueName || "Value"], items.map(i => [i.label, (opts.format || fmt)(i.value)])));
   }
 
-  // scatter: [{label, x, y, color, note}] with a log x axis; opts: {xTicks, xFormat, yFormat, yMin, yMax, xName, yName}
+  // scatter: [{label, x, y, color, note}] with a log x axis (opts.linear for a linear one); opts: {xTicks, xFormat, yFormat, yMin, yMax, xName, yName}
   function scatter(target, pts, opts = {}) {
     const box = typeof target === "string" ? document.querySelector(target) : target;
     box.innerHTML = "";
     const W = 720, H = opts.height || 380, m = { l: 48, r: 24, t: 16, b: 40 };
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart-svg", role: "img", "aria-label": opts.aria || "scatter chart" }, box);
-    const lx0 = Math.log10(opts.xMin), lx1 = Math.log10(opts.xMax);
+    const tx = opts.linear ? v => v : Math.log10, lx0 = tx(opts.xMin), lx1 = tx(opts.xMax);
     const yt = niceTicks(opts.yMin ?? 0, opts.yMax ?? Math.max(...pts.map(p => p.y)), 4);
     const y0 = yt[0], y1 = yt[yt.length - 1];
-    const X = v => m.l + (Math.log10(v) - lx0) / (lx1 - lx0) * (W - m.l - m.r);
+    const X = v => m.l + (tx(v) - lx0) / (lx1 - lx0) * (W - m.l - m.r);
     const Y = v => H - m.b - (v - y0) / (y1 - y0 || 1) * (H - m.t - m.b);
     const g = el("g", { class: "grid" }, svg);
     yt.forEach(v => {
@@ -195,6 +195,7 @@
       el("text", { x: X(v), y: H - m.b + 18, "text-anchor": "middle" }, svg).textContent = (opts.xFormat || fmt)(v);
     });
     if (opts.xName) el("text", { x: W - m.r, y: H - 4, "text-anchor": "end" }, svg).textContent = opts.xName;
+    if (opts.yName && opts.yLabel) el("text", { x: m.l + 6, y: m.t + 4, class: "label" }, svg).textContent = opts.yName;
     // labels: try right, left, above, below; keep the first spot that clears the points and the labels placed so far
     const boxes = pts.map(p => ({ x0: X(p.x) - 6, x1: X(p.x) + 6, y0: Y(p.y) - 6, y1: Y(p.y) + 6 }));
     const clash = b => boxes.some(o => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0) || b.x0 < m.l || b.x1 > W - 2 || b.y0 < 0;

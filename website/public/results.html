@@ -64,6 +64,17 @@
   <p style="font-size:15px;color:var(--ink-2)">Models are ranked by "share of the reference's R": each game's R divided by the reference actuary's R on the same world, median across games. This is fairer than median R alone, because models played different numbers of seeds and some worlds are kinder than others. "Beat the reference" counts seeds where the model's final R exceeded the reference actuary's on the same world. Cost is the API bill per game; minutes are wall-clock time per 40-quarter game.</p>
 </section>
 
+<section class="chapter" id="risk">
+  <p class="kicker">Nerve</p>
+  <h2>Same average, different nerve</h2>
+  <p>The ranking uses medians, which reward consistency. Averages tell a different story. Opus 5.5 and GPT-6.1 Sol return almost exactly the same R on average, about 1.7. Opus's results, though, are spread more than three times as widely: its best game is the best in the benchmark, and in nine of twenty it failed to earn the shareholders their 2% a quarter. An investor who owned all twenty of either company would have done about equally well. An investor who owned one would much rather it were Sol.</p>
+  <figure class="chart">
+    <figcaption><div class="title">Average result against how much it varies</div><div class="sub">Each model's mean R over its 20 games, against the standard deviation of those results. Up and to the left is a better deal. The reference actuary's spread is mostly the worlds themselves: some seeds are far kinder than others.</div></figcaption>
+    <div id="chart-risk"></div>
+  </figure>
+  <p class="hint">DeepSeek V4 Flash has the highest average of any model, helped by a few very good games, which its median plays down. Sonnet 5.5 averages R 1.0, just meeting the hurdle, despite being seized nine times: its good games pay for its bad ones.</p>
+</section>
+
 <section class="chapter" id="spend">
   <p class="kicker">The bill</p>
   <h2>What it cost, and why</h2>

@@ -75,6 +75,19 @@
       <td class="num">${refRow.n}</td><td class="num">${refRow.surv} of ${refRow.n}</td><td class="num"><b>${fmtR(refRow.medR)}</b></td>
       <td class="num">${fmtR(refRow.best)}</td><td class="num">${fmtR(refRow.worst)}</td><td class="num">100%</td><td class="num">–</td><td class="num">–</td><td class="num">–</td></tr></tbody>`;
 
+  // nerve: mean R against its standard deviation
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const sd = a => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / (a.length - 1)); };
+  const refRs = R.reference.map(x => x.R);
+  Charts.scatter("#chart-risk", [
+    { label: "Reference actuary", x: sd(refRs), y: mean(refRs), color: "--s1",
+      note: `mean R ${fmtR(mean(refRs))}, spread ${fmtR(sd(refRs))}<br>never insolvent` },
+    ...rows.map(r => { const Rs = R.models[r.m].map(x => x.R); const dead = r.n - r.surv;
+      return { label: short(r.m), x: sd(Rs), y: mean(Rs), color: colourOf[r.m],
+               note: `mean R ${fmtR(mean(Rs))}, spread ${fmtR(sd(Rs))}<br>median R ${fmtR(r.medR)}<br>insolvent in ${dead} of ${r.n}` }; }),
+  ], { linear: true, xMin: 0, xMax: 2.2, xTicks: [0, 0.5, 1, 1.5, 2], xFormat: fmtR, yMin: 0, yMax: 3, yFormat: fmtR,
+       xName: "Spread of R (standard deviation)", yName: "Mean R", aria: "mean R against its standard deviation, by model" });
+
   // the bill: score against cost, where the money went, and the habits behind it
   const SP = S.spend || {};
   const spent = rows.filter(r => SP[r.m]);
