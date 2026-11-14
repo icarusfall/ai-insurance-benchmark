@@ -9,7 +9,12 @@
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
-		Cache-Control "public, max-age=300"
 	}
+	# pages, scripts and data: the browser checks for a newer copy each time (a cheap 304 when unchanged), so a
+	# deploy never shows a new page with last deploy's scripts. Images change rarely and keep a day's cache.
+	@images path *.png *.jpg *.jpeg *.webp *.svg *.ico
+	@rest not path *.png *.jpg *.jpeg *.webp *.svg *.ico
+	header @images Cache-Control "public, max-age=86400"
+	header @rest Cache-Control "no-cache"
 	file_server
 }
